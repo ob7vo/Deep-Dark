@@ -1,0 +1,83 @@
+{
+  "unit_id": 101,
+  "level": 1,
+  "name": "droid-01",
+  "path": "configs/enemy_units/droid_2/",
+  "team": -1,
+  "parts_dropped": 2,
+  "single_target": true,
+  "stats": {
+    "hp": 50,
+    "knockbacks": 5,
+    "dmg": 5,
+    "speed": 50.0,
+    "attack_time": 0.1,
+    "sight_range": 50.0,
+    "max_attack_range": 85.0,
+    "min_attack_range": 0.0,
+    "min_lane_reach": 0,
+    "max_lane_reach": 0
+  },
+  "animations": {
+    "move": {
+      "texture": "Droid02Move.png",
+      "texture_size": [ 192, 48 ],
+      "cell_size": [ 48, 48 ],
+      "frames": 4,
+      "fps": 4
+    },
+    "idle": {
+      "texture": "Droid02Idle.png",
+      "texture_size": [ 192, 48 ],
+      "cell_size": [ 48, 48 ],
+      "frames": 4,
+      "fps": 6
+    },
+    "knockback": {
+      "texture": "Droid02Hurt.png",
+      "texture_size": [ 192, 48 ],
+      "cell_size": [ 48, 48 ],
+      "frames": 4
+    },
+    "attack": {
+      "texture": "Droid02Attack.png",
+      "texture_size": [ 336, 48 ],
+      "cell_size": [ 48, 48 ],
+      "attack_frames": [ 5, 6 ],
+      "frames": 7,
+      "fps": 14
+    },
+    "falling": {
+      "texture": "Droid02CountDown.png",
+      "texture_size": [ 192, 48 ],
+      "cell_size": [ 48, 48 ],
+      "frames": 4
+    },
+    "special": {
+      "type": "phase",
+      "texture": "Droid02Hurt.png",
+      "texture_size": [ 192, 48 ],
+      "cell_size": [ 48, 48 ],
+      "frames": 4,
+      "fps": 4
+    }
+  },
+  "augments": [
+    {
+      "augment": "death_surge",
+      "value": 50.0,
+      "percentage": 100.0,
+      "surge_level": 3
+    },
+    {
+      "augment": "shield",
+      "value": 60.0
+    },
+    {
+      "augment": "phase",
+      "value": 70.0
+    }
+  ],
+  "types": [ "nano", "floating" ],
+  "target_types": [ "typeless" ]
+}

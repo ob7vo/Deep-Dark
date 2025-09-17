@@ -1,0 +1,11 @@
+{
+  "team": 1,
+  "target_type": "all",
+  "cannon_timer": 5.0,
+  "type": 1,
+  "surge_level": 5,
+  "augment": {
+    "augment_type": "shove"
+  },
+  "dmg": 30
+}

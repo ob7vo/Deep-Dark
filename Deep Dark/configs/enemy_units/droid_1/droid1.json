@@ -1,0 +1,59 @@
+{
+  "unit_id": 100,
+  "level": 1,
+  "name": "droid-01",
+  "path": "configs/enemy_units/droid_1/",
+  "team": -1,
+  "parts_dropped": 3,
+  "single_target": true,
+  "stats": {
+    "hp": 75,
+    "knockbacks": 3,
+    "dmg": 15,
+    "speed": 7.5,
+    "attack_time": 2,
+    "sight_range": 75.0,
+    "max_attack_range": 75.0,
+    "min_attack_range": 0.0,
+    "min_lane_reach": 0,
+    "max_lane_reach": 0
+  },
+  "animations": {
+    "move": {
+      "texture": "Droid01Move.png",
+      "texture_size": [ 128, 32 ],
+      "cell_size": [ 32, 32 ],
+      "frames": 4,
+      "fps": 4
+    },
+    "idle": {
+      "texture": "Droid01Idle.png",
+      "texture_size": [ 128, 32 ],
+      "cell_size": [ 32, 32 ],
+      "frames": 4,
+      "fps": 6
+    },
+    "knockback": {
+      "texture": "Droid01Hurt.png",
+      "texture_size": [ 96, 32 ],
+      "cell_size": [ 32, 32 ],
+      "frames": 3
+    },
+    "attack": {
+      "texture": "Droid01Shoot.png",
+      "texture_size": [ 576, 48 ],
+      "cell_size": [ 48, 48 ],
+      "attack_frames": [ 9 ],
+      "frames": 12,
+      "fps": 6
+    },
+    "falling": {
+      "texture": "Droid01Move.png",
+      "texture_size": [ 128, 32 ],
+      "cell_size": [ 32, 32 ],
+      "frames": 4
+    }
+  },
+  "types": [ "nano", "floating" ],
+  "target_types": [ "typeless" ]
+}

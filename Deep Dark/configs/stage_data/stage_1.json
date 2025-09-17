@@ -1,0 +1,68 @@
+{
+  "name": "Entry Point",
+  "lane_count": 3,
+  "enemy_base": {
+    "hp": 5000,
+    "x_position": 1100,
+    "cannon_json_path": "configs/base_data/enemy_bases/orbital_base.json"
+  },
+  "player_base": {
+    "hp": 7500,
+    "x_position": 175
+  },
+  "lanes": [
+    {
+      "player_spawn_position": 500,
+      "enemy_spawn_position": 800,
+      "y_position": 200.0
+    },
+    {
+      "player_spawn_position": 200,
+      "enemy_spawn_position": 800,
+      "y_position": 400.0,
+      "gaps": [
+        [ 550.0, 735.0 ]
+      ]
+    },
+    {
+      "player_spawn_position": 200,
+      "enemy_spawn_position": 800,
+      "y_position": 600.0,
+      "gaps": [
+        [ 350.0, 450.0 ]
+      ]
+    }
+  ],
+  "teleporters": [
+    {
+      "lane": 0,
+      "connected_lane": 2,
+      "player_team": true,
+      "x_position": 1000,
+      "x_destination": 400
+    }
+  ],
+  "enemy_spawns": [
+    {
+      "json_path": "configs/enemy_units/droid_1/droid1.json",
+      "total_spawns": 8,
+      "magnification": 1.5,
+
+      "first_spawn_time": 85.0,
+      "spawn_delays": [ 3.67, 5.21 ],
+      "lane_indexes": [ 0, 2, 2, 1, 0, 1, 1, 0 ]
+    },
+    {
+      "json_path": "configs/enemy_units/droid_2/droid2.json",
+      "total_spawns": 6,
+      "magnification": 1.5,
+
+      "first_spawn_time": 91.5,
+      "spawn_delays": [ 92.29, 93.56 ],
+      "lane_indexes": [ 2, 2, 1, 2, 0, 1 ]
+    }
+  ],
+  "challanges": [
+
+  ]
+}

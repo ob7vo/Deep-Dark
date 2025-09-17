@@ -1,0 +1,81 @@
+{
+  "unit_id": 0,
+  "name": "soldier",
+  "path": "configs/player_units/soldier/",
+  "level": 1,
+  "team": 1,
+  "parts_cost":  3,
+  "single_target": false,
+  "stats": {
+    "hp": 8,
+    "knockbacks": 2,
+    "dmg": 15,
+    "speed": 68.5,
+    "attack_time": 0.5,
+    "sight_range": 100.0,
+    "max_attack_range": 250.0,
+    "min_attack_range": -20.0,
+    "min_lane_reach": 1,
+    "max_lane_reach": 0
+  },
+  "animations": {
+    "move": {
+      "texture": "WALK.png",
+      "texture_size": [ 768, 84 ],
+      "cell_size": [ 96, 84 ],
+      "frames": 8,
+      "fps": 8
+    },
+    "idle": {
+      "texture": "IDLE.png",
+      "texture_size": [ 672, 84 ],
+      "cell_size": [ 96, 84 ],
+      "frames": 7,
+      "fps": 10
+    },
+    "knockback": {
+      "texture": "HURT.png",
+      "texture_size": [ 384, 84 ],
+      "cell_size": [ 96, 84 ],
+      "frames": 4
+    },
+    "attack": {
+      "texture": "ATTACK.png",
+      "texture_size": [ 576, 84 ],
+      "cell_size": [ 96, 84 ],
+      "attack_frames": [ 4 ],
+      "frames": 6,
+      "fps": 12
+    },
+    "falling": {
+      "texture": "JUMP.png",
+      "texture_size": [ 480, 84 ],
+      "cell_size": [ 96, 84 ],
+      "frames": 5
+    },
+    "special": {
+      "type": "jump",
+      "texture": "JUMP.png",
+      "texture_size": [ 480, 84 ],
+      "cell_size": [ 96, 84 ],
+      "frames": 5,
+      "fps": 3
+    }
+  },
+  "augments": [
+    {
+      "augment": "shock_wave",
+      "value": 80.0,
+      "percentage": 100.0,
+      "surge_level": 3
+    },
+    {
+      "augment": "slow",
+      "value": 5.0,
+      "percentage": 100.0
+    }
+  ],
+  "types": [ "typeless" ],
+  "target_types": [ "nano" ],
+  "quick_augment_masks": [ "code_breaker" ]
+}
