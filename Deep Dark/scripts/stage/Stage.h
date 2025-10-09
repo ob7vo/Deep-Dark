@@ -4,9 +4,13 @@
 #include "UnitData.h"
 #include "Base.h"
 #include "Surge.h"
+#include "Tween.h"
+#include "ActionObject.h"
+#include "StageRecord.h"
 #include <iostream>
 
 const int p_team = 1;
+const float FLOOR = 900;
 
 class Unit;
 
@@ -35,39 +39,45 @@ struct EnemySpawner {
 
 	float nextSpawnTime;
 	float firstSpawnTime;
-	float minSpawnDelay;
-	float maxSpawnDelay;
+	std::pair<float, float> spawnDelays;
 	std::vector<std::pair<float, int>> forcedSpawnTimes;
 
 	int currentSpawnIndex = 0;
 	int totalSpawns;
+	bool infinite;
 
-	std::vector<int> laneToSpawn;
+	std::vector<int> laneSpawnIndexes;
 
-	EnemySpawner(const nlohmann::json& unitJsonPath, float firstSpawnTime, float minDelay,
-		float maxDelay, int totalSpawns, float magnification, std::vector<int> laneIndexes,
-		std::vector<std::pair<float,int>> forcedSpawnTimes);
+	EnemySpawner(const nlohmann::json& unitJsonPath, const nlohmann::json& file);
 
 	inline bool can_force_spawn(float time) { return forcedSpawnTimes.size() > 0 && time > forcedSpawnTimes[0].first; }
 };
 struct Stage
 {
+	StageRecord& recorder;
+
 	std::vector<Lane> lanes;
 	int laneCount = 0;
 	int nextUnitID = 0;
-
-	int* selectedLane;
+	int selectedLane = 0;
 
 	std::vector<EnemySpawner> enemySpawners;
 	std::vector<MoveRequest> moveRequests;
 	std::vector<std::unique_ptr<Surge>> surges;
+	std::vector<std::unique_ptr<ActionObject>> actionObjects;
+
+	std::unordered_map<int, UnitTween> unitTweens;
+	std::unique_ptr<Summon> summonData;
 
 	Base enemyBase;
 	Base playerBase;
 
-	Stage(const nlohmann::json& stageFile, int* selectedLane);
+	Stage(const nlohmann::json& stageFile, StageRecord& recorder);
 
 	Unit* create_unit(int laneIndex, const UnitStats* unitStats, std::array<Animation, 5>* aniMap);
+	void create_summon(Unit& unit);
+	Summon* try_create_summon_data(int summonId, float magnification);
+	void try_revive_unit(UnitSpawner* spawner);
 	void only_draw(sf::RenderWindow& window);
 	void create_surge(Unit& unit, const Augment& surge);
 	void create_surge(BaseCannon* pCannon, const Augment& surge);
@@ -101,5 +111,30 @@ struct Stage
 	inline void push_move_request(Unit& unit, int newLane, float fallTo, RequestType type) {
 		if (!can_push_move_request(unit.id)) return;
 		moveRequests.emplace_back(unit, newLane, fallTo, type);
+	}
+	inline bool tweening(int id) { return unitTweens.contains(id); }
+	inline void cancel_tween(int id) { unitTweens.erase(id); }
+	inline UnitTween* create_tween(int id, sf::Vector2f startPos, sf::Vector2f endPos, 
+		float time, RequestType tweenType, bool overwrite = true) {
+		if (tweening(id))
+			if (overwrite) cancel_tween(id);
+			else return nullptr;
+
+		unitTweens.emplace(id, UnitTween(startPos, endPos, time, tweenType));
+		//std::cout << "created tween" << std::endl;
+		return &unitTweens[id];
+	}
+	inline UnitTween* create_tween(Unit& unit, sf::Vector2f endPos, float time,
+		RequestType tweenType, bool overwrite = true) {
+		return create_tween(unit.id, unit.pos, endPos, time, tweenType, overwrite);
+	}
+	inline RequestType update_tween(Unit& unit, float deltaTime) {
+		unit.pos = unitTweens[unit.id].update_and_get(deltaTime);
+		if (unitTweens[unit.id].isComplete) {
+			RequestType type = unitTweens[unit.id].tweenType;
+			cancel_tween(unit.id);
+			return type;
+		}
+		return RequestType::NOT_DONE;
 	}
 };

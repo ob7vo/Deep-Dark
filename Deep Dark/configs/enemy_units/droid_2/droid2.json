@@ -9,14 +9,19 @@
   "stats": {
     "hp": 50,
     "knockbacks": 5,
-    "dmg": 5,
     "speed": 50.0,
     "attack_time": 0.1,
     "sight_range": 50.0,
-    "max_attack_range": 85.0,
-    "min_attack_range": 0.0,
-    "min_lane_reach": 0,
-    "max_lane_reach": 0
+    "hits": [
+      {
+        "dmg": 5,
+        "attack_range": [ 0, 85.0 ]
+      },
+      {
+        "dmg": 10,
+        "attack_range": [ 0, 85.0 ]
+      }
+    ]
   },
   "animations": {
     "move": {
@@ -74,8 +79,7 @@
       "value": 60.0
     },
     {
-      "augment": "phase",
-      "value": 70.0
+      "augment": "heavyweight"
     }
   ],
   "types": [ "nano", "floating" ],

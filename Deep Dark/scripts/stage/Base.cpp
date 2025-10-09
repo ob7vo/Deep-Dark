@@ -69,13 +69,13 @@ void Base::fire_cannon() {
 	timeLeft = cannonTimer;
 	//cannonAnimation = cannon->get_cannon_animation_ptr();
 	cannonAnimation = BaseCannon::ga_ptr();
-	cannonAnimation->start(sprite);
+	cannonAnimation->reset(sprite);
 }
 void Base::tick(Stage& stage, sf::RenderWindow& window, float deltaTime) {
 	if (cannonAnimation) {
 		auto events = cannonAnimation->update(deltaTime, sprite);
 
-		if (Animation::check_for_event(AnimationEvent::BASE_FIRE, events) && cannon)
+		if (Animation::check_for_event(AnimationEvent::ATTACK, events) && cannon)
 			cannon->fire(stage);
 		if (Animation::check_for_event(AnimationEvent::FINAL_FRAME, events)) {
 			sprite.setTextureRect(cannonAnimation->frames[0].rect);

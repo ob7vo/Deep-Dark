@@ -2,9 +2,11 @@
   "unit_id": 0,
   "name": "soldier",
   "path": "configs/player_units/soldier/",
+  "slot_sprite": "soldier_slot.png",
   "level": 1,
   "team": 1,
-  "parts_cost":  3,
+  "parts_cost": 3,
+  "recharge_timer": 3.0,
   "single_target": false,
   "stats": {
     "hp": 8,
@@ -13,10 +15,9 @@
     "speed": 68.5,
     "attack_time": 0.5,
     "sight_range": 100.0,
-    "max_attack_range": 250.0,
-    "min_attack_range": -20.0,
-    "min_lane_reach": 1,
-    "max_lane_reach": 0
+    "attack_range": [-20, 250],
+    "lane_reach": [ 1, 0 ],
+    "lane_sight": [ 1, 0 ]
   },
   "animations": {
     "move": {
@@ -70,12 +71,11 @@
       "surge_level": 3
     },
     {
-      "augment": "slow",
-      "value": 5.0,
-      "percentage": 100.0
+      "augment": "clone",
+      "value": 0.5
     }
   ],
   "types": [ "typeless" ],
   "target_types": [ "nano" ],
-  "quick_augment_masks": [ "code_breaker" ]
+  "quick_augment_masks": [ "code_breaker", "heavyweight" ]
 }

@@ -1,6 +1,6 @@
 #pragma once
 #include "Animation.h"
-#include "ActionStates.h"
+#include "UnitEnums.h"
 #include "UnitData.h"
 #include <iostream>
 
@@ -35,6 +35,7 @@ struct Surge
 
 	AugmentType surgeType;
 	const UnitStats* stats;
+	int hitIndex;
 
 	float aniTime = 0.0f;
 	int currentFrame = 0;
@@ -49,24 +50,28 @@ struct Surge
 
 	void attack_units(Lane& enemyUnits);
 	void on_kill(Unit& enemyUnit);
+	bool try_terminate_unit(Unit& enemyUnit);
 	virtual void tick(sf::RenderWindow& window, float deltaTime, Stage& stage) = 0;
-	virtual std::vector<AnimationEvent> draw(sf::RenderWindow& window, float deltaTime) = 0;
+	virtual int draw(sf::RenderWindow& window, float deltaTime) = 0;
 	virtual void start_animation(SurgeAnimationStates newState) {};
 	virtual bool never_hit_unit(int id) { return !already_hit_unit(id); }
 
 	inline bool already_hit_unit(int id) { 
 		return std::find(hitUnits.begin(), hitUnits.end(), id) != hitUnits.end(); 
 	}
-	inline bool immune_to_surge_type(int unitImmunities) const { return surgeType & unitImmunities; }
+	inline bool immune_to_surge_type(size_t unitImmunities) const { return surgeType & unitImmunities; }
 	inline bool targeted_by_unit(int enemyTargetTypes) const { return stats->targeted_by_unit(enemyTargetTypes); }
+	inline int get_dmg() { return stats->get_hit_stats(hitIndex).dmg; }
+
 	static void init_animations();
 };
 struct ShockWave : public Surge {
-	ShockWave(const UnitStats* stats, int curLane, int level, sf::Vector2f pos);
+	int id;
+	ShockWave(const UnitStats* stats, int curLane, int level, sf::Vector2f pos, Stage& stage);
 	~ShockWave() = default;
 
 	void tick(sf::RenderWindow& window, float deltaTime, Stage& stage) override;
-	std::vector<AnimationEvent> draw(sf::RenderWindow& window, float deltaTime) override;
+	int draw(sf::RenderWindow& window, float deltaTime) override;
 	void start_animation(SurgeAnimationStates newState) override;
 };
 struct FireWall : public Surge {
@@ -78,7 +83,7 @@ struct FireWall : public Surge {
 	~FireWall() = default;
 
 	void tick(sf::RenderWindow& window, float deltaTime, Stage& stage) override;
-	std::vector<AnimationEvent> draw(sf::RenderWindow& window, float deltaTime) override;
+	int draw(sf::RenderWindow& window, float deltaTime) override;
 	void start_animation(SurgeAnimationStates newState) override;
 	bool never_hit_unit(int id) override;
 };
@@ -87,6 +92,6 @@ struct OrbitalStrike : public Surge {
 	~OrbitalStrike() = default;
 
 	void tick(sf::RenderWindow& window, float deltaTime, Stage& stage) override;
-	std::vector<AnimationEvent> draw(sf::RenderWindow& window, float deltaTime) override;
+	int draw(sf::RenderWindow& window, float deltaTime) override;
 };
 

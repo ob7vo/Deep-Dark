@@ -1,7 +1,7 @@
 #pragma once
 #include <cmath>
+#include <array>
 const float M_PI = 3.1415927f;
-
 namespace Easing {
     // Linear (no easing)
     inline float linear(float t) { return t; }
@@ -137,3 +137,21 @@ namespace Easing {
             : (1.0f + easeOutBounce(2.0f * t - 1.0f)) / 2.0f;
     }
 }
+enum class EasingType {
+    LINEAR,
+    OUT_BOUNCE,
+    OUT_CUBIC,
+    IN_OUT_SINE,
+    OUT_QUART,
+    OUT_BACK,
+    COUNT
+};
+using EasingFunc = float(*)(float);
+static auto easeFuncArr = std::array<EasingFunc, 6>{
+    Easing::linear,
+    Easing::easeOutBounce,
+    Easing::easeOutCubic,
+    Easing::easeInOutSine,
+    Easing::easeOutQuart,
+    Easing::easeOutBack
+};

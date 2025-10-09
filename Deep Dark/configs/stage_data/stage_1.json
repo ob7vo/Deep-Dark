@@ -12,7 +12,7 @@
   },
   "lanes": [
     {
-      "player_spawn_position": 500,
+      "player_spawn_position": 200,
       "enemy_spawn_position": 800,
       "y_position": 200.0
     },
@@ -20,17 +20,12 @@
       "player_spawn_position": 200,
       "enemy_spawn_position": 800,
       "y_position": 400.0,
-      "gaps": [
-        [ 550.0, 735.0 ]
-      ]
+      "gaps": [[475.0,525.0]]
     },
     {
       "player_spawn_position": 200,
       "enemy_spawn_position": 800,
-      "y_position": 600.0,
-      "gaps": [
-        [ 350.0, 450.0 ]
-      ]
+      "y_position": 600.0
     }
   ],
   "teleporters": [
@@ -42,13 +37,27 @@
       "x_destination": 400
     }
   ],
+  "traps_": [
+    {
+      "lane": 1,
+      "trap_type": 4,
+      "trigger_range": [ 300, 600 ],
+      "attack_range": [ 300, 600 ],
+      "x_position": 450.0,
+      "check_timer": 6.0,
+      "augment": {
+        "augment_type": "overload",
+        "status_time": 2.5
+      }
+    }
+  ],
   "enemy_spawns": [
     {
       "json_path": "configs/enemy_units/droid_1/droid1.json",
       "total_spawns": 8,
       "magnification": 1.5,
 
-      "first_spawn_time": 85.0,
+      "first_spawn_time": 5.0,
       "spawn_delays": [ 3.67, 5.21 ],
       "lane_indexes": [ 0, 2, 2, 1, 0, 1, 1, 0 ]
     },
@@ -57,7 +66,7 @@
       "total_spawns": 6,
       "magnification": 1.5,
 
-      "first_spawn_time": 91.5,
+      "first_spawn_time": 5.5,
       "spawn_delays": [ 92.29, 93.56 ],
       "lane_indexes": [ 2, 2, 1, 2, 0, 1 ]
     }

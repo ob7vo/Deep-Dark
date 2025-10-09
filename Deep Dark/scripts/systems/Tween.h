@@ -1,13 +1,66 @@
 #pragma once
 #include <SFML/System/Vector2.hpp>
 #include "Easing.hpp"
+#include "UnitEnums.h"
 #include <iostream>
 #include <vector>
 #include <memory>
 #include <functional>
-using Vector2 = sf::Vector2f;
 
+const EasingType noEase = EasingType::COUNT;
+struct UnitTween {
+    float duration = 0.f;
+    float elapsedTime = 0.0f;
+    bool isComplete = false;
+    EasingType easingFuncX = EasingType::COUNT;
+    EasingType easingFuncY = EasingType::COUNT;
+    RequestType tweenType = RequestType::NONE;
+    sf::Vector2f pos;
+    sf::Vector2f startVec;
+    sf::Vector2f endVec;
 
+    UnitTween(sf::Vector2f val, const sf::Vector2f& end, float dur, RequestType type,
+        EasingType funcX = EasingType::COUNT, EasingType funcY = EasingType::COUNT) :
+        duration(dur), pos(val), startVec(val), endVec(end), tweenType(type),
+        easingFuncX(funcX), easingFuncY(funcY) {}
+    UnitTween() = default;
+    ~UnitTween() = default;
+
+    void update(float deltaTime) {
+        if (isComplete) return;
+        elapsedTime += deltaTime;
+
+        if (elapsedTime >= duration) {
+            elapsedTime = duration;
+            updateValue();
+            isComplete = true;
+        }
+        else updateValue();
+    }
+    float getEasedTX() {
+        float t = elapsedTime / duration;
+        return easingFuncX < EasingType::COUNT ? 
+            easeFuncArr[static_cast<int>(easingFuncX)](t) : t;
+    }
+    float getEasedTY() {
+        float t = elapsedTime / duration;
+        return easeFuncArr[static_cast<int>(easingFuncY)](t);
+    }
+    inline sf::Vector2f update_and_get(float deltaTime) {
+        update(deltaTime);
+        return pos;
+    }
+    inline void updateValue() {
+        if (easingFuncX < EasingType::COUNT) {
+            float t = getEasedTX();
+            pos.x = startVec.x + (endVec.x - startVec.x) * t;
+        }
+        if (easingFuncY < EasingType::COUNT) {
+            float t = getEasedTY();
+            pos.y = startVec.y + (endVec.y - startVec.y) * t;
+        }
+    }
+};
 struct BaseTween
 {
     float duration;
@@ -18,6 +71,7 @@ struct BaseTween
 
     BaseTween(float dur) :
         duration(dur), elapsedTime(0.0f), isComplete(false) {}
+    BaseTween() = default;
     virtual ~BaseTween() = default; // { printf("finished tween\n"); }
     virtual void update(float deltaTime) {
         if (isComplete) return;
@@ -30,7 +84,6 @@ struct BaseTween
             isComplete = true;
             if (onComplete) onComplete();
         } else updateValue();
-        
     }
     virtual void updateValue() = 0;
     float getEasedT() const {
@@ -75,11 +128,11 @@ struct FloatTween : public BaseTween {
     }
 };
 struct Vector2Tween : public BaseTween {
-    Vector2* target;
-    Vector2 startVec;
-    Vector2 endVec;
+    sf::Vector2f* target;
+    sf::Vector2f startVec;
+    sf::Vector2f endVec;
 
-    Vector2Tween(Vector2* tar, const Vector2& end, float dur) :
+    Vector2Tween(sf::Vector2f* tar, const sf::Vector2f& end, float dur) :
         BaseTween(dur), target(tar), startVec(*tar), endVec(end) {}
 
     inline void updateValue() override {
@@ -89,11 +142,6 @@ struct Vector2Tween : public BaseTween {
         }
         else isComplete = true;
     }
-    //Vector2 customBounceEasing(float t){
-    //    float x = getEasedT(); // Linear for X
-    //    float y = Easing::easeOutBounce(t); // Bouncy for Y (or easeOutBounce, etc.)
-    //    return { x, y };
-    //};
 };
 
 
@@ -102,7 +150,7 @@ private:
     static inline std::unordered_map<void*, std::shared_ptr<BaseTween>> activeTweens;
 
 public:
-    static ChainableTween move(Vector2* target, const Vector2& destination, float duration, bool overwrite = false) {
+    static ChainableTween move(sf::Vector2f* target, const sf::Vector2f& destination, float duration, bool overwrite = false) {
         if (isTweening(target) && !overwrite) return ChainableTween();
         std::shared_ptr<Vector2Tween> tween = std::make_shared<Vector2Tween>(target, destination, duration);
         activeTweens[static_cast<void*>(target)] = tween;

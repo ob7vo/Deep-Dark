@@ -5,8 +5,8 @@ const float KNOCKBACK_DURATION = 1.4f;
 const float FALL_DURATION = 1.25f;
 const float JUMP_DURATION = 1.f;
 
-AnimationFrame::AnimationFrame(sf::IntRect rect, float duration, std::vector<AnimationEvent> events) :
-    events(events){
+AnimationFrame::AnimationFrame(sf::IntRect rect, float duration, int events) :
+    eventsMask(events){
     this->rect = rect;
     this->duration = duration;
 }
@@ -14,7 +14,6 @@ Animation::Animation(std::string spritePath, int frameCount, float rate, int tex
     int cellSizes[2], std::vector<std::pair<int, AnimationEvent>> events, bool loops)
 {
     this->loops = loops;
-    std::vector<AnimationEvent> empty;
     time = 0.0f;
     currentFrame = 0;
     if (!texture.loadFromFile(spritePath)) {
@@ -37,18 +36,17 @@ Animation::Animation(std::string spritePath, int frameCount, float rate, int tex
     for (int row = 0; row < rows && frame < frameCount; row++) {
         for (int col = 0; col < columns && frame < frameCount; col++) {
             sf::IntRect rect({ col * cellWidth, row * cellHeight }, size);
-            frames.emplace_back(rect, rate, empty);
+            frames.emplace_back(rect, rate, 0);
             frame++; 
         }
     }
 
     for (int i = 0; i < events.size(); i++)
-        frames[events[i].first].events.emplace_back(events[i].second);
-    frames[0].events.emplace_back(AnimationEvent::FIRST_FRAME);
-    frames[frameCount - 1].events.emplace_back(AnimationEvent::FINAL_FRAME);
+        frames[events[i].first].eventsMask |= events[i].second;
+    frames[0].eventsMask |= AnimationEvent::FIRST_FRAME;
+    frames[frameCount - 1].eventsMask |= AnimationEvent::FINAL_FRAME;
 };
-std::vector<AnimationEvent> Animation::update(float deltaTime, sf::Sprite& sprite) {
-    static const std::vector<AnimationEvent> empty;
+int Animation::update(float deltaTime, sf::Sprite& sprite) {
     time += deltaTime;
 
     if (time > frames[currentFrame].duration) {
@@ -60,13 +58,12 @@ std::vector<AnimationEvent> Animation::update(float deltaTime, sf::Sprite& sprit
             currentFrame++;
         
         sprite.setTextureRect(frames[currentFrame].rect);
-        return frames[currentFrame].events;
+        return frames[currentFrame].eventsMask;
     }
 
-    return empty;
+    return 0;
 }
-std::vector<AnimationEvent> Animation::update(float& time, int& curFrame, float deltaTime, sf::Sprite& sprite) {
-    static const std::vector<AnimationEvent> empty;
+int Animation::update(float& time, int& curFrame, float deltaTime, sf::Sprite& sprite) {
     time += deltaTime;
 
     if (time > frames[curFrame].duration) {
@@ -78,18 +75,18 @@ std::vector<AnimationEvent> Animation::update(float& time, int& curFrame, float 
             curFrame++;
 
         sprite.setTextureRect(frames[curFrame].rect);
-        return frames[curFrame].events;
+        return frames[curFrame].eventsMask;
     }
 
-    return empty;
+    return 0;
 }
-void Animation::start(sf::Sprite& sprite) {
+void Animation::reset(sf::Sprite& sprite) {
     currentFrame = 0;
     time = 0;
     sprite.setTexture(texture);
     sprite.setTextureRect(frames[0].rect);
 }
-void Animation::start(float& time, int& curFrame, sf::Sprite& sprite) {
+void Animation::reset(float& time, int& curFrame, sf::Sprite& sprite) {
     curFrame = 0;
     time = 0;
     sprite.setTexture(texture);
@@ -99,16 +96,13 @@ std::string eventToString(AnimationEvent event) {
     switch (event) {
     case AnimationEvent::FIRST_FRAME: return "FIRST_FRAME";
     case AnimationEvent::FINAL_FRAME: return "FINAL_FRAME";
-    case AnimationEvent::UNIT_ATTACK: return "UNIT_ATTACK";
+    case AnimationEvent::ATTACK: return "UNIT_ATTACK";
         // Add other events here
     default: return "UNKNOWN_EVENT";
     }
 }
-bool Animation::check_for_event(AnimationEvent targetEvent, std::vector<AnimationEvent> events) {
-    for (auto event : events)
-        if (event == targetEvent) return true;
-
-    return false;
+bool Animation::check_for_event(AnimationEvent targetEvent, int events) {
+    return events & targetEvent;
 }
 Animation Animation::create_unit_animation(const json& file, std::string ani, bool loops) {
     if (!file["animations"].contains(ani)) {
@@ -146,7 +140,7 @@ Animation Animation::create_unit_animation(const json& file, std::string ani, bo
     if (file["animations"][ani].contains("attack_frames")) {
         std::vector<int> attack_frames = file["animations"][ani]["attack_frames"];
         for (int i = 0; i < attack_frames.size(); i++)
-            events.emplace_back(attack_frames[i], AnimationEvent::UNIT_ATTACK);
+            events.emplace_back(attack_frames[i], AnimationEvent::ATTACK);
     }
 
     return Animation(fullPath, frames, rate, texSizes, cellSizes, events, loops);

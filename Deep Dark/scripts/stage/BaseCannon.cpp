@@ -4,7 +4,6 @@
 #include <filesystem>
 using json = nlohmann::json;
 
-
 static Animation surgeCannonAni;
 static Animation shortCircuitCannonAni;
 static Animation orbitalCannonAni;
@@ -18,16 +17,17 @@ const float ORBITAL_CANNON_SPACING = 45.f;
 const int ORBITAL_STRIKES = 6;
 
 const float SHORT_CIRCUIT_CANNON_RANGE = 300.f;
+const int zero = 0;
 
 BaseCannon::BaseCannon(const json& baseJson, float magnification) :
 	cannonStats(UnitStats::create_cannon(baseJson, magnification)), team(baseJson["team"]), pos{} {
 }
 WaveCannon::WaveCannon(const json& baseJson, float magnification) :BaseCannon(baseJson, magnification), 
-shockWave(SHOCK_WAVE, 0.f, 0.f, baseJson["surge_level"]) {}
+shockWave(Augment::cannon(SHOCK_WAVE, baseJson["surge_level"])) {}
 FireWallCannon::FireWallCannon(const json& baseJson, float magnification) :BaseCannon(baseJson, magnification), 
-fireWall(FIRE_WALL, 0.f, 0.f, baseJson["surge_level"]) {}
+fireWall(Augment::cannon(FIRE_WALL, baseJson["surge_level"])) {}
 OrbitalCannon::OrbitalCannon(const json& baseJson, float magnification) :BaseCannon(baseJson, magnification),
-orbitalStrike(ORBITAL_STRIKE, 0.f, 0.f, 1) {}
+orbitalStrike(Augment::cannon(ORBITAL_STRIKE,1)) {}
 AreaCannon::AreaCannon(const json& baseJson, float magnification) : BaseCannon(baseJson, magnification),
 areaRange(baseJson["area_range"]) {}
 
@@ -62,7 +62,7 @@ void AreaCannon::fire(Stage& stage) {
 
 		for (auto it = enemyUnits.begin(); it != enemyUnits.end();) {
 			if (is_valid_target(*it))
-				it->apply_effects(cannonStats.augments);
+				it->apply_effects(cannonStats.augments, 0);
 		}
 	}
 }
@@ -83,7 +83,7 @@ Animation* AreaCannon::get_cannon_animation_ptr() { return &shortCircuitCannonAn
 
 void BaseCannon::init_animations() {
 	std::vector<std::pair<int, AnimationEvent>> events;
-	events.emplace_back(15, AnimationEvent::BASE_FIRE);
+	events.emplace_back(15, AnimationEvent::ATTACK);
 	std::string path = "configs/base_data/base_sprite.png";
 	int textureSize[2] = { 2016, 64 }, cellSize[2] = { 96,64 };
 	waveCannonAni = Animation(path, 21, .15f, textureSize, cellSize, events, false);

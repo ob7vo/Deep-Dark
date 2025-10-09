@@ -13,10 +13,9 @@
     "speed": 7.5,
     "attack_time": 2,
     "sight_range": 75.0,
-    "max_attack_range": 75.0,
-    "min_attack_range": 0.0,
-    "min_lane_reach": 0,
-    "max_lane_reach": 0
+    "attack_range": [ 0, 75 ],
+    "lane_reach": [ 0, 0 ],
+    "lane_sight": [ 0, 0 ]
   },
   "animations": {
     "move": {

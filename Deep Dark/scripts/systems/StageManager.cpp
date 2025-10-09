@@ -1,6 +1,7 @@
 #include "StageManager.h"
 #include <ranges>
 #include <algorithm>
+#include <format>
 
 using json = nlohmann::json;
 
@@ -13,22 +14,48 @@ float random_float(float min, float max) {
 }
 
 StageManager::StageManager(const json& stageJson, std::vector<std::string>& slotsJsonPaths) :
-	stage(stageJson, &selectedLane), loadout(slotsJsonPaths), selectedLane(0){
+	stageRecorder(stageJson["lane_count"]), loadout(slotsJsonPaths), 
+	stage(stageJson, stageRecorder) 
+{
+	partsCountText.setString(std::format("$0/{}", bagCap));
+	partsCountText.setPosition({ 50,50 });
+	bagUpgradeCostText.setString(std::format("${}", bagUpgradeCost));
+	bagUpgradeCostText.setPosition({ 50,700 });
 }
+
+// Reading Inputs
 void StageManager::read_lane_switch_inputs(Key key) {
 	if (key == Key::Up)
 		selectedLane = (selectedLane + 1) % stage.laneCount;
 	else if (key == Key::Down)
 		selectedLane = (selectedLane - 1 + stage.laneCount) % stage.laneCount;
+	stage.selectedLane = selectedLane;
+}
+void StageManager::read_pouch_upgrade_input(Key key) {
+	if (currentBagLevel >= MAX_BAG_LEVEL) return;
+	else if (key == Key::B && try_spend_parts(bagUpgradeCost)) {
+		currentBagLevel++;
+
+		partsPerSecond = (int)std::round(partsPerSecond * 1.1f);
+		bagCap += (int)std::round(baseBagCap * 0.5f);
+		bagUpgradeCost += (int)std::round(baseBagCap * 0.25f);
+
+		bagUpgradeCostText.setString(std::format("${}", bagUpgradeCost));
+	}
 }
 void StageManager::read_spawn_inputs(Key key) {
-	for (int i = 0; i < 10; i++) {
-		if (!loadout.filled_slot(i)) return;
-
-		if (key == numberKeys[i]) {
+	for (int i = 0; i < loadout.filledSlots; i++) {
+		if (key == numberKeys[i] && loadout.slots[i].cooldown <= 0) {
 			selectedLane %= stage.laneCount;
 			Slot& slot = loadout.slots[i];
-			stage.create_unit(selectedLane, &slot.unitStats, &slot.aniMap);
+			if (!try_spend_parts(slot.unitStats.parts)) return;
+			slot.cooldown = slot.spawnTimer;
+
+			if (slot.unitStats.has_augment(DROP_BOX)) 
+				create_drop_box(selectedLane, &slot.unitStats, &slot.aniMap);
+			else
+				stage.create_unit(selectedLane, &slot.unitStats, &slot.aniMap);
+
 			return;
 		}
 	}
@@ -43,8 +70,11 @@ void StageManager::handle_events(sf::Event event) {
 		read_lane_switch_inputs(keyEvent->code);
 		read_spawn_inputs(keyEvent->code);
 		read_base_fire_input(keyEvent->code);
+		read_pouch_upgrade_input(keyEvent->code);
 	}
 }
+
+// Action Objects
 void StageManager::try_spawn_death_surge(Unit& unit) {
 	if (!unit.trigger_augment(unit.stats, DEATH_SURGE)) return;
 	const Augment& augment = unit.stats->get_augment(DEATH_SURGE);
@@ -54,43 +84,59 @@ void StageManager::try_spawn_death_surge(Unit& unit) {
 	else if (unit.stats->quickAugMask & ORBITAL_STRIKE) surgeType = ORBITAL_STRIKE; 
 
 	float distance = augment.value;
-	Augment newSurge(surgeType, distance, 0.f, augment.surgeLevel);
+	Augment newSurge = Augment::surge(surgeType, distance, augment.surgeLevel, 0, unit.hitIndex);
 	stage.create_surge(unit, newSurge);
 }
-void StageManager::try_revive_unit(Unit& unit) {
-	// if they dont have the clone ability, or have be inflicted with code breaker, return
+void StageManager::create_drop_box(int laneInd, const UnitStats* stats, std::array<Animation, 5>* aniMap) {
+	if (!stats->has_augment(DROP_BOX)) return;
+	float percentage = stats->get_augment(DROP_BOX).value;
+	Lane& lane = stage.lanes[laneInd];
+	std::pair<float, float> range = { lane.playerXPos, lane.enemyXPos };
+	float spawnPoint = range.first + (range.second - range.first) * percentage;
+
+	/*
+	std::cout << laneInd << ", lane y - pos: " << lane.yPos << ", lane range: ("
+		<< range.first << " , " << range.second << ") percentage: " << percentage <<
+		"spawnPointX: " << spawnPoint << std::endl;
+		*/
+
+	sf::Vector2f spawnPos = { spawnPoint, lane.yPos };
+	ActionObjConfig config(stage, laneInd, spawnPos);
+	stage.actionObjects.emplace_back(
+		std::make_unique<UnitSpawner>(stats, aniMap, config));
+}
+void StageManager::try_create_cloner(Unit& unit) {
 	if (!unit.has_augment(CLONE) || unit.statuses & CODE_BREAKER) return;
 
-	Unit* newUnit = stage.create_unit(unit.currentLane, unit.stats, unit.get_ani_array());
-	if (newUnit) {
-		int maxHp = unit.stats->maxHp;
-		int newHp = maxHp * unit.stats->get_augment(CLONE).value;
-		newUnit->hp = newHp;
-		for (int i = 1; i <= unit.stats->knockbacks; i++) {
-			int threshold = maxHp - (maxHp * i / unit.stats->knockbacks);
-			if (newHp <= threshold)
-				newUnit->kbIndex = i + 1;
-		}
-		std::cout << "cloned unit, kbIndex = " << newUnit->kbIndex << std::endl;
-
-		newUnit->statuses |= CODE_BREAKER;
-		newUnit->pos = unit.pos;
-		newUnit->start_animation(UnitAnimationState::MOVING);
-	}
+	ActionObjConfig config(stage, unit.currentLane, unit.pos);
+	stage.actionObjects.emplace_back(
+		std::make_unique<UnitSpawner>(unit.stats, unit.get_ani_array(), config));
 }
+
 void StageManager::collect_parts(Unit& unit) {
 	int p = unit.stats->parts;
 	if (unit.statuses & PLUNDER) p *= 2;
-	parts = std::clamp(parts + p, 0, walletCap);
+	gain_parts(p);
+}
+void StageManager::increment_parts(float deltaTime) {
+	partsIncTimer += deltaTime;
+	if (partsIncTimer >= 1.0f) {
+		gain_parts(partsPerSecond);
+		partsIncTimer = 0.0f;
+	}
 }
 void StageManager::handle_enemy_unit_death(Unit& unit) {
-	try_spawn_death_surge(unit);
-	try_revive_unit(unit);
+	if (unit.causeOfDeath != DeathCause::FALLING) {
+		try_spawn_death_surge(unit);
+		try_create_cloner(unit);
+	}
 	collect_parts(unit);
 }
 void StageManager::handle_player_unit_death(Unit& unit) {
-	try_spawn_death_surge(unit);
-	try_revive_unit(unit);
+	if (unit.causeOfDeath != DeathCause::FALLING) {
+		try_spawn_death_surge(unit);
+		try_create_cloner(unit);
+	}
 }
 void StageManager::spawn_enemies(float deltaTime) {
 	timeSinceStart += deltaTime;
@@ -106,11 +152,13 @@ void StageManager::spawn_enemies(float deltaTime) {
 		if (data.currentSpawnIndex >= data.totalSpawns) continue;
 
 		if (timeSinceStart > data.nextSpawnTime) {
-			data.nextSpawnTime += random_float(data.minSpawnDelay, data.maxSpawnDelay);
-			int laneIndex = data.laneToSpawn[data.currentSpawnIndex];
+			data.nextSpawnTime += random_float(data.spawnDelays.first, data.spawnDelays.second);
+			int laneIndex = data.laneSpawnIndexes[data.currentSpawnIndex];
 			stage.create_unit(laneIndex, &data.enemyStats, &data.aniArr);
 
 			data.currentSpawnIndex++;
+			if (data.currentSpawnIndex >= data.totalSpawns && data.infinite)
+				data.currentSpawnIndex = 0;
 		}
 	}
 }
@@ -125,12 +173,11 @@ void StageManager::process_move_requests() {
 
 		if (unit == sourceVec.end() || request.currentLane == request.newLane) {
 			stage.moveRequests.pop_back();
+			std::cout << "ignoring move request" << std::endl;
 			continue;
 		}
-	//	else if (true) {
-//
-	//	}
-		unit->cancel_tweens();
+
+		stage.cancel_tween(unit->id);
 
 		auto& newVec = stage.get_source_vector(request.newLane, unit->stats->team);
 		Unit& movedUnit = newVec.emplace_back(std::move(*unit));
@@ -153,27 +200,8 @@ void StageManager::update_unit_ticks(sf::RenderWindow& window, float deltaTime) 
 	//std::cout << "new update_unit_ticks() call" << std::endl;
 	for (auto& lane : stage.lanes) {
 		lane.draw(window);
-		auto dead_begin = std::ranges::remove_if(lane.playerUnits, [&window, &deltaTime](auto& unit) {
-			unit.tick(window, deltaTime);
-
-			if (unit.dead()) {
-				unit.cancel_tweens();
-				return true;
-			}
-			else return false;
-			});
-	    lane.playerUnits.erase(dead_begin.begin(), dead_begin.end());
-		//lane.playerUnits.erase(dead_begin, lane.playerUnits.end());
-
-		//std::erase_if(lane.playerUnits, [&window, &deltaTime](auto& unit) {
-			//unit.tick(window, deltaTime);
-
-			//return unit.dead();
-		//});
-
-		//lane.playerUnits.erase(dead_begin, lane.playerUnits.end());
+		if (lane.trap) lane.trap->tick(window, deltaTime);
 		for (auto it = lane.enemyUnits.begin(); it != lane.enemyUnits.end();) {
-			std::cout << "enemy tick" << std::endl;
 			if (it->dead()) {
 				handle_enemy_unit_death(*it);
 				it = lane.enemyUnits.erase(it);
@@ -183,30 +211,32 @@ void StageManager::update_unit_ticks(sf::RenderWindow& window, float deltaTime) 
 				++it;
 			}
 		}
-		/*
 		for (auto it = lane.playerUnits.begin(); it != lane.playerUnits.end();) {
 			if (it->dead()) {
-				//handle_player_unit_death(*it);
-				std::cout << "Player Unit #" << it->id << " on Lane " << it->currentLane <<
-					"is DEAD, erasing it from the vector" << std::endl;
+				handle_player_unit_death(*it);
+				//std::cout << "Player Unit #" << it->id << " on Lane " << it->currentLane <<
+				//	"is DEAD, erasing it from the vector" << std::endl;
 				it = lane.playerUnits.erase(it);
-				int dummy = 0;
 			}
 			else {
-				//std::cout << "Unit #" << it->id << " is NOT DEAD, hp: " << it->hp <<
-			//		" - AnimationState: " << (int)it->get_state() << std::endl;
 				it->tick(window, deltaTime);
 				++it;
 			}
 		}
-		*/
 	}
 }
-void StageManager::update_surge_ticks(sf::RenderWindow& window, float deltaTime) {
+void StageManager::update_ptr_ticks(sf::RenderWindow& window, float deltaTime) {
 	for (auto it = stage.surges.begin(); it != stage.surges.end();) {
 		if ((*it)->readyForRemoval) it = stage.surges.erase(it);
 		else {
 			(*it)->tick(window, deltaTime, stage);
+			++it;
+		}
+	}
+	for (auto it = stage.actionObjects.begin(); it != stage.actionObjects.end();) {
+		if ((*it)->readyForRemoval) it = stage.actionObjects.erase(it);
+		else {
+			(*it)->tick(window, deltaTime);
 			++it;
 		}
 	}
@@ -215,9 +245,12 @@ void StageManager::update_base_ticks(sf::RenderWindow& window, float deltaTime) 
 	stage.playerBase.tick(stage, window, deltaTime);
 	stage.enemyBase.tick(stage, window, deltaTime);
 }
+
+// UI
 void StageManager::only_draw(sf::RenderWindow& window) {
 	for (auto& lane : stage.lanes) {
 		lane.draw(window);
+		if (lane.trap) window.draw(lane.trap->sprite);
 		for (auto it = lane.enemyUnits.begin(); it != lane.enemyUnits.end();) {
 			window.draw(it->get_sprite());
 			++it;
@@ -228,10 +261,26 @@ void StageManager::only_draw(sf::RenderWindow& window) {
 		}
 	}
 }
+void StageManager::update_ui(float deltaTime) {
+	for (int i = 0; i < loadout.filledSlots; i++) {
+		loadout.slots[i].cooldown -= deltaTime;
+	}
+}
+void StageManager::draw_ui(sf::RenderWindow& window) {
+	loadout.draw_slots(window, parts);
+
+	partsCountText.setString(std::format("#{}/{}", parts, bagCap));
+	window.draw(partsCountText);
+	window.draw(bagUpgradeCostText);
+}
+
 void StageManager::update_game_ticks(sf::RenderWindow& window, float deltaTime) {
-	//spawn_enemies(deltaTime);
+	spawn_enemies(deltaTime);
 	update_unit_ticks(window, deltaTime); // This is where the erase is called
-	//update_surge_ticks(window, deltaTime);
-	//update_base_ticks(window, deltaTime);
-	//process_move_requests(); // this is where the other erase is called
+	update_ptr_ticks(window, deltaTime);
+	update_base_ticks(window, deltaTime);
+	process_move_requests(); // this is where the other erase is called
+	increment_parts(deltaTime);
+
+	update_and_draw_ui(window, deltaTime);
 }

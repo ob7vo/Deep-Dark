@@ -137,6 +137,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="scripts\systems\Camera.cpp" />
+    <ClCompile Include="scripts\stage\ActionObject.cpp" />
     <ClCompile Include="scripts\stage\BaseCannon.cpp" />
     <ClCompile Include="Deep Dark.cpp" />
     <ClCompile Include="scripts\stage\Base.cpp" />
@@ -148,10 +150,13 @@
     <ClCompile Include="scripts\systems\Loadout.cpp" />
     <ClCompile Include="scripts\systems\StageManager.cpp" />
     <ClCompile Include="scripts\visuals\Animation.cpp" />
+    <ClCompile Include="scripts\stage\Trap.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="scripts\systems\Camera.h" />
+    <ClInclude Include="scripts\stage\ActionObject.h" />
     <ClInclude Include="scripts\stage\BaseCannon.h" />
-    <ClInclude Include="scripts\misc\ActionStates.h" />
+    <ClInclude Include="scripts\misc\UnitEnums.h" />
     <ClInclude Include="scripts\misc\Easing.hpp" />
     <ClInclude Include="scripts\misc\json.hpp" />
     <ClInclude Include="scripts\stage\Base.h" />
@@ -168,9 +173,14 @@
     <ClInclude Include="scripts\systems\StageManager.h" />
     <ClInclude Include="scripts\systems\Tween.h" />
     <ClInclude Include="scripts\visuals\Animation.h" />
+    <ClInclude Include="scripts\stage\Trap.h" />
+    <ClInclude Include="scripts\systems\StageRecord.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="configs\base _data\player_bases\p_wave_base.json" />
+    <None Include="configs\enemy_units\drone\drone.json" />
+    <None Include="configs\enemy_units\mushroom\mushroom.json" />
+    <None Include="configs\player_units\archdemon\archdemon.json" />
     <None Include="data\base data\enemy bases\orbitral base\orbital base.json" />
     <None Include="data\enemy units\droid 2\droid2.json" />
     <None Include="data\stage data\stage 1.json" />

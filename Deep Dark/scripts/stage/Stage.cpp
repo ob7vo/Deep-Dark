@@ -3,18 +3,32 @@
 #include <iostream>
 #include <fstream>
 
-using json = nlohmann::json;
-const float FLOOR = 800;
+const int MAX_SUMMONS = 10;
 
-EnemySpawner::EnemySpawner(const json& jsonFile, float firstSpawnTime, float minDelay,
+using json = nlohmann::json;
+/*float firstSpawnTime, float minDelay,
 	float maxDelay, int totalSpawns, float magnification, std::vector<int> laneIndexes,
-	std::vector<std::pair<float,int>> forcedSpawns = {})
+	bool inf, std::vector<std::pair<float,int>> forcedSpawns = {})
 	: totalSpawns(totalSpawns), minSpawnDelay(minDelay), maxSpawnDelay(maxDelay), forcedSpawnTimes(forcedSpawns),
-	laneToSpawn(laneIndexes), firstSpawnTime(firstSpawnTime), enemyStats(jsonFile, magnification) {
-	Animation::create_unit_animation_array(jsonFile, aniArr);
+	laneToSpawn(laneIndexes), firstSpawnTime(firstSpawnTime), enemyStats(jsonFile, magnification), infinite(inf) */
+EnemySpawner::EnemySpawner(const json& jsonFile, const json& file){
+	totalSpawns = file["total_spawns"];
+	float magnification = file["magnification"];
+	firstSpawnTime = file["first_spawn_time"];
+	spawnDelays = file["spawn_delays"];
+	std::vector<int> laneIndexes = file["lane_indexes"];
+	laneSpawnIndexes = laneIndexes;
+	infinite = file.contains("infinite");
+
+	if (file.contains("forced_spawn_times"))
+		for (auto& forcedTime : file["forced_spawn_times"])
+			forcedSpawnTimes.emplace_back(forcedTime[0], forcedTime[1]);
 	nextSpawnTime = firstSpawnTime;
+
+	Animation::create_unit_animation_array(jsonFile, aniArr);
+	enemyStats = UnitStats(jsonFile, magnification);
 }
-Stage::Stage(const json& stageFile, int* selectedLane) : selectedLane(selectedLane),
+Stage::Stage(const json& stageFile, StageRecord& rec) : recorder(rec),
 	enemyBase(stageFile, -1), playerBase(stageFile, 1)
 {
 	laneCount = stageFile["lane_count"];
@@ -58,33 +72,31 @@ Stage::Stage(const json& stageFile, int* selectedLane) : selectedLane(selectedLa
 				lanes[lane].enemyTeleporter = std::make_unique<Teleporter>(connectedLane, xPos, xDestination, y);
 		}
 	}
+	if (stageFile.contains("traps")) {
+		for (auto& trap : stageFile["traps"]) {
+			int lane = trap["lane"];
+			lanes[lane].trap = std::make_unique<Trap>(lanes[lane], trap);
+		}
+	}
 	for (auto& spawnData : stageFile["enemy_spawns"]) {
 		std::string path = spawnData["json_path"];
 		std::ifstream file(path);
 		json enemyJson = json::parse(file);
 		file.close();
 
-		int totalSpawns = spawnData["total_spawns"];
-		float magnification = spawnData["magnification"];
-		float firstSpawnTime = spawnData["first_spawn_time"];
-		float minSpawnDelay = spawnData["spawn_delays"][0];
-		float maxSpawnDelay = spawnData["spawn_delays"][1];
-		std::vector<int> laneIndexes = spawnData["lane_indexes"];
-
-		std::vector<std::pair<float, int>> forcedSpawnTimes;
-
-		if (spawnData.contains("forced_spawn_times")) 
-			for (auto& forcedTime : spawnData["forced_spawn_times"]) 
-				forcedSpawnTimes.emplace_back(forcedTime[0],forcedTime[1]);
-
-		enemySpawners.emplace_back(enemyJson, firstSpawnTime, minSpawnDelay, maxSpawnDelay, totalSpawns, magnification, laneIndexes, forcedSpawnTimes);
+		enemySpawners.emplace_back(enemyJson, spawnData);
 	}
 }
 MoveRequest::MoveRequest(Unit& unit, int newLane, float fallTo, RequestType type) :
 unitId(unit.id), team(unit.stats->team), currentLane(unit.currentLane),
 newLane(newLane), pos(fallTo), type(type) {}
-// creation
+float ran_num(float min, float max) {
+	static std::minstd_rand gen(std::random_device{}());
+	std::uniform_real_distribution<float> dis(min, max);
+	return dis(gen);
+}
 
+// creation
 Unit* Stage::create_unit(int laneIndex, const UnitStats* unitStats, std::array<Animation, 5>* aniMap) {
 	if (laneIndex < 0 || laneIndex >= lanes.size()) {
 		std::cout << "Lane Index " << laneIndex << " is out of range, cannot spawn Unit" << std::endl;
@@ -99,6 +111,55 @@ Unit* Stage::create_unit(int laneIndex, const UnitStats* unitStats, std::array<A
 
 	return &newVec.emplace_back(this, spawnPos, laneIndex, unitStats, aniMap, nextUnitID++);
 }
+void Stage::try_revive_unit(UnitSpawner* spawner) {
+	// if they dont have the clone ability, or have be inflicted with code breaker, return
+	Unit* newUnit = create_unit(spawner->lane, spawner->stats, spawner->aniMap);
+	if (newUnit) {
+		int maxHp = spawner->stats->maxHp;
+		int newHp = maxHp * spawner->stats->get_augment(CLONE).value;
+		newUnit->hp = newHp;
+		for (int i = 1; i <= spawner->stats->knockbacks; i++) {
+			int threshold = maxHp - (maxHp * i / spawner->stats->knockbacks);
+			if (newHp <= threshold)
+				newUnit->kbIndex = i + 1;
+		}
+		std::cout << "cloned unit, kbIndex = " << newUnit->kbIndex << std::endl;
+
+		newUnit->statuses |= CODE_BREAKER;
+		newUnit->pos = spawner->pos;
+		newUnit->start_animation(UnitAnimationState::MOVING);
+	}
+}
+Summon* Stage::try_create_summon_data(int summonId, float magnification) {
+	if (summonData) 
+		return summonData->count < MAX_SUMMONS ? summonData.get() : nullptr;
+
+	switch (summonId) {
+	case 103:
+		std::ifstream file("configs/enemy_units/slime/slime.json");
+		nlohmann::json unitJson = nlohmann::json::parse(file);
+		summonData = std::make_unique<Summon>(unitJson, magnification);
+		break;
+	}
+	return summonData ? summonData.get() : nullptr;
+}
+void Stage::create_summon(Unit& unit) {
+	Augment salvage = unit.stats->get_augment(SALVAGE);
+	int id = salvage.intValue;
+	Summon* summonData = try_create_summon_data(id, unit.stats->magnification);
+	if (!summonData) return;
+
+	float spawnRange = salvage.value;
+	float newX = ran_num(unit.pos.x - spawnRange, unit.pos.x + spawnRange);
+	sf::Vector2f newPos = { newX, unit.pos.y };
+	Unit* summon = create_unit(unit.currentLane, &summonData->data.stats, &summonData->data.ani);
+	if (summon) {
+		summonData++;
+		summon->pos = newPos;
+		summon->spawnCategory = SpawnCategory::SUMMON;
+	}
+}
+
 // units
 void Stage::create_surge(Unit& unit, const Augment& surge) {
 	int lane = unit.currentLane;
@@ -109,10 +170,11 @@ void Stage::create_surge(Unit& unit, const Augment& surge) {
 		pos.x += surge.value * unit.stats->team;
 
 	create_surge(unit.stats, lane, level, pos, surge.augType);
+	surges.back()->hitIndex = unit.hitIndex;
 }
 // player bases
 void Stage::create_surge(BaseCannon* pCannon, const Augment& surge) {
-	create_surge(&pCannon->cannonStats, *selectedLane, surge.surgeLevel, pCannon->pos, surge.augType);
+	create_surge(&pCannon->cannonStats, selectedLane, surge.surgeLevel, pCannon->pos, surge.augType);
 }
 // enemy bases
 void Stage::create_surge(BaseCannon* eCannon, const Augment& surge, int lane, float distance) {
@@ -123,7 +185,7 @@ void Stage::create_surge(BaseCannon* eCannon, const Augment& surge, int lane, fl
 void Stage::create_surge(const UnitStats* stats, int lane, int level, sf::Vector2f pos, AugmentType aug) {
 	switch (aug) {
 	case AugmentType::SHOCK_WAVE:
-		surges.emplace_back(std::make_unique<ShockWave>(stats, lane, level, pos));
+		surges.emplace_back(std::make_unique<ShockWave>(stats, lane, level, pos, *this));
 		break;
 	case AugmentType::FIRE_WALL:
 		surges.emplace_back(std::make_unique<FireWall>(stats, lane, level, pos));
@@ -146,6 +208,7 @@ std::pair<float, int> Stage::find_lane_to_fall_on(Unit& unit) {
 	}
 
 	unit.hp = -100;
+	unit.causeOfDeath = DeathCause::FALLING;
 	return { newY, unit.currentLane };
 }
 int Stage::find_lane_to_knock_to(Unit& unit, int inc) {

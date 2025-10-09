@@ -6,24 +6,14 @@
 #include "ButtonManager.h"
 #include "Tween.h"
 #include "json.hpp"
+#include "Camera.h"
 using json = nlohmann::json;
 
 const float MAX_DELTA_TIME = 0.033f;
 const int ASPECT_WIDTH = 900;
-const int ASPECT_HEIGHT = 750;
+const int ASPECT_HEIGHT = 800;
 sf::Vector2f SPEED(0.2f,0.2f);
-sf::Vector2f pos(20.f, 50.f);
 
-void get_posiion() {
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
-        pos.y -= SPEED.y;
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
-        pos.x -= SPEED.x;
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
-        pos.y += SPEED.y;
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
-        pos.x += SPEED.x;
-}
 void print_unit_stats(const Unit& unit) {
    // printf("hp: %d\n", unit.hp);
    // printf("dmg: %d\n", unit.dmg);
@@ -37,7 +27,8 @@ int main()
 {
     sf::Clock clock;
     sf::RenderWindow window(sf::VideoMode({ ASPECT_WIDTH, ASPECT_WIDTH }), "SFML works!");
-    sf::View view = window.getDefaultView();
+    Camera cam(100.0f);
+    cam.view = window.getDefaultView();
 
     Surge::init_animations();
     BaseCannon::init_animations();
@@ -80,14 +71,9 @@ int main()
                 window.close();
             else if (auto size = event->getIf<sf::Event::Resized>()) {
                 // Update the view to the new size
-                sf::Vector2f windowSize(size->size);
-
-                int x = size->size.x / ASPECT_WIDTH;
-                int y = size->size.y / ASPECT_HEIGHT;
-                int scale = std::min(x, y);
-
-                view.setSize(windowSize);
-                window.setView(view);
+     //         cam.view.setSize(sf::Vector2f(size->size));
+     //         window.setView(cam.view);
+                window.setView(cam.get_view(size->size));
             }
             else if (event->is<sf::Event::MouseButtonPressed>())
                 buttonManager.register_click(mousePos);
@@ -97,7 +83,6 @@ int main()
         deltaTime = std::min(deltaTime, MAX_DELTA_TIME);
 
         window.clear();
-        Tween::updateAll(deltaTime);
         stageManager.update_game_ticks(window, deltaTime);
       //  buttonManager.tick(window, mousePos);
         window.display();

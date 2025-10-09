@@ -1,5 +1,6 @@
 #pragma once
 #include "Teleporter.h"
+#include "Trap.h"
 #include "Unit.h"
 #include <memory>
 #include <vector>
@@ -20,14 +21,16 @@ struct Lane {
 	std::vector<Unit> enemyUnits;
 	std::unique_ptr<Teleporter> enemyTeleporter = nullptr;
 	std::unique_ptr<Teleporter> playerTeleporter = nullptr;
+	std::unique_ptr<Trap> trap = nullptr;
 
 	Lane(float eX, float pX, float y, std::vector<std::pair<float, float>> gaps, int index)
 		: enemyXPos(eX), playerXPos(pX), yPos(y), laneIndex(index), gaps(gaps), floor({ eX-pX,7.5f })
 	{
+		gapsShapes.reserve(gaps.size());
+		gaps.reserve(gaps.size() + 1);
 		setShapes();
 		playerUnits.reserve(RESERVED_UNITS);
 		enemyUnits.reserve(RESERVED_UNITS);
-		gapsShapes.reserve(gaps.size());
 	}
 
 	inline void setShapes() {
@@ -44,6 +47,13 @@ struct Lane {
 			gapsShapes.back().setPosition({ x, yPos });
 		}
 	//	float X = gap.x + (gap.y - gap.x) * .5f;
+	}
+	inline void add_shape(std::pair<float,float> gap) {
+		sf::Vector2f size({ (gap.second - gap.first),7.5f });
+		gapsShapes.emplace_back(size);
+		float x = gap.first + size.x * .5f;
+		gapsShapes.back().setOrigin({ size.x * .5f, 0.f });
+		gapsShapes.back().setPosition({ x, yPos });
 	}
 	Teleporter* get_teleporter(int team) {
 		return team == 1 ? playerTeleporter.get() : enemyTeleporter.get();

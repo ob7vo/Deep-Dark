@@ -48,6 +48,15 @@
     <ClCompile Include="scripts\stage\BaseCannon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="scripts\stage\Trap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scripts\stage\ActionObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scripts\systems\Camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="scripts\systems\StageManager.h">
@@ -92,7 +101,7 @@
     <ClInclude Include="scripts\stage\UnitData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="scripts\misc\ActionStates.h">
+    <ClInclude Include="scripts\misc\UnitEnums.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="scripts\misc\Easing.hpp">
@@ -104,11 +113,26 @@
     <ClInclude Include="scripts\stage\BaseCannon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="scripts\stage\Trap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scripts\stage\ActionObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scripts\systems\StageRecord.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scripts\systems\Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="data\stage data\stage 1.json" />
     <None Include="data\enemy units\droid 2\droid2.json" />
     <None Include="data\base data\enemy bases\orbitral base\orbital base.json" />
     <None Include="configs\base _data\player_bases\p_wave_base.json" />
+    <None Include="configs\enemy_units\mushroom\mushroom.json" />
+    <None Include="configs\enemy_units\drone\drone.json" />
+    <None Include="configs\player_units\archdemon\archdemon.json" />
   </ItemGroup>
 </Project>

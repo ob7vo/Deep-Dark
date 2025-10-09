@@ -1,0 +1,75 @@
+{
+  "unit_id": 1,
+  "name": "archdemon",
+  "path": "configs/player_units/archdemon/",
+  "slot_sprite": "archdemon_slot.png",
+  "level": 1,
+  "team": 1,
+  "parts_cost": 7,
+  "recharge_timer": 2.0,
+  "single_target": false,
+  "stats": {
+    "hp": 100,
+    "knockbacks": 4,
+    "speed": 40,
+    "attack_time": 1.5,
+    "sight_range": 100.0,
+    "lane_sight": [ 1, 0 ],
+    "hits": [
+      {
+        "dmg": 25,
+        "attack_range": [ 0, 100.0 ]
+      },
+      {
+        "dmg": 1,
+        "attack_range": [ 0, 175.0 ]
+      }
+    ]
+
+  },
+  "animations": {
+    "move": {
+      "texture": "ad_MOVE.png",
+      "texture_size": [ 768, 128 ],
+      "cell_size": [ 128, 128 ],
+      "frames": 6,
+      "fps": 6
+    },
+    "idle": {
+      "texture": "ad_MOVE.png",
+      "texture_size": [ 768, 128 ],
+      "cell_size": [ 128, 128 ],
+      "frames": 6,
+      "fps": 3
+    },
+    "knockback": {
+      "texture": "ad_HURT.png",
+      "texture_size": [ 512, 128 ],
+      "cell_size": [ 128, 128 ],
+      "frames": 4
+    },
+    "attack": {
+      "texture": "ad_ATTACK.png",
+      "texture_size": [ 3840, 128 ],
+      "cell_size": [ 256, 128 ],
+      "attack_frames": [ 10, 12 ],
+      "frames": 15,
+      "fps": 10
+    },
+    "falling": {
+      "texture": "ad_FALL.png",
+      "texture_size": [ 1024, 128 ],
+      "cell_size": [ 128, 128 ],
+      "frames": 8
+    }
+  },
+  "augments": [
+    {
+      "augment": "terminate",
+      "value": 0.4
+    }
+  ],
+  "types": [ "rusted", "ancient" ],
+  "target_types": [ "all" ],
+  "quick_augment_masks": [ "bully" ]
+}

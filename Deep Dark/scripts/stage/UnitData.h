@@ -1,5 +1,5 @@
 #pragma once
-#include "ActionStates.h"
+#include "UnitEnums.h"
 #include "Animation.h"
 #include <iostream>
 #include <memory>
@@ -8,27 +8,37 @@ const int TEAM_PLAYER = 1;
 const int TEAM_ENEMY = -1;
 const float GUARANTEED_CHANCE = 100.0f;
 
+struct Hit {
+	int dmg = 0;
+	std::pair<int, int> laneReach;
+	std::pair<float, float> attackRange;
+
+	Hit(int dmg, std::pair<int, int> laneReach = {}, std::pair<float, float> attackRange = {}) :
+		dmg(dmg), laneReach(laneReach), attackRange(attackRange) { }
+};
+
 struct UnitStats {
+	int unitId = 0;
+	float magnification = 1.f;
+
 	int team = 0;
 	int parts = 0;
 
 	int maxHp = 0;
 	int knockbacks = 0;
-	int dmg = 0;
 	float speed = 0;
 	float attackTime = 0;
 
+	std::vector<Hit> hits;
+	int totalHits = 1;
 	float sightRange = 0;
-	float maxAttackRange = 0;
-	float minAttackRange = 0;
-	int minLaneReach = 0;
-	int maxLaneReach = 0;
+	std::pair<int, int> laneSight;
 	bool singleTarget = 0;
 
 	int unitTypes = 0;
 	int targetTypes = 0;
-	int immunities = 0;
-	int quickAugMask = 0;
+	size_t immunities = 0;
+	size_t quickAugMask = 0;
 	std::vector<Augment> augments;	
 
 	std::unique_ptr<Animation> specialAnimation = nullptr;
@@ -63,6 +73,7 @@ struct UnitStats {
 			{"overload", AugmentType::OVERLOAD},
 			{"weaken", AugmentType::WEAKEN},
 			{"blind", AugmentType::BLIND},
+			{"corrode", AugmentType::CORRODE},
 			{"short_circuit", AugmentType::SHORT_CIRCUIT},
 			{"virus", AugmentType::VIRUS},
 			{"breaker", AugmentType::BREAKER},
@@ -88,7 +99,14 @@ struct UnitStats {
 			{"clone", AugmentType::CLONE},
 			{"code_breaker", AugmentType::CODE_BREAKER},
 			{"leap", AugmentType::LEAP},
-			{"jump", AugmentType::JUMP}
+			{"jump", AugmentType::JUMP},
+			{"drop_box", AugmentType::DROP_BOX},
+			{"warp", AugmentType::WARP},
+			{"terminate", AugmentType::TERMINATE},
+			{"lightweight", AugmentType::LIGHTWEIGHT},
+			{"heavyweight", AugmentType::HEAVYWEIGHT},
+			{"bully", AugmentType::BULLY},
+			{"salvage", AugmentType::SALVAGE}
 		};
 
 		auto it = augmentMap.find(str);
@@ -98,16 +116,21 @@ struct UnitStats {
 
 	UnitStats() : augments{} {}
 	UnitStats(const nlohmann::json& file, float magnification) : augments{} {
+		std::pair<int, int> baseRange = { 0,0 };
+
 		if (file["animations"].contains("special")) {
 			bool loops = file["animations"]["special"].value("loops", true);
 			specialAnimation = std::make_unique<Animation>(Animation::create_unit_animation(file, "special", loops));
-			std::cout << "creating special animation. Address: " << specialAnimation << std::endl;
+			//std::cout << "creating special animation. Address: " << specialAnimation << std::endl;
 		}
 
+		this->magnification = magnification;
+		unitId = file["unit_id"];
 		team = file["team"];	
 		if (team == TEAM_PLAYER) parts = file["parts_cost"];
 		else parts = file["parts_dropped"];
-		unitTypes = targetTypes = immunities = quickAugMask = 0;
+		unitTypes = targetTypes = 0;
+		immunities = quickAugMask = 0;
 		unitTypes |= UnitType::ALL;
 		augments.reserve(3);
 
@@ -129,42 +152,67 @@ struct UnitStats {
 				if (augType == NONE) continue;
 				quickAugMask |= augType;
 
-				float value = aug.value("value", 0.0f);
+				float val = aug.value("value", 0.0f);
+				float val2 = aug.value("value2", 0.0f);
 				float percentage = aug.value("percentage", 0.0f);
-				int lvl = aug.value("surge_level", 1);
 
-				augments.emplace_back(augType, value, percentage, lvl);
+				int activeHits = ALL_HITS;
+				if (aug.contains("active_hits")) {
+					activeHits = 0;
+					for (int i : aug["active_hits"])
+						activeHits |= i;
+				}
+
+				int lvl = aug.value("surge_level", 1);
+				lvl = aug.value("int_value", lvl);
+
+				augments.emplace_back(augType, val, val2, percentage, activeHits, lvl);
 			}
 		}
 
 		maxHp = static_cast<int>(file["stats"]["hp"] * magnification);
-		dmg = static_cast<int>(file["stats"]["dmg"] * magnification);
 		knockbacks = static_cast<int>(file["stats"]["knockbacks"]);
 		speed = file["stats"]["speed"];
 		attackTime = file["stats"]["attack_time"];
 		sightRange = file["stats"]["sight_range"];
-		maxAttackRange = file["stats"]["max_attack_range"];
-		minAttackRange = file["stats"]["min_attack_range"];
-		minLaneReach = file["stats"]["min_lane_reach"];
-		maxLaneReach = file["stats"]["max_lane_reach"];
+		laneSight = file["stats"].value("lane_sight", baseRange);
 		singleTarget = file["single_target"];
 		parts = file.value("parts", 0);
+
+		if (!file["stats"].contains("hits")) {
+			int dmg = file["stats"]["dmg"];
+			std::pair<int, int> laneReach = file["stats"].value("lane_reach", baseRange);
+			std::pair<float, float> attackRange = file["stats"]["attack_range"];
+			hits.emplace_back(dmg, laneReach, attackRange);
+		}
+		else {
+			for (auto& hit : file["stats"]["hits"]) {
+				int dmg = dmg = static_cast<int>(hit["dmg"] * magnification);
+				std::pair<int, int> laneReach = hit.value("lane_reach", baseRange);
+				std::pair<float, float> attackRange = hit["attack_range"];
+				hits.emplace_back(dmg, laneReach, attackRange);
+			}
+			totalHits = hits.size();
+		}
 	}
 	static UnitStats create_cannon(const nlohmann::json& baseFile, float magnification) {
 		UnitStats stats;
+		stats.magnification = magnification;
 		stats.team = baseFile["team"];
 		stats.targetTypes = convert_string_to_type(baseFile["target_type"]);
-		stats.dmg = static_cast<int>(std::round(baseFile.value("dmg", 1) * magnification));
+		int dmg = static_cast<int>(std::round(baseFile.value("dmg", 1) * magnification));
+		stats.hits.emplace_back(dmg);
 
 		if (baseFile.contains("augment")) {
 			AugmentType aug = convert_string_to_augment(baseFile["augment"]["augment_type"]);
 			float procTime = baseFile["augment"].value("status_time", 1.f);
-			stats.augments.emplace_back(aug, procTime, GUARANTEED_CHANCE);
+			stats.augments.emplace_back(Augment::status(aug, procTime));
 		}
 
 		return stats;
 	}
 
+	inline const Hit& get_hit_stats(int hitIndex) const { return hits[hitIndex]; }
 	inline bool rusted_tyoe() const { return unitTypes & UnitType::RUSTED; }
 	inline bool ancient_type() const { return unitTypes & UnitType::ANCIENT; }
 	inline bool floating_type() const { return unitTypes & UnitType::FLOATING; }
@@ -182,4 +230,16 @@ struct UnitStats {
 		return {};
 	}
 };
-
+struct UnitData {
+	UnitStats stats;
+	std::array<Animation, 5> ani;
+	UnitData(const nlohmann::json& file, float mag) :
+		stats(file, mag) {
+		Animation::create_unit_animation_array(file, ani);
+	}
+};
+struct Summon {
+	int count = 0;
+	UnitData data;
+	Summon(const nlohmann::json& file, float mag) : data(file, mag) {}
+};
