@@ -5,8 +5,8 @@ stage(config.stage), lane(config.lane), pos(config.pos) {
 }
 UnitSpawner::UnitSpawner(const UnitStats* stats, std::array<Animation, 5>* aniMap, ActionObjConfig& config) :
 	ActionObject(config), stats(stats), aniMap(aniMap) {
-	std::cout << "created unit spawner, pos(" << pos.x << " , " << pos.y
-		<< ")" << std::endl;
+	//std::cout << "created unit spawner, pos(" << pos.x << " , " << pos.y
+		//<< ")" << std::endl;
 	create_animation();
 }
 SurgeSpawner::SurgeSpawner(const UnitStats* stats, const Augment surge, ActionObjConfig& config) :

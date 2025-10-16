@@ -65,14 +65,16 @@ const enum AugmentType : size_t {
 	LIGHTWEIGHT = 1ULL << 34, // Gets knockedback 1.5x farther
 	HEAVYWEIGHT = 1ULL << 35, // Gets knockedback .7x farther (or SHORTER i guess, can't be launched
 	BULLY = 1ULL << 36, // Knocksback enemies 1.5x farther
-	SALVAGE = 1ULL << 37 // Killing an enemy will summon a Unit
+	SALVAGE = 1ULL << 37, // Killing an enemy will summon a Unit
+	SELF_DESTRUCT = 1ULL << 38 // Units dies after attacking
 };
 enum class DeathCause {
 	NONE = 0,
 	UNIT,
 	SURGE,
 	FALLING,
-	TRAP
+	TRAP,
+	CANNON,
 };
 const enum UnitType { // comments depict the Types common builds
 	NULL_TYPE = 0,

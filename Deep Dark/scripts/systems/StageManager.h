@@ -1,6 +1,8 @@
 #pragma once
 #include "Stage.h"
 #include "Loadout.h"
+#include "Camera.h" 
+#include "Observer.h"
 #include <iostream>
 using Key = sf::Keyboard::Key;
 
@@ -20,26 +22,27 @@ const int MAX_BAG_LEVEL = 5;
 const int BAG_UPGRADE_PORTION = 4;
 const int BASE_BAG_COST = 4;
 
-struct SMConstructor {
-	//sf::Font partsFont;
-//	SMConstructor() {partsFont.}
-}; 
 const sf::Font baseFont("fonts/KOMIKAX_.ttf");
 
 struct StageManager
 {
+	Camera* cam = nullptr;
 	Loadout loadout;
 	Stage stage;
 	StageRecord stageRecorder;
 
+	std::vector<Challenge> challenges;
+	int clearedChallenges = 0;
+
 	sf::Text partsCountText = sf::Text(baseFont);
 	sf::Text bagUpgradeCostText = sf::Text(baseFont);
-	
+	sf::Text clearedChallengesText = sf::Text(baseFont);
+
 	float timeSinceStart = 0.f;
 	int selectedLane = 0;
 
 	int parts = 0; // currency
-	int partsPerSecond = 25;
+	int partsPerSecond = 5;
 	int currentBagLevel = 1;
 	int bagUpgradeCost = 4;
 	int baseBagUpgradeCost = 4;
@@ -51,20 +54,20 @@ struct StageManager
 	void update_game_ticks(sf::RenderWindow& window, float deltaTime);
 	void process_move_requests();
 	void spawn_enemies(float deltaTime);
-	void increment_parts(float deltaTime);
+	void increment_parts_and_notify(float deltaTime);
 	void update_unit_ticks(sf::RenderWindow& window, float deltaTime);
 	void update_ptr_ticks(sf::RenderWindow& window, float deltaTime);
 	void update_base_ticks(sf::RenderWindow& window, float deltaTime);
 
 	void only_draw(sf::RenderWindow& window);
 	void update_ui(float deltaTime);
-	void draw_ui(sf::RenderWindow& window);
+	void draw_ui();
 
 	void handle_events(sf::Event event);
-	void read_lane_switch_inputs(Key key);
-	void read_spawn_inputs(Key key);
-	void read_base_fire_input(Key key);
-	void read_pouch_upgrade_input(Key key);
+	bool read_lane_switch_inputs(Key key);
+	bool read_spawn_inputs(Key key);
+	bool read_base_fire_input(Key key);
+	bool read_pouch_upgrade_input(Key key);
 
 	void try_spawn_death_surge(Unit& unit);
 	void create_drop_box(int lane, const UnitStats* stats, std::array<Animation, 5>* aniMap);
@@ -73,21 +76,34 @@ struct StageManager
 	void handle_enemy_unit_death(Unit& unit);
 	void handle_player_unit_death(Unit& unit);
 
-	inline void update_and_draw_ui(sf::RenderWindow& window, float deltaTime) {
+	inline void update_and_draw_ui(float deltaTime) {
 		update_ui(deltaTime); 
-		draw_ui(window);
+		draw_ui();
 	}
 	inline void printy() { std::cout << selectedLane << std::endl; }
 	inline bool try_spend_parts(int partsToSpend) {
 		if (parts < partsToSpend) return false;
 
 		parts = std::max(parts - partsToSpend, 0);
-		stageRecorder.partsSpent += partsToSpend;
+		stageRecorder.add_parts_spent(partsToSpend);
 		return true;
 	}
 	inline void gain_parts(int partsToGain) {
 		parts = std::min(parts + partsToGain, bagCap);
-		stageRecorder.partsEarned += partsToGain;
+		stageRecorder.add_parts_earned(partsToGain);
+	}
+	inline void notify_challenges() {
+		int clears = 0;
+		for (auto& challenge : challenges) {
+			challenge.cleared = challenge.notify(*this);
+			if (challenge.cleared) clears++;
+		}
+
+		if (clears != clearedChallenges) {
+			clearedChallenges = clears;
+			clearedChallengesText.setString(std::format("Challenges Cleared: {}/{}",
+				clearedChallenges, challenges.size()));
+		}
 	}
 };
 

@@ -43,7 +43,9 @@ Animation::Animation(std::string spritePath, int frameCount, float rate, int tex
 
     for (int i = 0; i < events.size(); i++)
         frames[events[i].first].eventsMask |= events[i].second;
+   // std::cout << frames.size() <<" - events.size(): " << events.size() << std::endl;
     frames[0].eventsMask |= AnimationEvent::FIRST_FRAME;
+  //  std::cout << frameCount << std::endl;
     frames[frameCount - 1].eventsMask |= AnimationEvent::FINAL_FRAME;
 };
 int Animation::update(float deltaTime, sf::Sprite& sprite) {

@@ -106,7 +106,8 @@ struct UnitStats {
 			{"lightweight", AugmentType::LIGHTWEIGHT},
 			{"heavyweight", AugmentType::HEAVYWEIGHT},
 			{"bully", AugmentType::BULLY},
-			{"salvage", AugmentType::SALVAGE}
+			{"salvage", AugmentType::SALVAGE},
+			{"self_destruct", AugmentType::SELF_DESTRUCT}
 		};
 
 		auto it = augmentMap.find(str);
@@ -177,7 +178,7 @@ struct UnitStats {
 		sightRange = file["stats"]["sight_range"];
 		laneSight = file["stats"].value("lane_sight", baseRange);
 		singleTarget = file["single_target"];
-		parts = file.value("parts", 0);
+		parts = get_parts_value(file);
 
 		if (!file["stats"].contains("hits")) {
 			int dmg = file["stats"]["dmg"];
@@ -192,8 +193,9 @@ struct UnitStats {
 				std::pair<float, float> attackRange = hit["attack_range"];
 				hits.emplace_back(dmg, laneReach, attackRange);
 			}
-			totalHits = hits.size();
+			totalHits = (int)hits.size();
 		}
+		//std::cout << totalHits << std::endl;
 	}
 	static UnitStats create_cannon(const nlohmann::json& baseFile, float magnification) {
 		UnitStats stats;
@@ -228,6 +230,12 @@ struct UnitStats {
 			if (augment.augType == aug) return augment;
 
 		return {};
+	}
+	inline int get_parts_value(const nlohmann::json& json) {
+		int p = json.value("parts_dropped", 0);
+		p = json.value("parts_cost", p);
+		p = json.value("parts", p);
+		return p;
 	}
 };
 struct UnitData {

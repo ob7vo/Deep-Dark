@@ -1,5 +1,7 @@
 #include "Trap.h"
 #include "Lane.h"
+#include "StageRecord.h"
+
 const float PROC_CHANCE = 100.f;
 Trap::Trap(Lane& lane, const nlohmann::json& trap) : sprite(Animation::def_texture()), 
 lane(lane){
@@ -41,7 +43,7 @@ bool Trap::enemy_in_trigger_range() {
 			return true;
 	return false;
 }
-void Trap::tick(sf::RenderWindow& window, float deltaTime) {
+void Trap::tick(sf::RenderWindow& window, float deltaTime, StageRecord& rec) {
 	if (animating) {
 		int events = ani.update(deltaTime, sprite);
 		if (Animation::check_for_event(AnimationEvent::FINAL_FRAME, events)) {
@@ -49,9 +51,8 @@ void Trap::tick(sf::RenderWindow& window, float deltaTime) {
 			animating = false;
 			ani.reset(sprite);
 		}
-		if (Animation::check_for_event(AnimationEvent::TRIGGER, events)) {
-			trigger();
-		}
+		if (Animation::check_for_event(AnimationEvent::TRIGGER, events))
+			trigger(rec);
 	}
 
 	window.draw(sprite);
@@ -63,7 +64,9 @@ void Trap::tick(sf::RenderWindow& window, float deltaTime) {
 		ani.reset(sprite);
 	}
 }
-void Trap::trigger() {
+void Trap::trigger(StageRecord& rec) {
+	rec.add_trap_trigger();
+
 	switch (trapType) {
 	case TrapType::LAUNCH_PAD:
 		trigger_launch_pad();

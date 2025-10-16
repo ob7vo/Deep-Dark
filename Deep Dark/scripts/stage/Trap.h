@@ -14,6 +14,7 @@ enum class TrapType {
 struct Lane;
 class Unit;
 struct Stage;
+struct StageRecord;
 
 struct Trap
 {
@@ -38,8 +39,8 @@ struct Trap
 	virtual ~Trap() = default;
 
 	bool enemy_in_trigger_range();
-	void tick(sf::RenderWindow& window, float deltaTime);
-	void trigger();
+	void tick(sf::RenderWindow& window, float deltaTime, StageRecord& rec);
+	void trigger(StageRecord& rec);
 	void trigger_launch_pad();
 	void trigger_trap_door();
 	void trigger_attack();

@@ -5,18 +5,18 @@
   "slot_sprite": "soldier_slot.png",
   "level": 1,
   "team": 1,
-  "parts_cost": 3,
+  "parts_cost": 25,
   "recharge_timer": 3.0,
   "single_target": false,
   "stats": {
-    "hp": 8,
-    "knockbacks": 2,
-    "dmg": 15,
+    "hp": 30,
+    "knockbacks": 1,
+    "dmg": 5,
     "speed": 68.5,
     "attack_time": 0.5,
     "sight_range": 100.0,
     "attack_range": [-20, 250],
-    "lane_reach": [ 1, 0 ],
+    "lane_reach": [ -1, 0 ],
     "lane_sight": [ 1, 0 ]
   },
   "animations": {
@@ -67,13 +67,9 @@
     {
       "augment": "shock_wave",
       "value": 80.0,
-      "percentage": 100.0,
+      "percentage": 1.0,
       "surge_level": 3
-    },
-    {
-      "augment": "clone",
-      "value": 0.5
-    }
+    } 
   ],
   "types": [ "typeless" ],
   "target_types": [ "nano" ],

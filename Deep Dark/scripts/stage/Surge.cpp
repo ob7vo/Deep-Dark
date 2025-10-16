@@ -84,10 +84,10 @@ int OrbitalStrike::draw(sf::RenderWindow& window, float deltaTime) {
 bool in_surge_range(float enemyXPos, float xPos, float range){ 
 	return enemyXPos >= xPos - range && enemyXPos <= xPos + range;
 }
-bool Surge::try_terminate_unit(Unit& enemyUnit) {
+bool Surge::try_terminate_unit(Unit& enemyUnit, int dmg) {
 	if (!stats->has_augment(TERMINATE)) return false;
 	float threshold = stats->get_augment(TERMINATE).value;
-	float curHpPercent = enemyUnit.hp / enemyUnit.stats->maxHp;
+	float curHpPercent = (float)(enemyUnit.hp - dmg) / enemyUnit.stats->maxHp;
 
 	return curHpPercent <= threshold;
 }

@@ -50,7 +50,7 @@ struct Surge
 
 	void attack_units(Lane& enemyUnits);
 	void on_kill(Unit& enemyUnit);
-	bool try_terminate_unit(Unit& enemyUnit);
+	bool try_terminate_unit(Unit& enemyUnit, int dmg = 0);
 	virtual void tick(sf::RenderWindow& window, float deltaTime, Stage& stage) = 0;
 	virtual int draw(sf::RenderWindow& window, float deltaTime) = 0;
 	virtual void start_animation(SurgeAnimationStates newState) {};

@@ -14,27 +14,27 @@ struct Surge;
 class Unit {
 private:
 	Stage* stage; // Current Stage
-	float attackCooldown;
-	UnitAnimationState animationState;
+	float attackCooldown = 0;
+	UnitAnimationState animationState = UnitAnimationState::MOVING;
 
-	float aniTime;
-	int currentFrame;
+	float aniTime = 0.f;
+	int currentFrame = 0;
 	std::array<Animation, 5>* aniMap; // Owned by Enemy Spawners and Loadout slots
 	sf::Sprite sprite;
 
 public:
 	const UnitStats* stats; // Owned by Enemy Spawners and Loadout slots
-	int hp, shieldHp;
-	int hitIndex;
-	int kbIndex;
+	int hp = 0, shieldHp = 0;
+	int hitIndex = 0;
+	int kbIndex = 0;
 	int id = -1;
-	int currentLane;
+	int currentLane = 0;
 	sf::Vector2f pos;
 	std::vector<StatusEffect> activeStatuses;
 
 	sf::RectangleShape marker;
 
-	size_t statuses;
+	size_t statuses = 0;
 	DeathCause causeOfDeath = DeathCause::NONE;
 	SpawnCategory spawnCategory = SpawnCategory::NORMAL;
 
@@ -48,6 +48,9 @@ public:
 		else 
 			std::cout << "UNIT DIED, ID: " << id << " - at address: " << this << std::endl;
 	} 
+
+	using StateFunc = void (Unit::*)(sf::RenderWindow&, float);
+	static const std::unordered_map<UnitAnimationState, StateFunc> stateMap;
 	bool move_req_check();
 	void destroy_unit();
 	bool tweening();
@@ -60,7 +63,7 @@ public:
 	bool over_gap() const;
 	bool try_proc_augment(const std::vector<Augment>& augments, AugmentType target, int hits = 0);
 	bool rust_type_and_near_gap();
-	bool try_terminate_unit(Unit& enemyUnit);
+	bool try_terminate_unit(Unit& enemyUnit, int dmg = 0);
 
 	void attack();
 	void knockback(float force = 1.f);
@@ -105,7 +108,7 @@ public:
 	void is_phasing_state(sf::RenderWindow& window, float deltaTime);
 	void waiting_state(sf::RenderWindow& window, float deltaTime);
 
-	void try_knockback(int oldHp, const UnitStats* enemyStats);
+	void try_knockback(int oldHp, int hitIndex, const UnitStats* enemyStats);
 	void push_fall_request();
 	void push_squash_request();
 	void push_launch_request();
@@ -169,3 +172,4 @@ public:
 		return defaultTex;
 	}
 };
+

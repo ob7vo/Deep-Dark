@@ -1,0 +1,65 @@
+{
+  "unit_id": 103,
+  "level": 1,
+  "name": "drone",
+  "path": "configs/enemy_units/drone/",
+  "team": -1,
+  "parts_dropped": 2,
+  "single_target": false,
+  "stats": {
+    "hp": 500,
+    "knockbacks": 1,
+    "speed": 50.0,
+    "attack_time": 0.1,
+    "sight_range": 50.0,
+    "dmg": 50,
+    "attack_range": [ -250.0, 350.0 ],
+    "lane_reach": [-1, 1]
+  },
+  "animations": {
+    "move": {
+      "texture": "dr_MOVE.png",
+      "texture_size": [ 320, 32 ],
+      "cell_size": [ 32, 32 ],
+      "frames": 10,
+      "fps": 6
+    },
+    "idle": {
+      "texture": "dr_IDLE.png",
+      "texture_size": [ 256, 32 ],
+      "cell_size": [ 32, 32 ],
+      "frames": 8,
+      "fps": 6
+    },
+    "knockback": {
+      "texture": "dr_HURT.png",
+      "texture_size": [ 128, 32 ],
+      "cell_size": [ 32, 32 ],
+      "frames": 4
+    },
+    "attack": {
+      "texture": "dr_ATTACK.png",
+      "texture_size": [ 384, 32 ],
+      "cell_size": [ 32, 32 ],
+      "attack_frames": [ 8 ],
+      "frames": 12,
+      "fps": 6
+    },
+    "falling": {
+      "texture": "dr_IDLE.png",
+      "texture_size": [ 256, 32 ],
+      "cell_size": [ 32, 32 ],
+      "frames": 8
+    }
+  },
+  "augments": [
+    {
+      "augment": "overload",
+      "value": 5.0,
+      "percentage": 100.0
+    }
+  ],
+  "types": [ "nano", "floating" ],
+  "target_types": [ "all" ],
+  "quick_augment_masks": [ "bully", "self_destruct" ]
+}

@@ -67,7 +67,7 @@ struct Stage
 	std::vector<std::unique_ptr<ActionObject>> actionObjects;
 
 	std::unordered_map<int, UnitTween> unitTweens;
-	std::unique_ptr<Summon> summonData;
+	std::unique_ptr<Summon> summonData = nullptr;
 
 	Base enemyBase;
 	Base playerBase;

@@ -12,7 +12,8 @@ struct Teleporter {
 	Teleporter(int lane, float xPos, float xDestination, float y)
 		: connectedLane(lane), xPos(xPos), xDestination(xDestination), shape({15.f,7.5f}), yPos(y) {
 		shape.setOrigin({ 7.5f, 7.5f });
-		shape.setFillColor(sf::Color::Cyan);
+		shape.setPosition({ xPos, y });
+		shape.setFillColor(sf::Color::Magenta);
 	}
 	inline bool check_if_on_teleporter(float x, float y) {
 		return (x >= xPos - TELEPORTER_AREA && x <= xPos + TELEPORTER_AREA) &&

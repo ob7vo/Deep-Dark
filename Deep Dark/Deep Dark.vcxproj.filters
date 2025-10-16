@@ -21,13 +21,10 @@
     <ClCompile Include="scripts\systems\StageManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="scripts\systems\Button.cpp">
+    <ClCompile Include="scripts\visuals\Button.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="scripts\systems\ButtonManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="scripts\systems\Loadout.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="scripts\visuals\Animation.cpp">
@@ -57,12 +54,15 @@
     <ClCompile Include="scripts\systems\Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="scripts\systems\Observer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="scripts\systems\StageManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="scripts\systems\Button.h">
+    <ClInclude Include="scripts\visuals\Button.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="scripts\systems\ButtonManager.h">
@@ -123,6 +123,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="scripts\systems\Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scripts\misc\Bounds.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scripts\misc\ChallengeTypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scripts\systems\Observer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

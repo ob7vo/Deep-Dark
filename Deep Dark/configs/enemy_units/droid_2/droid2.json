@@ -76,12 +76,10 @@
     },
     {
       "augment": "shield",
-      "value": 60.0
-    },
-    {
-      "augment": "heavyweight"
+      "int_value": 60.0
     }
   ],
   "types": [ "nano", "floating" ],
-  "target_types": [ "typeless" ]
+  "target_types": [ "typeless" ],
+  "quick_augment_masks": [ "heavyweight", "bully" ]
 }

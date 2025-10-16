@@ -22,7 +22,7 @@ EnemySpawner::EnemySpawner(const json& jsonFile, const json& file){
 
 	if (file.contains("forced_spawn_times"))
 		for (auto& forcedTime : file["forced_spawn_times"])
-			forcedSpawnTimes.emplace_back(forcedTime[0], forcedTime[1]);
+			forcedSpawnTimes.emplace_back((float)forcedTime[0], (int)forcedTime[1]);
 	nextSpawnTime = firstSpawnTime;
 
 	Animation::create_unit_animation_array(jsonFile, aniArr);
@@ -116,7 +116,7 @@ void Stage::try_revive_unit(UnitSpawner* spawner) {
 	Unit* newUnit = create_unit(spawner->lane, spawner->stats, spawner->aniMap);
 	if (newUnit) {
 		int maxHp = spawner->stats->maxHp;
-		int newHp = maxHp * spawner->stats->get_augment(CLONE).value;
+		int newHp = (int)(maxHp * spawner->stats->get_augment(CLONE).value);
 		newUnit->hp = newHp;
 		for (int i = 1; i <= spawner->stats->knockbacks; i++) {
 			int threshold = maxHp - (maxHp * i / spawner->stats->knockbacks);
@@ -133,14 +133,20 @@ void Stage::try_revive_unit(UnitSpawner* spawner) {
 Summon* Stage::try_create_summon_data(int summonId, float magnification) {
 	if (summonData) 
 		return summonData->count < MAX_SUMMONS ? summonData.get() : nullptr;
-
+	std::string path = "";
 	switch (summonId) {
 	case 103:
-		std::ifstream file("configs/enemy_units/slime/slime.json");
-		nlohmann::json unitJson = nlohmann::json::parse(file);
-		summonData = std::make_unique<Summon>(unitJson, magnification);
+		path = "configs/enemy_units/drone/drone.json";
 		break;
+	case 102:
+		path = "configs/enemy_units/mushroom/mushroom.json";
+		break;
+	default:
+		return nullptr;
 	}
+	std::ifstream file(path);
+	nlohmann::json unitJson = nlohmann::json::parse(file);
+	summonData = std::make_unique<Summon>(unitJson, magnification);
 	return summonData ? summonData.get() : nullptr;
 }
 void Stage::create_summon(Unit& unit) {

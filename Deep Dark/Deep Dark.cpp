@@ -7,28 +7,32 @@
 #include "Tween.h"
 #include "json.hpp"
 #include "Camera.h"
+
 using json = nlohmann::json;
 
 const float MAX_DELTA_TIME = 0.033f;
+const unsigned int FRAMERATE_LIMIT = 30;
 const int ASPECT_WIDTH = 900;
 const int ASPECT_HEIGHT = 800;
-sf::Vector2f SPEED(0.2f,0.2f);
+sf::Vector2f MOUSE_POS{ 0.f,0.f };
 
-void print_unit_stats(const Unit& unit) {
-   // printf("hp: %d\n", unit.hp);
-   // printf("dmg: %d\n", unit.dmg);
-   // printf("knockbacks: %d\n", unit.knockbacks);
-}
-sf::Vector2f get_mouse_position(sf::RenderWindow& window) {
+
+void set_mouse_position(sf::RenderWindow& window) {
     sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-    return window.mapPixelToCoords(mousePos);
+    MOUSE_POS = window.mapPixelToCoords(mousePos);
 }
 int main()
 {
+    std::cout << "SFML Version: "
+        << SFML_VERSION_MAJOR << "."
+        << SFML_VERSION_MINOR << "."
+        << SFML_VERSION_PATCH << std::endl;
+
     sf::Clock clock;
     sf::RenderWindow window(sf::VideoMode({ ASPECT_WIDTH, ASPECT_WIDTH }), "SFML works!");
-    Camera cam(100.0f);
-    cam.view = window.getDefaultView();
+    window.setFramerateLimit(FRAMERATE_LIMIT);
+
+    Camera cam(window);
 
     Surge::init_animations();
     BaseCannon::init_animations();
@@ -58,33 +62,41 @@ int main()
     json stageJson = json::parse(stageFile);
     stageFile.close();
     StageManager stageManager(stageJson, slots);
+    stageManager.cam = &cam;
 
     ButtonManager buttonManager;
     std::function<void()> print = []() { std::cout << "you clicked me! (I sound so gay bro)" << std::endl; };
   //  buttonManager.add_button({ 300.0f,250.f }, {100.f, 50.f}, sf::Color::Cyan, print);
     while (window.isOpen())
     {
-        sf::Vector2f mousePos = get_mouse_position(window);
+        set_mouse_position(window);
+        cam.set_mouse_pos(MOUSE_POS);
+        float deltaTime = clock.restart().asSeconds();
+        deltaTime = std::min(deltaTime, MAX_DELTA_TIME);
+
         while (const std::optional event = window.pollEvent()){
             stageManager.handle_events(*event);
+            cam.handle_events(*event);
             if (event->is<sf::Event::Closed>())
                 window.close();
             else if (auto size = event->getIf<sf::Event::Resized>()) {
                 // Update the view to the new size
-     //         cam.view.setSize(sf::Vector2f(size->size));
-     //         window.setView(cam.view);
-                window.setView(cam.get_view(size->size));
+                cam.view.setSize(sf::Vector2f(size->size));
+                cam.uiView.setSize(sf::Vector2f(size->size));
+                window.setView(cam.view);
             }
-            else if (event->is<sf::Event::MouseButtonPressed>())
-                buttonManager.register_click(mousePos);
+            else if (event->is<sf::Event::MouseButtonPressed>()) {
+                buttonManager.register_click(MOUSE_POS);
+                cam.register_click(*event);
+            }
         }
 
-        float deltaTime = clock.restart().asSeconds();
-        deltaTime = std::min(deltaTime, MAX_DELTA_TIME);
+        if (cam.dragging) cam.click_and_drag();
 
         window.clear();
         stageManager.update_game_ticks(window, deltaTime);
-      //  buttonManager.tick(window, mousePos);
+        cam.update(deltaTime);
+        buttonManager.tick(window, MOUSE_POS);
         window.display();
     }
 }

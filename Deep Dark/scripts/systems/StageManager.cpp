@@ -21,18 +21,44 @@ StageManager::StageManager(const json& stageJson, std::vector<std::string>& slot
 	partsCountText.setPosition({ 50,50 });
 	bagUpgradeCostText.setString(std::format("${}", bagUpgradeCost));
 	bagUpgradeCostText.setPosition({ 50,700 });
+
+	int challengeCount = stageJson["challenges"].size();
+	challenges.reserve(challengeCount);
+	for (auto& ch : stageJson["challenges"]) {
+		std::string desc = ch["description"].get<std::string>();
+		bool startState = ch.value("starting_state", false);
+
+		std::string chaTypeStr = ch["challenge_type"].get<std::string>();
+		char compChar = ch["comparison"].get<std::string>()[0];
+		int team = ch.value("team", 0);
+		int val = ch.value("value", 0);
+		int val2 = ch.value("value2", 0);
+
+		challenges.emplace_back(desc, chaTypeStr, compChar, team, val, val2);
+		challenges.back().cleared = startState;
+	}
+
+	clearedChallengesText.setString(
+		std::format("Challenges Cleared: 0/{}", challenges.size()));
+	clearedChallengesText.setPosition({ 600,700 });
 }
 
 // Reading Inputs
-void StageManager::read_lane_switch_inputs(Key key) {
-	if (key == Key::Up)
+bool StageManager::read_lane_switch_inputs(Key key) {
+	if (key == Key::Up) {
 		selectedLane = (selectedLane + 1) % stage.laneCount;
-	else if (key == Key::Down)
+		return true;
+	}
+	else if (key == Key::Down) {
 		selectedLane = (selectedLane - 1 + stage.laneCount) % stage.laneCount;
+		return true;
+	}
+
 	stage.selectedLane = selectedLane;
+	return false;
 }
-void StageManager::read_pouch_upgrade_input(Key key) {
-	if (currentBagLevel >= MAX_BAG_LEVEL) return;
+bool StageManager::read_pouch_upgrade_input(Key key) {
+	if (currentBagLevel >= MAX_BAG_LEVEL) return false;
 	else if (key == Key::B && try_spend_parts(bagUpgradeCost)) {
 		currentBagLevel++;
 
@@ -41,14 +67,16 @@ void StageManager::read_pouch_upgrade_input(Key key) {
 		bagUpgradeCost += (int)std::round(baseBagCap * 0.25f);
 
 		bagUpgradeCostText.setString(std::format("${}", bagUpgradeCost));
+		return true;
 	}
+	return false;
 }
-void StageManager::read_spawn_inputs(Key key) {
+bool StageManager::read_spawn_inputs(Key key) {
 	for (int i = 0; i < loadout.filledSlots; i++) {
 		if (key == numberKeys[i] && loadout.slots[i].cooldown <= 0) {
 			selectedLane %= stage.laneCount;
 			Slot& slot = loadout.slots[i];
-			if (!try_spend_parts(slot.unitStats.parts)) return;
+			if (!try_spend_parts(slot.unitStats.parts)) return false;
 			slot.cooldown = slot.spawnTimer;
 
 			if (slot.unitStats.has_augment(DROP_BOX)) 
@@ -56,21 +84,24 @@ void StageManager::read_spawn_inputs(Key key) {
 			else
 				stage.create_unit(selectedLane, &slot.unitStats, &slot.aniMap);
 
-			return;
+			return true;
 		}
 	}
+	return false;
 }
-void StageManager::read_base_fire_input(Key key) {
+bool StageManager::read_base_fire_input(Key key) {
 	if (key == Key::F) {
 		stage.playerBase.fire_cannon();
+		return true;
 	}
+	return false;
 }
 void StageManager::handle_events(sf::Event event) {
 	if (auto keyEvent = event.getIf<sf::Event::KeyPressed>()) {
-		read_lane_switch_inputs(keyEvent->code);
-		read_spawn_inputs(keyEvent->code);
-		read_base_fire_input(keyEvent->code);
-		read_pouch_upgrade_input(keyEvent->code);
+		if (read_spawn_inputs(keyEvent->code)) return;
+		else if (read_lane_switch_inputs(keyEvent->code)) return;
+		else if (read_base_fire_input(keyEvent->code)) return;
+		else read_pouch_upgrade_input(keyEvent->code);
 	}
 }
 
@@ -118,11 +149,12 @@ void StageManager::collect_parts(Unit& unit) {
 	if (unit.statuses & PLUNDER) p *= 2;
 	gain_parts(p);
 }
-void StageManager::increment_parts(float deltaTime) {
+void StageManager::increment_parts_and_notify(float deltaTime) {
 	partsIncTimer += deltaTime;
-	if (partsIncTimer >= 1.0f) {
+	while (partsIncTimer >= 1.0f) {
 		gain_parts(partsPerSecond);
-		partsIncTimer = 0.0f;
+		notify_challenges();
+		partsIncTimer -= 1.0f;
 	}
 }
 void StageManager::handle_enemy_unit_death(Unit& unit) {
@@ -200,7 +232,7 @@ void StageManager::update_unit_ticks(sf::RenderWindow& window, float deltaTime) 
 	//std::cout << "new update_unit_ticks() call" << std::endl;
 	for (auto& lane : stage.lanes) {
 		lane.draw(window);
-		if (lane.trap) lane.trap->tick(window, deltaTime);
+		if (lane.trap) lane.trap->tick(window, deltaTime, stageRecorder);
 		for (auto it = lane.enemyUnits.begin(); it != lane.enemyUnits.end();) {
 			if (it->dead()) {
 				handle_enemy_unit_death(*it);
@@ -262,16 +294,17 @@ void StageManager::only_draw(sf::RenderWindow& window) {
 	}
 }
 void StageManager::update_ui(float deltaTime) {
-	for (int i = 0; i < loadout.filledSlots; i++) {
+	for (int i = 0; i < loadout.filledSlots; i++) 
 		loadout.slots[i].cooldown -= deltaTime;
-	}
-}
-void StageManager::draw_ui(sf::RenderWindow& window) {
-	loadout.draw_slots(window, parts);
 
 	partsCountText.setString(std::format("#{}/{}", parts, bagCap));
-	window.draw(partsCountText);
-	window.draw(bagUpgradeCostText);
+}
+void StageManager::draw_ui() {
+	loadout.draw_slots(cam, parts);
+
+	cam->queue_ui_draw(&partsCountText);
+	cam->queue_ui_draw(&bagUpgradeCostText);
+	cam->queue_ui_draw(&clearedChallengesText);
 }
 
 void StageManager::update_game_ticks(sf::RenderWindow& window, float deltaTime) {
@@ -280,7 +313,7 @@ void StageManager::update_game_ticks(sf::RenderWindow& window, float deltaTime) 
 	update_ptr_ticks(window, deltaTime);
 	update_base_ticks(window, deltaTime);
 	process_move_requests(); // this is where the other erase is called
-	increment_parts(deltaTime);
+	increment_parts_and_notify(deltaTime);
 
-	update_and_draw_ui(window, deltaTime);
+	update_and_draw_ui(deltaTime);
 }

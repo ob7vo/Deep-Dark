@@ -27,6 +27,7 @@ Unit::Unit(Stage* curStage, sf::Vector2f startPos, int startingLane, const UnitS
 	pos = startPos;
 	hp = data->maxHp;
 	kbIndex = 1;
+	hitIndex = 0;
 	attackCooldown = 0.0f;
 
 	//tries to get augment to flip status mask. If it doesnt have the Augment,
@@ -47,7 +48,8 @@ bool Unit::tweening() { return stage->tweening(id); }
 void Unit::destroy_unit() {
 	std::cout << "destroying Unit with id #" << id << std::endl;
 	stage->cancel_tween(id);
-	stage->recorder.add_death(currentLane, causeOfDeath);
+
+	stage->recorder.add_death(stats->team, currentLane, causeOfDeath);
 	if (is_summoned_unit()) stage->summonData->count--;
 
 	hp = 0;
@@ -208,12 +210,13 @@ void Unit::warp(const UnitStats* enemyStats) {
 	auto [minWall, maxWall] = stage->get_walls(currentLane);
 	pos.x = std::clamp(newX, minWall, maxWall);
 
-	attackCooldown = aug.percentage;
+	attackCooldown = aug.value2;
 }
-void Unit::try_knockback(int oldHp, const UnitStats* enemyStats) {
+
+void Unit::try_knockback(int oldHp, int hitIndex, const UnitStats* enemyStats) {
 	if (in_knockback()) return;
 	if (met_knockback_threshold(oldHp, hp)) {
-		shieldHp = (int)stats->get_augment(SHIELD).value;
+		shieldHp = (int)stats->get_augment(SHIELD).intValue;
 		float force = enemyStats->has_augment(BULLY) ? 1.5f : 1;
 
 		if (enemyStats->has_augment(AugmentType::SQUASH))
@@ -223,9 +226,9 @@ void Unit::try_knockback(int oldHp, const UnitStats* enemyStats) {
 		else
 			knockback(force);
 	}
-	else if (trigger_augment(enemyStats, SHOVE, 0)) 
+	else if (trigger_augment(enemyStats, SHOVE, hitIndex)) 
 		knockback(0.5f);
-	else if (trigger_augment(enemyStats, WARP, 0)) 
+	else if (trigger_augment(enemyStats, WARP, hitIndex)) 
 		warp(enemyStats);
 }
 void Unit::push_fall_request() {
@@ -328,7 +331,8 @@ bool Unit::enemy_is_in_sight_range() {
 }
 std::pair<int, int> Unit::get_lane_reach() {
 	auto& hit = stats->get_hit_stats(hitIndex);
-	int min = std::max(currentLane - hit.laneReach.first, 0);
+	// laneReach.first will be negative
+	int min = std::max(currentLane + hit.laneReach.first, 0);
 	int max = std::min(currentLane + hit.laneReach.second + 1, stage->laneCount);
 	return { min, max };
 }
@@ -373,10 +377,10 @@ bool Unit::rust_type_and_near_gap() {
 	}
 	return false;
 }
-bool Unit::try_terminate_unit(Unit& enemyUnit) {
+bool Unit::try_terminate_unit(Unit& enemyUnit, int dmg) {
 	if (!has_augment(TERMINATE)) return false;
 	float threshold = stats->get_augment(TERMINATE).value;
-	float curHpPercent = enemyUnit.hp / enemyUnit.stats->maxHp;
+	float curHpPercent = (float)(enemyUnit.hp - dmg) / enemyUnit.stats->maxHp;
 
 	return curHpPercent <= threshold;
 }
@@ -507,7 +511,7 @@ bool Unit::take_damage(Unit& attackingUnit) {
 	if (targeted_by_unit(attackingUnit)) {
 		if (trigger_augment(attackingUnit.stats, VOID, attackingUnit.hitIndex))
 			dmg += (int)(stats->maxHp * attackingUnit.stats->get_augment(VOID).value);
-		if (attackingUnit.try_terminate_unit(*this))
+		if (attackingUnit.try_terminate_unit(*this, dmg))
 			dmg += stats->maxHp;
 	}
 
@@ -515,7 +519,7 @@ bool Unit::take_damage(Unit& attackingUnit) {
 	hp -= dmg;
 	std::cout << "ID: " << id << " - hit, oldHp: " << oldHp << " - newHp: " << hp << " - dmg taken: " << dmg << std::endl;
 
-	try_knockback(oldHp, attackingUnit.stats);
+	try_knockback(oldHp, attackingUnit.hitIndex, attackingUnit.stats);
 	return hp <= 0 && !try_proc_survive();
 }
 bool Unit::take_damage(Surge& surge) {
@@ -534,7 +538,7 @@ bool Unit::take_damage(Surge& surge) {
 	if (targeted_by_unit(surge.stats->targetTypes)) {
 		if (trigger_augment(surge.stats, VOID, surge.hitIndex))
 			dmg += (int)(stats->maxHp * surge.stats->get_augment(VOID).value);
-		if (surge.try_terminate_unit(*this))
+		if (surge.try_terminate_unit(*this, dmg))
 			dmg += stats->maxHp;
 	}
 
@@ -542,7 +546,7 @@ bool Unit::take_damage(Surge& surge) {
 	hp -= dmg;
 	std::cout << "ID: " << id << " - hit, by a SURGE, oldHp: " << oldHp << " - dmg taken: " << dmg << " - newHp: " << hp << std::endl;
 
-	try_knockback(oldHp, surge.stats);
+	try_knockback(oldHp, surge.hitIndex, surge.stats);
 
 	return hp <= 0 && !try_proc_survive();
 }
@@ -657,7 +661,7 @@ void Unit::moving_state(sf::RenderWindow& window, float deltaTime) {
 	else if (can_fall())
 		push_fall_request();
 	else if (enemy_is_in_sight_range()) {
-		std::cout << "found enemy" << std::endl;
+		//std::cout << "found enemy" << std::endl;
 		if (can_phase()) start_special_animation(UnitAnimationState::PHASE);
 		else start_idle_or_attack_animation();
 	}
@@ -677,15 +681,18 @@ void Unit::attack_state(sf::RenderWindow& window, float deltaTime) {
 		hitIndex = 0;
 	if (Animation::check_for_event(AnimationEvent::FINAL_FRAME, events)) {
 		attackCooldown = stats->attackTime;
-		if (enemy_is_in_sight_range()) 
+		if (has_augment(SELF_DESTRUCT)) destroy_unit();
+		else if (enemy_is_in_sight_range()) 
 			start_idle_or_attack_animation();	
 		else if (!rusted_tyoe() || (rusted_tyoe() && !can_fall()))
 			start_animation(UnitAnimationState::MOVING);
 		else
 			start_animation(UnitAnimationState::IDILING);
 	}
-	if (Animation::check_for_event(AnimationEvent::ATTACK, events))
+	if (Animation::check_for_event(AnimationEvent::ATTACK, events)) {
 		attack();
+		if (has_augment(SELF_DESTRUCT)) hp = 0;
+	}
 }
 void Unit::idling_state(sf::RenderWindow& window, float deltaTime) {
 	draw(window, deltaTime);
@@ -701,7 +708,7 @@ void Unit::knockback_state(sf::RenderWindow& window, float deltaTime) {
 	else if (can_fall()) 
 		push_fall_request();
 	else if (!tweening()) {
-		std::cout << "after knockback: at Y-" << pos.y << "AND on lane #" << currentLane << std::endl;
+		//std::cout << "after knockback: at Y-" << pos.y << "AND on lane #" << currentLane << std::endl;
 		if (hp <= 0) destroy_unit();
 		else if (enemy_is_in_sight_range())
 			start_idle_or_attack_animation();
@@ -770,5 +777,18 @@ void Unit::waiting_state(sf::RenderWindow& window, float deltaTime) {
 		}
 	}
 }
+
+const std::unordered_map<UnitAnimationState, Unit::StateFunc> stateMap = {
+	{UnitAnimationState::MOVING, &Unit::moving_state},
+	{UnitAnimationState::ATTACKING, &Unit::attack_state},
+	{UnitAnimationState::IDILING, &Unit::idling_state},
+	{UnitAnimationState::KNOCKEDBACK, &Unit::knockback_state},
+	{UnitAnimationState::FALLING, &Unit::falling_state},
+	{UnitAnimationState::JUMPING, &Unit::jumping_state},
+	{UnitAnimationState::PHASE, &Unit::phase_state},
+	{UnitAnimationState::IS_PHASING, &Unit::waiting_state},
+	{UnitAnimationState::WAITING, &Unit::waiting_state},
+	{UnitAnimationState::DYING, &Unit::waiting_state}
+};
 
 //	std::cout << "ID: " << id << " - hit, by UNIT, oldHp: " << oldHp << " - dmg taken : " << dmg << " - newHp : " << hp << std::endl;

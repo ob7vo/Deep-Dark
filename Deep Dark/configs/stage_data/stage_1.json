@@ -20,7 +20,7 @@
       "player_spawn_position": 200,
       "enemy_spawn_position": 800,
       "y_position": 400.0,
-      "gaps": [[475.0,525.0]]
+      "gaps": [ [ 475.0, 525.0 ] ]
     },
     {
       "player_spawn_position": 200,
@@ -53,12 +53,12 @@
   ],
   "enemy_spawns": [
     {
-      "json_path": "configs/enemy_units/droid_1/droid1.json",
+      "json_path": "configs/enemy_units/mushroom/mushroom.json",
       "total_spawns": 8,
       "magnification": 1.5,
 
-      "first_spawn_time": 5.0,
-      "spawn_delays": [ 3.67, 5.21 ],
+      "first_spawn_time": 92.0,
+      "spawn_delays": [ 33.67, 35.21 ],
       "lane_indexes": [ 0, 2, 2, 1, 0, 1, 1, 0 ]
     },
     {
@@ -66,12 +66,14 @@
       "total_spawns": 6,
       "magnification": 1.5,
 
-      "first_spawn_time": 5.5,
+      "first_spawn_time": 55.5,
       "spawn_delays": [ 92.29, 93.56 ],
       "lane_indexes": [ 2, 2, 1, 2, 0, 1 ]
     }
   ],
-  "challanges": [
-
+  "challenges": [
+    {
+      "description": "Don't trigger any traps"
+    }
   ]
 }

@@ -77,7 +77,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)\imgui\;$(ProjectDir)scripts\visuals\;$(ProjectDir)scripts\systems\;$(ProjectDir)scripts\misc\;$(ProjectDir)scripts\stage\;$(ProjectDir)scripts\utilities\;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)scripts\visuals\;$(ProjectDir)scripts\systems\;$(ProjectDir)scripts\misc\;$(ProjectDir)scripts\stage\;$(ProjectDir)scripts\menus\;$(ProjectDir)scripts\utilities\;C:\Users\amaec\source\repos\Deep Dark\Deep Dark\TGUI;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -93,7 +93,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\imgui\;$(ProjectDir)scripts\visuals\;$(ProjectDir)scripts\systems\;$(ProjectDir)scripts\misc\;$(ProjectDir)scripts\stage\;$(ProjectDir)scripts\utilities\;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)scripts\visuals\;$(ProjectDir)scripts\systems\;$(ProjectDir)scripts\misc\;$(ProjectDir)scripts\stage\;$(ProjectDir)scripts\menus\;$(ProjectDir)scripts\utilities\;C:\Users\amaec\source\repos\Deep Dark\Deep Dark\TGUI;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -109,7 +109,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)\imgui\;$(ProjectDir)scripts\visuals\;$(ProjectDir)scripts\systems\;$(ProjectDir)scripts\misc\;$(ProjectDir)scripts\stage\;$(ProjectDir)scripts\utilities\;C:\Users\amaec\source\SFML-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)scripts\visuals\;$(ProjectDir)scripts\systems\;$(ProjectDir)scripts\misc\;$(ProjectDir)scripts\stage\;$(ProjectDir)scripts\menus\;$(ProjectDir)scripts\utilities\;C:\Users\amaec\source\repos\Deep Dark\Deep Dark\TGUI;C:\Users\amaec\source\SFML-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -127,7 +127,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)\imgui\;$(ProjectDir)scripts\visuals\;$(ProjectDir)scripts\systems\;$(ProjectDir)scripts\misc\;$(ProjectDir)scripts\stage\;$(ProjectDir)scripts\utilities\;C:\Users\amaec\source\SFML-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)scripts\visuals\;$(ProjectDir)scripts\systems\;$(ProjectDir)scripts\misc\;$(ProjectDir)scripts\stage\;$(ProjectDir)scripts\menus\;$(ProjectDir)scripts\utilities\;C:\Users\amaec\source\repos\Deep Dark\Deep Dark\TGUI;C:\Users\amaec\source\SFML-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -137,6 +137,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="scripts\systems\Observer.cpp" />
     <ClCompile Include="scripts\systems\Camera.cpp" />
     <ClCompile Include="scripts\stage\ActionObject.cpp" />
     <ClCompile Include="scripts\stage\BaseCannon.cpp" />
@@ -145,14 +146,16 @@
     <ClCompile Include="scripts\stage\Stage.cpp" />
     <ClCompile Include="scripts\stage\Surge.cpp" />
     <ClCompile Include="scripts\stage\Unit.cpp" />
-    <ClCompile Include="scripts\systems\Button.cpp" />
+    <ClCompile Include="scripts\visuals\Button.cpp" />
     <ClCompile Include="scripts\systems\ButtonManager.cpp" />
-    <ClCompile Include="scripts\systems\Loadout.cpp" />
     <ClCompile Include="scripts\systems\StageManager.cpp" />
     <ClCompile Include="scripts\visuals\Animation.cpp" />
     <ClCompile Include="scripts\stage\Trap.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="scripts\systems\Observer.h" />
+    <ClInclude Include="scripts\misc\Bounds.h" />
+    <ClInclude Include="scripts\misc\ChallengeTypes.h" />
     <ClInclude Include="scripts\systems\Camera.h" />
     <ClInclude Include="scripts\stage\ActionObject.h" />
     <ClInclude Include="scripts\stage\BaseCannon.h" />
@@ -167,7 +170,7 @@
     <ClInclude Include="scripts\stage\Teleporter.h" />
     <ClInclude Include="scripts\stage\Unit.h" />
     <ClInclude Include="scripts\stage\UnitData.h" />
-    <ClInclude Include="scripts\systems\Button.h" />
+    <ClInclude Include="scripts\visuals\Button.h" />
     <ClInclude Include="scripts\systems\ButtonManager.h" />
     <ClInclude Include="scripts\systems\Loadout.h" />
     <ClInclude Include="scripts\systems\StageManager.h" />
