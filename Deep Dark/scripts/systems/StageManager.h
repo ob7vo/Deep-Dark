@@ -3,6 +3,7 @@
 #include "Loadout.h"
 #include "Camera.h" 
 #include "Observer.h"
+#include <Menu.h>
 #include <iostream>
 using Key = sf::Keyboard::Key;
 
@@ -34,9 +35,7 @@ struct StageManager
 	std::vector<Challenge> challenges;
 	int clearedChallenges = 0;
 
-	sf::Text partsCountText = sf::Text(baseFont);
-	sf::Text bagUpgradeCostText = sf::Text(baseFont);
-	sf::Text clearedChallengesText = sf::Text(baseFont);
+	StageUI ui;
 
 	float timeSinceStart = 0.f;
 	int selectedLane = 0;
@@ -99,11 +98,18 @@ struct StageManager
 			if (challenge.cleared) clears++;
 		}
 
-		if (clears != clearedChallenges) {
-			clearedChallenges = clears;
-			clearedChallengesText.setString(std::format("Challenges Cleared: {}/{}",
-				clearedChallenges, challenges.size()));
-		}
+		if (clears != clearedChallenges)
+			update_challenges_text(clears);
+	}
+	inline void update_challenges_text(int clears) {
+		clearedChallenges = clears;
+
+		if (clearedChallenges == challenges.size())
+			ui.clearedChallengesText.setFillColor(sf::Color::Green);
+		else
+			ui.clearedChallengesText.setFillColor(sf::Color::Yellow);
+
+		ui.clearedChallengesText.setString(std::format("Challenges Cleared: {}/{}",
+			clearedChallenges, challenges.size()));
 	}
 };
-

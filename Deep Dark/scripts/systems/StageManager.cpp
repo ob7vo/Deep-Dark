@@ -17,30 +17,37 @@ StageManager::StageManager(const json& stageJson, std::vector<std::string>& slot
 	stageRecorder(stageJson["lane_count"]), loadout(slotsJsonPaths), 
 	stage(stageJson, stageRecorder) 
 {
-	partsCountText.setString(std::format("$0/{}", bagCap));
-	partsCountText.setPosition({ 50,50 });
-	bagUpgradeCostText.setString(std::format("${}", bagUpgradeCost));
-	bagUpgradeCostText.setPosition({ 50,700 });
+	ui.partsCountText.setString(std::format("$0/{}", bagCap));
+	ui.partsCountText.setPosition({ 50,50 });
+	ui.bagUpgradeCostText.setString(std::format("${}", bagUpgradeCost));
+	ui.bagUpgradeCostText.setPosition({ 50,700 });
 
 	int challengeCount = stageJson["challenges"].size();
 	challenges.reserve(challengeCount);
 	for (auto& ch : stageJson["challenges"]) {
-		std::string desc = ch["description"].get<std::string>();
+		std::string desc = ch.value("description", "");
 		bool startState = ch.value("starting_state", false);
 
-		std::string chaTypeStr = ch["challenge_type"].get<std::string>();
+		std::string chaTypeStr = ch.value("challenge_type", "");
 		char compChar = ch["comparison"].get<std::string>()[0];
 		int team = ch.value("team", 0);
 		int val = ch.value("value", 0);
-		int val2 = ch.value("value2", 0);
+		int lane = ch.value("lane", -1);
 
-		challenges.emplace_back(desc, chaTypeStr, compChar, team, val, val2);
-		challenges.back().cleared = startState;
+		if (ch.contains("banned_types"))
+			for (auto& target : ch["banned_types"])
+				val |= UnitStats::convert_string_to_type(target);
+
+		Challenge& chal = challenges.emplace_back(desc, chaTypeStr, compChar, team, val, lane);
+		chal.cleared = startState;
+		chal.pTarget = chal.get_target_ptr(*this);
 	}
 
-	clearedChallengesText.setString(
+	ui.clearedChallengesText.setString(
 		std::format("Challenges Cleared: 0/{}", challenges.size()));
-	clearedChallengesText.setPosition({ 600,700 });
+	ui.clearedChallengesText.setPosition({ 500,650 });
+	ui.clearedChallengesText.setCharacterSize(16);
+	ui.clearedChallengesText.setFillColor(sf::Color::Yellow);
 }
 
 // Reading Inputs
@@ -66,7 +73,7 @@ bool StageManager::read_pouch_upgrade_input(Key key) {
 		bagCap += (int)std::round(baseBagCap * 0.5f);
 		bagUpgradeCost += (int)std::round(baseBagCap * 0.25f);
 
-		bagUpgradeCostText.setString(std::format("${}", bagUpgradeCost));
+		ui.bagUpgradeCostText.setString(std::format("${}", bagUpgradeCost));
 		return true;
 	}
 	return false;
@@ -297,14 +304,14 @@ void StageManager::update_ui(float deltaTime) {
 	for (int i = 0; i < loadout.filledSlots; i++) 
 		loadout.slots[i].cooldown -= deltaTime;
 
-	partsCountText.setString(std::format("#{}/{}", parts, bagCap));
+	ui.partsCountText.setString(std::format("#{}/{}", parts, bagCap));
 }
 void StageManager::draw_ui() {
 	loadout.draw_slots(cam, parts);
 
-	cam->queue_ui_draw(&partsCountText);
-	cam->queue_ui_draw(&bagUpgradeCostText);
-	cam->queue_ui_draw(&clearedChallengesText);
+	cam->queue_ui_draw(&ui.partsCountText);
+	cam->queue_ui_draw(&ui.bagUpgradeCostText);
+	cam->queue_ui_draw(&ui.clearedChallengesText);
 }
 
 void StageManager::update_game_ticks(sf::RenderWindow& window, float deltaTime) {

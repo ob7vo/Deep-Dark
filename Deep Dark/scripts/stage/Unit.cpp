@@ -44,7 +44,11 @@ Unit::Unit(Stage* curStage, sf::Vector2f startPos, int startingLane, const UnitS
 }
 Unit::Unit(Stage* stage, Surge& surge) :
 	Unit(stage, surge.pos, surge.currentLane, surge.stats, nullptr, -2) { }
+
 bool Unit::tweening() { return stage->tweening(id); }
+bool Unit::done_tweening_and_animating(int events) {
+	return !stage->tweening(id) && (events & FINAL_FRAME);
+}
 void Unit::destroy_unit() {
 	std::cout << "destroying Unit with id #" << id << std::endl;
 	stage->cancel_tween(id);
@@ -720,8 +724,8 @@ void Unit::knockback_state(sf::RenderWindow& window, float deltaTime) {
 	}
 }
 void Unit::falling_state(sf::RenderWindow& window, float deltaTime) {
-	draw(window, deltaTime);
-	if (!tweening()) {
+	int events = draw(window, deltaTime);
+	if (done_tweening_and_animating(events)) {
 		if (hp <= 0) destroy_unit();
 		else if (enemy_is_in_sight_range())
 			start_idle_or_attack_animation();

@@ -23,7 +23,6 @@ lane(lane){
 	sprite.setTexture(ani.texture);
 	ani.reset(sprite);
 	sprite.setPosition(pos);
-
 }
 bool Trap::in_trigger_range(Unit& unit) {
 	return unit.pos.x >= triggerRange.first && unit.pos.x <= triggerRange.second;
@@ -99,6 +98,7 @@ void Trap::trigger_trap_door() {
 	triggered = !triggered;
 }
 void Trap::trigger_attack() {
+	std::cout << "trigger_attack" << std::endl;
 	for (auto& unit : lane.enemyUnits)
 		if (valid_attack_target(unit)) {
 			if (dmgValue > 0.f) {

@@ -24,7 +24,8 @@ enum class ChallengeType {
 	BANNED_UNIT_TYPES,
 	UNITS_COST,
 	CHALLENGES_CLEARED, 
-	CLEAR_TIME
+	CLEAR_TIME,
+	UNITS_AT_ONCE
 };
 enum class ComparisonType {
 	LESS_THAN = 0, //There will be NO, "or equal to"'s. Just make it exclusive
@@ -33,9 +34,4 @@ enum class ComparisonType {
 	NOT,
 	BITWISE_AND,
 	BITWISE_NOT
-};
-const enum ChallengeTeam {
-	ENEMY = -1,
-	NONE = 0,
-	PLAYER = 1
 };

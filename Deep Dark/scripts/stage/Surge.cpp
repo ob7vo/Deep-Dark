@@ -94,7 +94,7 @@ bool Surge::try_terminate_unit(Unit& enemyUnit, int dmg) {
 void Surge::on_kill(Unit& unit) {
 	if (unit.trigger_augment(stats, AugmentType::PLUNDER)) unit.statuses |= PLUNDER;
 	if (stats->has_augment(CODE_BREAKER)) unit.statuses |= CODE_BREAKER;
-	unit.causeOfDeath = DeathCause::SURGE;
+	unit.causeOfDeath = createdByCannon ? DeathCause::CANNON : DeathCause::SURGE;
 };
 void Surge::attack_units(Lane& lanes) {
 	std::vector<Unit>& enemyUnits = lanes.get_targets(stats->team);

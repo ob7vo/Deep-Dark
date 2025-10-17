@@ -5,8 +5,8 @@
   "slot_sprite": "soldier_slot.png",
   "level": 1,
   "team": 1,
-  "parts_cost": 25,
-  "recharge_timer": 3.0,
+  "parts_cost": 0,
+  "recharge_timer": 0.5,
   "single_target": false,
   "stats": {
     "hp": 30,

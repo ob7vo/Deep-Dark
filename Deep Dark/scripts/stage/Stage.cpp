@@ -103,11 +103,11 @@ Unit* Stage::create_unit(int laneIndex, const UnitStats* unitStats, std::array<A
 		return nullptr;
 	}
 
-	int team = unitStats->team;;
-	sf::Vector2f spawnPos = lanes[laneIndex].get_spawn_pos(team);
+	recorder.add_spawn(unitStats->team, laneIndex);
+	sf::Vector2f spawnPos = lanes[laneIndex].get_spawn_pos(unitStats->team);
 
 	//	std::cout << "emplacing back new unit" << std::endl;
-	auto& newVec = get_source_vector(laneIndex, team);
+	auto& newVec = get_source_vector(laneIndex, unitStats->team);
 
 	return &newVec.emplace_back(this, spawnPos, laneIndex, unitStats, aniMap, nextUnitID++);
 }
@@ -181,12 +181,14 @@ void Stage::create_surge(Unit& unit, const Augment& surge) {
 // player bases
 void Stage::create_surge(BaseCannon* pCannon, const Augment& surge) {
 	create_surge(&pCannon->cannonStats, selectedLane, surge.surgeLevel, pCannon->pos, surge.augType);
+	surges.back()->createdByCannon = true;
 }
 // enemy bases
 void Stage::create_surge(BaseCannon* eCannon, const Augment& surge, int lane, float distance) {
 	sf::Vector2f pos = eCannon->pos;
 	pos.x -= distance;
 	create_surge(&eCannon->cannonStats, lane, surge.surgeLevel, pos, surge.augType);
+	surges.back()->createdByCannon = true;
 }
 void Stage::create_surge(const UnitStats* stats, int lane, int level, sf::Vector2f pos, AugmentType aug) {
 	switch (aug) {
@@ -198,6 +200,9 @@ void Stage::create_surge(const UnitStats* stats, int lane, int level, sf::Vector
 		break;
 	case AugmentType::ORBITAL_STRIKE:
 		surges.emplace_back(std::make_unique<OrbitalStrike>(stats, lane, pos));
+		break;
+	default:
+		std::cout << "no surge was created. invalid augment type" << std::endl;
 		break;
 	}
 }

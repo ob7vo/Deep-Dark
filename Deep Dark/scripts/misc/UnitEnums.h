@@ -1,6 +1,8 @@
 #pragma once
 #include <random>
-const int ALL_HITS = 0b00111111;
+#include <iostream>
+
+const int ALL_HITS = 0b11111111;
 
 enum class RequestType {
 	NOT_DONE,
@@ -112,14 +114,14 @@ struct Augment {
 		int hits, int lvl) :augType(aug), value(val), value2(val2),
 		percentage(percentage), surgeLevel(lvl), activeHits(hits) {}
 
-	static Augment status(AugmentType aug, float procTime, float chance = 100.f, int hits = 0) {
+	static Augment status(AugmentType aug, float procTime, float chance = 100.f, int hits = ALL_HITS) {
 		return Augment(aug, procTime, empty, chance, hits, empty);
 	}
-	static Augment surge(AugmentType aug, float dist, int lvl, float chance = 100.f, int hits = 0) {
+	static Augment surge(AugmentType aug, float dist, int lvl, float chance = 100.f, int hits = ALL_HITS) {
 		return Augment(aug, dist, empty, chance, hits, lvl);
 	}
 	static Augment cannon(AugmentType aug, int lvl) {
-		return Augment(aug, empty, empty, empty, empty, lvl);
+		return Augment(aug, empty, empty, empty, ALL_HITS, lvl);
 	}
 
 	inline bool is_surge() const {
@@ -128,5 +130,11 @@ struct Augment {
 	}
 	inline bool is_status_effect() const { return augType <= 64 && augType > 0; }
 	inline bool is_damage_modifier() const { return augType >= 128 && augType <= 512; }
-	inline bool can_hit(int hitIndex) const { return activeHits & (1 << hitIndex); }
+	inline bool can_hit(int hitIndex) const { 
+		bool canHit = activeHits & (1 << hitIndex); 
+		if (canHit) std::cout << "you CAN proc this augment" << std::endl;
+		else std::cout << "YOU CANNOT PROC THIS AUGMENT BABY" << std::endl;
+
+		return canHit;
+	}
 };

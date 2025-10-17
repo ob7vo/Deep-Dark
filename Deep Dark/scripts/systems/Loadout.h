@@ -112,7 +112,7 @@ struct Loadout{
 		}
 	}
 	inline void draw_slots(Camera* cam, int currentParts) {
-		for (int i = 0; i < filledSlots; i++) {
+		for (int i = 0; i < 10; i++) {
 			slots[i].draw(cam, currentParts);
 		}
 	}

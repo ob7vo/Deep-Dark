@@ -2,9 +2,9 @@
 #include "Button.h"
 struct ButtonManager
 {
-	std::vector<Button> buttons;
+	std::vector<Button*> buttons;
 
-	ButtonManager();
+	ButtonManager() = default;
 
 	void tick(sf::RenderWindow& window, sf::Vector2f mousePos);
 	void draw(sf::RenderWindow& window);

@@ -2,6 +2,7 @@
 #include "ChallengeTypes.h"
 #include <unordered_map>
 #include <iostream>
+#include <algorithm>
 
 class Unit;
 struct Loadout;
@@ -26,28 +27,29 @@ struct Challenge{
 	std::string description = "";
 	bool cleared = false;
 	int value = 0;
-	int value2 = 0;
+	int lane = 0;
+	int* pTarget = nullptr;
 
 	ChallengeType challengeType = ChallengeType::UNIT_DEATHS;
 	ComparisonType comparison = ComparisonType::EQUAL;
 	int team = 0;
 
 	Challenge(std::string desc, std::string chaTypeStr, char compTypeChr,
-		int team, int val = 0, int val2 = 0) : description(desc),
-	value(val), value2(val2), team(team){
+		int team, int val = 0, int lane = 0) : description(desc),
+	value(val), lane(lane), team(team){
 		challengeType = get_challenge_type(chaTypeStr);
 		comparison = get_comparsion_type(compTypeChr);
 	}
 
 	bool notify(StageManager& manager);
 		
-	inline bool compare(int val, int goal) {
+	inline bool compare(int tar, int goal) {
 		switch (comparison) {
-		case ComparisonType::LESS_THAN: return val < goal;
-		case ComparisonType::GREATER_THAN: return val > goal;
-		case ComparisonType::EQUAL: return val == goal;
-		case ComparisonType::NOT: return val != goal;
-		case ComparisonType::BITWISE_AND: return val & goal;
+		case ComparisonType::LESS_THAN: return tar < goal;
+		case ComparisonType::GREATER_THAN: return tar > goal;
+		case ComparisonType::EQUAL: return tar == goal;
+		case ComparisonType::NOT: return tar != goal;
+		case ComparisonType::BITWISE_AND: return tar & goal;
 		}
 		return false;
 	}
@@ -62,6 +64,7 @@ struct Challenge{
 		std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 		static const std::unordered_map<std::string, ChallengeType> challengeMap = {
 			{"unit_deaths", ChallengeType::UNIT_DEATHS},
+			{"units_spawned", ChallengeType::UNITS_SPAWNED},
 			{"deaths_by_units", ChallengeType::DEATHS_VIA_UNITS},
 			{"deaths_by_surges", ChallengeType::DEATHS_VIA_SURGES},
 			{"deaths_by_traps", ChallengeType::DEATHS_VIA_TRAPS},
@@ -88,5 +91,7 @@ struct Challenge{
 		case '&': return ComparisonType::BITWISE_AND;
 		}
 	}
+	inline int get_current_unit_count(StageManager& manager);
+	int* get_target_ptr(StageManager& manager);
 };
 

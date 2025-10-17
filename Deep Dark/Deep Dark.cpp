@@ -64,9 +64,6 @@ int main()
     StageManager stageManager(stageJson, slots);
     stageManager.cam = &cam;
 
-    ButtonManager buttonManager;
-    std::function<void()> print = []() { std::cout << "you clicked me! (I sound so gay bro)" << std::endl; };
-  //  buttonManager.add_button({ 300.0f,250.f }, {100.f, 50.f}, sf::Color::Cyan, print);
     while (window.isOpen())
     {
         set_mouse_position(window);
@@ -86,7 +83,6 @@ int main()
                 window.setView(cam.view);
             }
             else if (event->is<sf::Event::MouseButtonPressed>()) {
-                buttonManager.register_click(MOUSE_POS);
                 cam.register_click(*event);
             }
         }
@@ -96,7 +92,6 @@ int main()
         window.clear();
         stageManager.update_game_ticks(window, deltaTime);
         cam.update(deltaTime);
-        buttonManager.tick(window, MOUSE_POS);
         window.display();
     }
 }

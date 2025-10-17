@@ -54,6 +54,7 @@ public:
 	bool move_req_check();
 	void destroy_unit();
 	bool tweening();
+	bool done_tweening_and_animating(int events);
 
 	bool enemy_in_range(float xPos, float maxRange, float minRange);
 	bool enemy_is_in_sight_range();

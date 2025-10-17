@@ -20,7 +20,7 @@
       "player_spawn_position": 200,
       "enemy_spawn_position": 800,
       "y_position": 400.0,
-      "gaps": [ [ 475.0, 525.0 ] ]
+      "gaps": [ [ 2475.0, 525.0 ] ]
     },
     {
       "player_spawn_position": 200,
@@ -37,17 +37,17 @@
       "x_destination": 400
     }
   ],
-  "traps_": [
+  "traps": [
     {
       "lane": 1,
       "trap_type": 4,
       "trigger_range": [ 300, 600 ],
-      "attack_range": [ 300, 600 ],
+      "attack_range": [ 300, 800 ],
       "x_position": 450.0,
       "check_timer": 6.0,
       "augment": {
         "augment_type": "overload",
-        "status_time": 2.5
+        "status_time": 4.5
       }
     }
   ],
@@ -73,7 +73,16 @@
   ],
   "challenges": [
     {
-      "description": "Don't trigger any traps"
+      "description": "Don't trigger any traps",
+      "challenge_type": "traps_triggered",
+      "comparison": "<",
+      "value": 1
+    },
+    {
+      "challenge_type": "units_spawned",
+      "comparison": ">",
+      "team": 1,
+      "value": 2
     }
   ]
 }

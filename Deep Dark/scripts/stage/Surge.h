@@ -28,6 +28,7 @@ struct Lane;
 struct Surge
 {
 	bool readyForRemoval = 0;
+	bool createdByCannon = false;
 
 	float width = 10.f;
 	sf::Vector2f pos;

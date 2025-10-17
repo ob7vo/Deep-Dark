@@ -57,6 +57,9 @@
     <ClCompile Include="scripts\systems\Observer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="scripts\visuals\Menu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="scripts\systems\StageManager.h">
@@ -132,6 +135,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="scripts\systems\Observer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scripts\visuals\Menu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -137,6 +137,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="scripts\visuals\Menu.cpp" />
     <ClCompile Include="scripts\systems\Observer.cpp" />
     <ClCompile Include="scripts\systems\Camera.cpp" />
     <ClCompile Include="scripts\stage\ActionObject.cpp" />
@@ -153,6 +154,7 @@
     <ClCompile Include="scripts\stage\Trap.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="scripts\visuals\Menu.h" />
     <ClInclude Include="scripts\systems\Observer.h" />
     <ClInclude Include="scripts\misc\Bounds.h" />
     <ClInclude Include="scripts\misc\ChallengeTypes.h" />
