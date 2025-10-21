@@ -10,7 +10,6 @@ Base::Base(const json& stageFile, int team) : team(team), sprite(get_default_tex
 	std::string baseString = team == 1 ? "player_base" : "enemy_base";
 	cannonAnimation = nullptr;
 
-	timeLeft = 0;
 	hp = stageFile[baseString]["hp"];
 	pos = { stageFile[baseString]["x_position"], BASE_Y_POS };
 	sprite.setPosition(pos);
@@ -58,18 +57,20 @@ void Base::create_cannon(std::string path, float magnification) {
 void Base::take_damage(int dmg) {
 	hp -= dmg;
 }
-void Base::fire_cannon() {
+bool Base::try_fire_cannon() {
 	if (!cannon) {
-		timeLeft = 999.f;
+		cooldown = 999.f;
 		std::cout << "Base has no Cannon to fire" << std::endl;
-		return;
+		return false;
 	}
-	else if (timeLeft >= 0) return;
+	else if (on_cooldown()) return false;
 
-	timeLeft = cannonTimer;
+	cooldown = cannonTimer;
 	//cannonAnimation = cannon->get_cannon_animation_ptr();
 	cannonAnimation = BaseCannon::ga_ptr();
 	cannonAnimation->reset(sprite);
+
+	return true;
 }
 void Base::tick(Stage& stage, sf::RenderWindow& window, float deltaTime) {
 	if (cannonAnimation) {
@@ -84,13 +85,13 @@ void Base::tick(Stage& stage, sf::RenderWindow& window, float deltaTime) {
 	}
 
 	window.draw(sprite);
-	timeLeft -= deltaTime;
-	if (team == PLAYER_BASE || !cannon || timeLeft >= 0) return;
+	cooldown -= deltaTime;
+	if (team == PLAYER_BASE || !cannon || on_cooldown()) return;
 
 	for (auto& lane : stage.lanes)
 		for (auto& unit : lane.playerUnits)
 			if (enemy_in_range(unit.pos.x)) {
-				fire_cannon();
+				try_fire_cannon();
 				return;
 			};
 }

@@ -137,7 +137,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="scripts\visuals\Menu.cpp" />
+    <ClCompile Include="scripts\menus\StageUI.cpp" />
     <ClCompile Include="scripts\systems\Observer.cpp" />
     <ClCompile Include="scripts\systems\Camera.cpp" />
     <ClCompile Include="scripts\stage\ActionObject.cpp" />
@@ -148,21 +148,21 @@
     <ClCompile Include="scripts\stage\Surge.cpp" />
     <ClCompile Include="scripts\stage\Unit.cpp" />
     <ClCompile Include="scripts\visuals\Button.cpp" />
-    <ClCompile Include="scripts\systems\ButtonManager.cpp" />
     <ClCompile Include="scripts\systems\StageManager.cpp" />
     <ClCompile Include="scripts\visuals\Animation.cpp" />
     <ClCompile Include="scripts\stage\Trap.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="scripts\visuals\Menu.h" />
+    <ClInclude Include="scripts\menus\Menu.h" />
+    <ClInclude Include="scripts\menus\StageUI.h" />
     <ClInclude Include="scripts\systems\Observer.h" />
-    <ClInclude Include="scripts\misc\Bounds.h" />
+    <ClInclude Include="scripts\utilities\Bounds.h" />
     <ClInclude Include="scripts\misc\ChallengeTypes.h" />
     <ClInclude Include="scripts\systems\Camera.h" />
     <ClInclude Include="scripts\stage\ActionObject.h" />
     <ClInclude Include="scripts\stage\BaseCannon.h" />
     <ClInclude Include="scripts\misc\UnitEnums.h" />
-    <ClInclude Include="scripts\misc\Easing.hpp" />
+    <ClInclude Include="scripts\utilities\Easing.hpp" />
     <ClInclude Include="scripts\misc\json.hpp" />
     <ClInclude Include="scripts\stage\Base.h" />
     <ClInclude Include="scripts\stage\Lane.h" />
@@ -172,6 +172,7 @@
     <ClInclude Include="scripts\stage\Teleporter.h" />
     <ClInclude Include="scripts\stage\Unit.h" />
     <ClInclude Include="scripts\stage\UnitData.h" />
+    <ClInclude Include="scripts\utilities\UILayout.h" />
     <ClInclude Include="scripts\visuals\Button.h" />
     <ClInclude Include="scripts\systems\ButtonManager.h" />
     <ClInclude Include="scripts\systems\Loadout.h" />

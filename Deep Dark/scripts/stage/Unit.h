@@ -16,6 +16,7 @@ private:
 	Stage* stage; // Current Stage
 	float attackCooldown = 0;
 	UnitAnimationState animationState = UnitAnimationState::MOVING;
+	//* state = nullptr;
 
 	float aniTime = 0.f;
 	int currentFrame = 0;
@@ -174,3 +175,23 @@ public:
 	}
 };
 
+/*
+struct UnitState {
+	~UnitState() = default;
+	virtual void state_tick(Unit& u, sf::RenderWindow& window, float deltaTime) = 0;
+};
+struct MovingUnitState : public UnitState {
+	static MovingUnitState& get_state() {
+		static MovingUnitState ins;
+		return ins;
+	}
+	void state_tick(Unit& u, sf::RenderWindow& window, float deltaTime) override;
+};
+struct AttackingUnitState : public UnitState {
+	static AttackingUnitState& get_state() {
+		static AttackingUnitState ins;
+		return ins;
+	}
+	void state_tick(Unit& u, sf::RenderWindow& window, float deltaTime) override;
+};
+*/

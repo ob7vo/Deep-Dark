@@ -24,9 +24,6 @@
     <ClCompile Include="scripts\visuals\Button.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="scripts\systems\ButtonManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="scripts\visuals\Animation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -57,7 +54,7 @@
     <ClCompile Include="scripts\systems\Observer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="scripts\visuals\Menu.cpp">
+    <ClCompile Include="scripts\menus\StageUI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -107,7 +104,7 @@
     <ClInclude Include="scripts\misc\UnitEnums.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="scripts\misc\Easing.hpp">
+    <ClInclude Include="scripts\utilities\Easing.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="scripts\misc\json.hpp">
@@ -128,7 +125,7 @@
     <ClInclude Include="scripts\systems\Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="scripts\misc\Bounds.h">
+    <ClInclude Include="scripts\utilities\Bounds.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="scripts\misc\ChallengeTypes.h">
@@ -137,7 +134,13 @@
     <ClInclude Include="scripts\systems\Observer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="scripts\visuals\Menu.h">
+    <ClInclude Include="scripts\menus\Menu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scripts\utilities\UILayout.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scripts\menus\StageUI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

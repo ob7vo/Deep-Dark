@@ -61,13 +61,14 @@ int main()
     */
     json stageJson = json::parse(stageFile);
     stageFile.close();
-    StageManager stageManager(stageJson, slots);
-    stageManager.cam = &cam;
+    StageManager stageManager(stageJson, slots, cam);
 
     while (window.isOpen())
     {
         set_mouse_position(window);
         cam.set_mouse_pos(MOUSE_POS);
+        stageManager.ui.check_mouse_hover(MOUSE_POS);
+
         float deltaTime = clock.restart().asSeconds();
         deltaTime = std::min(deltaTime, MAX_DELTA_TIME);
 
@@ -83,6 +84,7 @@ int main()
                 window.setView(cam.view);
             }
             else if (event->is<sf::Event::MouseButtonPressed>()) {
+                stageManager.ui.register_click(MOUSE_POS);
                 cam.register_click(*event);
             }
         }

@@ -7,25 +7,26 @@ struct Stage;
 
 class Base
 {
+private:
 	sf::Sprite sprite;
 	int team = 0;
-	int maxHp;
-	int hp;
+	int maxHp = 0;
+	int hp = 0;
 
-	float timeLeft;
-	float cannonTimer;
-	float sightRange; // only for enemy bases
+	float cooldown = 0;
+	float cannonTimer = 0;
+	float sightRange = 0; // only for enemy bases
 
 public:
 	std::unique_ptr<BaseCannon> cannon;
 	Animation* cannonAnimation = nullptr;
-	sf::Vector2f pos;
+	sf::Vector2f pos = {0.f, 0.f};
 
 	Base(const nlohmann::json& stageFile, int team);
 	void create_cannon(std::string path, float mag);
 
 	void take_damage(int dmg);
-	void fire_cannon();
+	bool try_fire_cannon();
 	void tick(Stage& stage, sf::RenderWindow& window, float deltaTime);
 
 	//void get_animation_ptr(std::string cannonType);
@@ -43,5 +44,7 @@ public:
 		}
 		return defaultTex;
 	}
+	inline void draw(sf::RenderWindow& window) { window.draw(sprite); }
+	inline bool on_cooldown() const { return cooldown > 0.f; }
 };
 

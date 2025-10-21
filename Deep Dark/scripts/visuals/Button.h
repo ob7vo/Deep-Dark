@@ -1,23 +1,37 @@
 #pragma once
 #include <SFML\Graphics.hpp>
 #include <functional>
+#include "Camera.h"
+#include <iostream>
 
 class Button
 {
-	sf::Vector2f viewportPos;
-	sf::Vector2f pos;
-	sf::Vector2f bounds;
-	sf::Color baseColor;
+	sf::Vector2f pos = { 0.f,0.f };
+	sf::Vector2f bounds = { 0.f,0.f };
+	sf::Texture texture = defTexture;
 public:
-	std::function<void()> onClick;
-	sf::RectangleShape shape;
+	std::function<void()> onClick = NULL;
+	sf::Sprite sprite = sf::Sprite(defTexture);
+	sf::VertexArray darkOverlay = sf::VertexArray(sf::PrimitiveType::TriangleStrip, 4);
 	bool hovering = 0;
 
-	Button(sf::Vector2f pos, sf::Vector2f bounds, sf::Color color, std::function<void()> onClick);
+	Button() = default;
 
 	void check_mouse_hover(sf::Vector2f mousePos);
 	bool is_hovering(sf::Vector2f mousePos);
+	inline void set_new_params(sf::Vector2f normPos, sf::Vector2f scale, 
+		const std::string& path, Camera& cam) {
+		cam.set_sprite_params(normPos, scale, path, texture, sprite);
+		pos = sprite.getPosition();
+		bounds = sprite.getGlobalBounds().size * 1.05f;
 
-	void draw(sf::RenderWindow& window);
+		sf::FloatRect bounds = sprite.getGlobalBounds();
+		float left = pos.x;
+		float top = pos.y;
+		float height = bounds.size.y;
+		float width = bounds.size.x;
+
+		darkOverlay = cam.get_dark_overlay(left, top, width, height);
+	}
 };
 

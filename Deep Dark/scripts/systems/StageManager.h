@@ -3,7 +3,7 @@
 #include "Loadout.h"
 #include "Camera.h" 
 #include "Observer.h"
-#include <Menu.h>
+#include <StageUI.h>
 #include <iostream>
 using Key = sf::Keyboard::Key;
 
@@ -23,11 +23,9 @@ const int MAX_BAG_LEVEL = 5;
 const int BAG_UPGRADE_PORTION = 4;
 const int BASE_BAG_COST = 4;
 
-const sf::Font baseFont("fonts/KOMIKAX_.ttf");
-
 struct StageManager
 {
-	Camera* cam = nullptr;
+	Camera& cam;
 	Loadout loadout;
 	Stage stage;
 	StageRecord stageRecorder;
@@ -43,13 +41,13 @@ struct StageManager
 	int parts = 0; // currency
 	int partsPerSecond = 5;
 	int currentBagLevel = 1;
-	int bagUpgradeCost = 4;
-	int baseBagUpgradeCost = 4;
+	int bagUpgradeCost = 20;
+	int baseBagUpgradeCost = 20;
 	int bagCap = 500;
-	int baseBagCap = 0;
+	int baseBagCap = 500;
 	float partsIncTimer = 0;
 
-	StageManager(const nlohmann::json& stageJson, std::vector<std::string>& loudoutSlots);
+	StageManager(const nlohmann::json& stageJson, std::vector<std::string>& loudoutSlots, Camera& cam);
 	void update_game_ticks(sf::RenderWindow& window, float deltaTime);
 	void process_move_requests();
 	void spawn_enemies(float deltaTime);
@@ -65,8 +63,9 @@ struct StageManager
 	void handle_events(sf::Event event);
 	bool read_lane_switch_inputs(Key key);
 	bool read_spawn_inputs(Key key);
-	bool read_base_fire_input(Key key);
-	bool read_pouch_upgrade_input(Key key);
+	void read_button_inputs(Key key);
+	void upgrade_bag();
+	void pause();
 
 	void try_spawn_death_surge(Unit& unit);
 	void create_drop_box(int lane, const UnitStats* stats, std::array<Animation, 5>* aniMap);
@@ -102,6 +101,7 @@ struct StageManager
 			update_challenges_text(clears);
 	}
 	inline void update_challenges_text(int clears) {
+		
 		clearedChallenges = clears;
 
 		if (clearedChallenges == challenges.size())
@@ -111,5 +111,12 @@ struct StageManager
 
 		ui.clearedChallengesText.setString(std::format("Challenges Cleared: {}/{}",
 			clearedChallenges, challenges.size()));
+			
 	}
+	inline bool try_buy_upgrade_bag() {
+		return currentBagLevel < MAX_BAG_LEVEL && try_spend_parts(bagUpgradeCost);
+	}
+	inline bool paused() const { return ui.paused; }
+	inline bool try_fire_cannon() { return stage.playerBase.try_fire_cannon(); }
+	inline bool can_fire_cannon() const { return stage.playerBase.on_cooldown(); }
 };
