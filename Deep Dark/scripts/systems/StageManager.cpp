@@ -13,14 +13,12 @@ float random_float(float min, float max) {
 	return dis(gen);
 }
 
-StageManager::StageManager(const json& stageJson, std::vector<std::string>& slotsJsonPaths) :
-	stageRecorder(stageJson["lane_count"]), loadout(slotsJsonPaths), 
-	stage(stageJson, stageRecorder) 
+StageManager::StageManager(const json& stageJson, std::vector<std::string>& slotsJsonPaths, Camera& cam) :
+	stageRecorder(stageJson["lane_count"]), loadout(slotsJsonPaths), cam(cam),
+	ui(cam, *this), stage(stageJson, stageRecorder)
 {
 	ui.partsCountText.setString(std::format("$0/{}", bagCap));
-	ui.partsCountText.setPosition({ 50,50 });
 	ui.bagUpgradeCostText.setString(std::format("${}", bagUpgradeCost));
-	ui.bagUpgradeCostText.setPosition({ 50,700 });
 
 	int challengeCount = stageJson["challenges"].size();
 	challenges.reserve(challengeCount);
@@ -45,12 +43,29 @@ StageManager::StageManager(const json& stageJson, std::vector<std::string>& slot
 
 	ui.clearedChallengesText.setString(
 		std::format("Challenges Cleared: 0/{}", challenges.size()));
-	ui.clearedChallengesText.setPosition({ 500,650 });
 	ui.clearedChallengesText.setCharacterSize(16);
 	ui.clearedChallengesText.setFillColor(sf::Color::Yellow);
+
+	bagCap = baseBagCap;
+	bagUpgradeCost = baseBagUpgradeCost;
 }
 
 // Reading Inputs
+void StageManager::upgrade_bag() {
+	currentBagLevel++;
+
+	partsPerSecond = (int)std::round(partsPerSecond * 1.1f);
+	bagCap += (int)std::round(baseBagCap * 0.5f);
+	bagUpgradeCost += (int)std::round(baseBagUpgradeCost * 0.25f);
+
+	ui.bagUpgradeCostText.setString(std::format("${}", bagUpgradeCost));
+	ui.partsCountText.setString(std::format("#{}/{}", parts, bagCap));
+
+}
+void StageManager::pause() {
+	ui.paused = !ui.paused;
+	//cam.locked = ui.paused;
+}
 bool StageManager::read_lane_switch_inputs(Key key) {
 	if (key == Key::Up) {
 		selectedLane = (selectedLane + 1) % stage.laneCount;
@@ -64,19 +79,11 @@ bool StageManager::read_lane_switch_inputs(Key key) {
 	stage.selectedLane = selectedLane;
 	return false;
 }
-bool StageManager::read_pouch_upgrade_input(Key key) {
-	if (currentBagLevel >= MAX_BAG_LEVEL) return false;
-	else if (key == Key::B && try_spend_parts(bagUpgradeCost)) {
-		currentBagLevel++;
-
-		partsPerSecond = (int)std::round(partsPerSecond * 1.1f);
-		bagCap += (int)std::round(baseBagCap * 0.5f);
-		bagUpgradeCost += (int)std::round(baseBagCap * 0.25f);
-
-		ui.bagUpgradeCostText.setString(std::format("${}", bagUpgradeCost));
-		return true;
-	}
-	return false;
+void StageManager::read_button_inputs(Key key) {
+	if (key == Key::F)
+		try_fire_cannon();
+	else if (key == Key::B && try_buy_upgrade_bag())
+		upgrade_bag();
 }
 bool StageManager::read_spawn_inputs(Key key) {
 	for (int i = 0; i < loadout.filledSlots; i++) {
@@ -96,19 +103,17 @@ bool StageManager::read_spawn_inputs(Key key) {
 	}
 	return false;
 }
-bool StageManager::read_base_fire_input(Key key) {
-	if (key == Key::F) {
-		stage.playerBase.fire_cannon();
-		return true;
-	}
-	return false;
-}
 void StageManager::handle_events(sf::Event event) {
 	if (auto keyEvent = event.getIf<sf::Event::KeyPressed>()) {
-		if (read_spawn_inputs(keyEvent->code)) return;
+		if (keyEvent->code == Key::Escape) {
+			pause();
+			return;
+		}
+
+		if (paused()) return;
+		else if (read_spawn_inputs(keyEvent->code)) return;
 		else if (read_lane_switch_inputs(keyEvent->code)) return;
-		else if (read_base_fire_input(keyEvent->code)) return;
-		else read_pouch_upgrade_input(keyEvent->code);
+		else read_button_inputs(keyEvent->code);
 	}
 }
 
@@ -177,9 +182,8 @@ void StageManager::handle_player_unit_death(Unit& unit) {
 		try_create_cloner(unit);
 	}
 }
-void StageManager::spawn_enemies(float deltaTime) {
-	timeSinceStart += deltaTime;
 
+void StageManager::spawn_enemies(float deltaTime) {
 	for (size_t i = stage.enemySpawners.size(); i--;) {
 		auto& data = stage.enemySpawners[i];
 
@@ -299,6 +303,20 @@ void StageManager::only_draw(sf::RenderWindow& window) {
 			++it;
 		}
 	}
+
+	stage.enemyBase.draw(window);
+	stage.playerBase.draw(window);
+
+	for (auto it = stage.surges.begin(); it != stage.surges.end();) {
+		window.draw((*it)->sprite);
+		++it;
+	}
+	for (auto it = stage.actionObjects.begin(); it != stage.actionObjects.end();) {
+		window.draw((*it)->sprite);
+		++it;
+	}
+
+	draw_ui();
 }
 void StageManager::update_ui(float deltaTime) {
 	for (int i = 0; i < loadout.filledSlots; i++) 
@@ -308,13 +326,17 @@ void StageManager::update_ui(float deltaTime) {
 }
 void StageManager::draw_ui() {
 	loadout.draw_slots(cam, parts);
-
-	cam->queue_ui_draw(&ui.partsCountText);
-	cam->queue_ui_draw(&ui.bagUpgradeCostText);
-	cam->queue_ui_draw(&ui.clearedChallengesText);
+	ui.draw();
 }
 
 void StageManager::update_game_ticks(sf::RenderWindow& window, float deltaTime) {
+	if (paused()) {
+		only_draw(window);
+		return;
+	}
+
+	timeSinceStart += deltaTime;
+
 	spawn_enemies(deltaTime);
 	update_unit_ticks(window, deltaTime); // This is where the erase is called
 	update_ptr_ticks(window, deltaTime);

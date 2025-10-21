@@ -5,7 +5,6 @@
 #include "Camera.h"
 #include <fstream>
 
-const sf::Color blackTransperent(0, 0, 0, 128);
 static sf::Texture& default_slot_texture() {
 	static sf::Texture defaultTex;
 	static bool initialized = false;
@@ -42,7 +41,7 @@ struct Slot {
 		height = bounds.size.y;
 		width = bounds.size.x;
 	}
-	inline void draw_cooldown_bar(Camera* cam, float percentage) {
+	inline void draw_cooldown_bar(Camera& cam, float percentage) {
 		//std::cout << "drawing bar with percentage: " << percentage << std::endl;
 		sf::VertexArray darkOverlay(sf::PrimitiveType::TriangleStrip, 4);
 		float darkHeight = height * (1.0f - percentage);  // Fill from bottom
@@ -59,10 +58,10 @@ struct Slot {
 		darkOverlay[3].position = { left + width, top + height };
 		darkOverlay[3].color = blackTransperent;
 
-		cam->queue_temp_ui_draw(darkOverlay);
+		cam.queue_temp_ui_draw(darkOverlay);
 	}
-	inline void draw(Camera* cam, int curParts) {
-		cam->queue_ui_draw(&slotSprite);
+	inline void draw(Camera& cam, int curParts) {
+		cam.queue_ui_draw(&slotSprite);
 
 		float percentage = 0;
 		if ((cooldown <= 0 && can_afford_unit(curParts)) || empty) {
@@ -111,7 +110,7 @@ struct Loadout{
 			pos.y += 50;
 		}
 	}
-	inline void draw_slots(Camera* cam, int currentParts) {
+	inline void draw_slots(Camera& cam, int currentParts) {
 		for (int i = 0; i < 10; i++) {
 			slots[i].draw(cam, currentParts);
 		}

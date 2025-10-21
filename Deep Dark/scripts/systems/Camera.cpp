@@ -12,11 +12,31 @@ Camera::Camera(sf::RenderWindow& window) : window(window) {
 	view = window.getDefaultView();
 	uiView = view;
 	pos = view.getCenter();
-	sf::Vector2f size = view.getSize() * 2.f;
+	sf::Vector2f boundsSize = view.getSize() * 2.f;
 	sf::Vector2f topLeft = { -100,-100 };//{ -ASPECT_WIDTH * 0.5f, -ASPECT_HEIGHT * 0.5f };
-	sf::FloatRect bound(topLeft, size);
+	sf::FloatRect bound(topLeft, boundsSize);
 	set_bounds(bound);
+
+	sf::Vector2f uiTopLeft = uiView.getCenter();
+	get_dark_overlay(darkScreenOverlay, 0, 0, view.getSize().x, view.getSize().y);
 }
+void Camera::get_dark_overlay(sf::VertexArray& darkOverlay, float left, float top, float width, float height, float percentage) {
+	darkOverlay = sf::VertexArray(sf::PrimitiveType::TriangleStrip, 4);
+	float darkHeight = height * (1.0f - percentage);
+	
+	darkOverlay[0].position = { left, top + height - darkHeight };
+	darkOverlay[0].color = blackTransperent;
+
+	darkOverlay[1].position = { left + width, top + height - darkHeight };
+	darkOverlay[1].color = blackTransperent;
+
+	darkOverlay[2].position = { left, top + height };
+	darkOverlay[2].color = blackTransperent;
+
+	darkOverlay[3].position = { left + width, top + height };
+	darkOverlay[3].color = blackTransperent;
+}
+
 void Camera::update(float deltaTime) {
 	draw_all_ui();
 	if (has_velocity())
@@ -37,6 +57,8 @@ void Camera::draw_all_ui() {
 }
 
 void Camera::handle_events(sf::Event event) {
+	if (locked) return;
+
 	if (auto key = event.getIf<sf::Event::KeyPressed>()) {
 		move(key->code);
 		zoom(key->code);
@@ -54,6 +76,8 @@ void Camera::handle_events(sf::Event event) {
 	}
 }
 void Camera::register_click(sf::Event event) {
+	if (locked) return;
+
 	if (auto click = event.getIf<sf::Event::MouseButtonPressed>()) {
 		if (click->button == MOUSE_1) {
 			velocity = { 0.f,0.f };

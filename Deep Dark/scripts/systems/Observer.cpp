@@ -39,15 +39,15 @@ bool Challenge::notify(StageManager& manager) {
 	return false;
 }
 int* Challenge::get_target_ptr(StageManager& manager) {
-	float t = 0;
 	UnitRecord& rec = manager.stageRecorder.get_unit_record(team);
+
 	switch (challengeType) {
 	case ChallengeType::UNIT_DEATHS:
 		if (lane <= 0 || lane >= rec.deaths.size()) return &rec.totalDeaths;
 		else return &rec.deaths[lane];
 	case ChallengeType::UNITS_SPAWNED:
 		if (lane <= 0 || lane >= rec.deaths.size()) {
-			std::cout << "getting total spawns address: " << rec.totalSpawns << std::endl;
+			std::cout << "getting total spawns address: " << &rec.totalSpawns << std::endl;
 			return &rec.totalSpawns;
 		}
 		else return &rec.unitsSpawned[lane];

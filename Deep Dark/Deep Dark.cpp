@@ -15,7 +15,7 @@ const unsigned int FRAMERATE_LIMIT = 30;
 const int ASPECT_WIDTH = 900;
 const int ASPECT_HEIGHT = 800;
 sf::Vector2f MOUSE_POS{ 0.f,0.f };
-
+sf::Color WINDOW_COLOR(22, 27, 54);
 
 void set_mouse_position(sf::RenderWindow& window) {
     sf::Vector2i mousePos = sf::Mouse::getPosition(window);
@@ -30,6 +30,7 @@ int main()
 
     sf::Clock clock;
     sf::RenderWindow window(sf::VideoMode({ ASPECT_WIDTH, ASPECT_WIDTH }), "SFML works!");
+  
     window.setFramerateLimit(FRAMERATE_LIMIT);
 
     Camera cam(window);
@@ -61,13 +62,14 @@ int main()
     */
     json stageJson = json::parse(stageFile);
     stageFile.close();
-    StageManager stageManager(stageJson, slots);
-    stageManager.cam = &cam;
+    StageManager stageManager(stageJson, slots, cam);
 
     while (window.isOpen())
     {
         set_mouse_position(window);
         cam.set_mouse_pos(MOUSE_POS);
+        stageManager.ui.check_mouse_hover(MOUSE_POS);
+
         float deltaTime = clock.restart().asSeconds();
         deltaTime = std::min(deltaTime, MAX_DELTA_TIME);
 
@@ -83,13 +85,15 @@ int main()
                 window.setView(cam.view);
             }
             else if (event->is<sf::Event::MouseButtonPressed>()) {
+                stageManager.ui.register_click(MOUSE_POS);
                 cam.register_click(*event);
             }
         }
 
         if (cam.dragging) cam.click_and_drag();
 
-        window.clear();
+        window.clear(WINDOW_COLOR);
+
         stageManager.update_game_ticks(window, deltaTime);
         cam.update(deltaTime);
         window.display();
