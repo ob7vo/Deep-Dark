@@ -3,7 +3,7 @@
 #include "Loadout.h"
 #include "Camera.h" 
 #include "Observer.h"
-#include <StageUI.h>
+#include "StageUI.h"
 #include <iostream>
 using Key = sf::Keyboard::Key;
 
@@ -26,14 +26,13 @@ const int BASE_BAG_COST = 4;
 struct StageManager
 {
 	Camera& cam;
-	Loadout loadout;
-	Stage stage;
-	StageRecord stageRecorder;
+	StageUI& ui;
+	Loadout& loadout;
+	Stage stage = {};
+	StageRecord stageRecorder = {};
 
-	std::vector<Challenge> challenges;
+	std::vector<Challenge> challenges = {};
 	int clearedChallenges = 0;
-
-	StageUI ui;
 
 	float timeSinceStart = 0.f;
 	int selectedLane = 0;
@@ -47,16 +46,20 @@ struct StageManager
 	int baseBagCap = 500;
 	float partsIncTimer = 0;
 
-	StageManager(const nlohmann::json& stageJson, std::vector<std::string>& loudoutSlots, Camera& cam);
-	void update_game_ticks(sf::RenderWindow& window, float deltaTime);
+	StageManager(Camera& cam, StageUI& ui, Loadout& loadout) : 
+		cam(cam), ui(ui), loadout(loadout) {};
+	void unload_stage();
+	void create_stage(const nlohmann::json& stageJson);
+
+	void update_game_ticks(float deltaTime);
 	void process_move_requests();
 	void spawn_enemies(float deltaTime);
 	void increment_parts_and_notify(float deltaTime);
-	void update_unit_ticks(sf::RenderWindow& window, float deltaTime);
-	void update_ptr_ticks(sf::RenderWindow& window, float deltaTime);
-	void update_base_ticks(sf::RenderWindow& window, float deltaTime);
+	void update_unit_ticks(float deltaTime);
+	void update_ptr_ticks(float deltaTime);
+	void update_base_ticks(float deltaTime);
 
-	void only_draw(sf::RenderWindow& window);
+	void draw(sf::RenderWindow& window);
 	void update_ui(float deltaTime);
 	void draw_ui();
 

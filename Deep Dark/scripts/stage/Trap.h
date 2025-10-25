@@ -39,7 +39,7 @@ struct Trap
 	virtual ~Trap() = default;
 
 	bool enemy_in_trigger_range();
-	void tick(sf::RenderWindow& window, float deltaTime, StageRecord& rec);
+	void tick(float deltaTime, StageRecord& rec);
 	void trigger(StageRecord& rec);
 	void trigger_launch_pad();
 	void trigger_trap_door();

@@ -25,19 +25,19 @@ struct StagePauseMenu : public Menu<STAGE_PAUSE_MENU_BUTTONS> {
 };
 
 struct StageUI : public Menu<STAGE_UI_BUTTONS> {
-	StageManager& stageManager;
+	StageManager* stageManager;
 	StagePauseMenu pauseMenu;
 
 	sf::Text partsCountText = sf::Text(baseFont);
 	sf::Text bagUpgradeCostText = sf::Text(baseFont);
 	sf::Text clearedChallengesText = sf::Text(baseFont);
 
-	StageUI(Camera& cam, StageManager& manager);
+	StageUI(Camera& cam);
 	void create_buttons();
 
 	void draw() override;
-	void register_click(sf::Vector2f mousePos) override;
-	void check_mouse_hover(sf::Vector2f mousePos) override;
+	void register_click() override;
+	void check_mouse_hover() override;
 
 	void pause();
 	void upgrade_bag();

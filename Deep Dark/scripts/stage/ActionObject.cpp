@@ -13,9 +13,8 @@ SurgeSpawner::SurgeSpawner(const UnitStats* stats, const Augment surge, ActionOb
 	ActionObject(config), stats(stats), surge(surge) {
 	create_animation();
 }
-void ActionObject::tick(sf::RenderWindow& window, float deltaTime) {
+void ActionObject::tick(float deltaTime) {
 	int events = ani.update(deltaTime, sprite);
-	window.draw(sprite);
 
 	if (Animation::check_for_event(TRIGGER, events))
 		action();

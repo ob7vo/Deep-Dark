@@ -18,9 +18,9 @@ Camera::Camera(sf::RenderWindow& window) : window(window) {
 	set_bounds(bound);
 
 	sf::Vector2f uiTopLeft = uiView.getCenter();
-	get_dark_overlay(darkScreenOverlay, 0, 0, view.getSize().x, view.getSize().y);
+	set_dark_overlay(darkScreenOverlay, 0, 0, view.getSize().x, view.getSize().y);
 }
-void Camera::get_dark_overlay(sf::VertexArray& darkOverlay, float left, float top, float width, float height, float percentage) {
+void Camera::set_dark_overlay(sf::VertexArray& darkOverlay, float left, float top, float width, float height, float percentage) {
 	darkOverlay = sf::VertexArray(sf::PrimitiveType::TriangleStrip, 4);
 	float darkHeight = height * (1.0f - percentage);
 	
@@ -39,7 +39,9 @@ void Camera::get_dark_overlay(sf::VertexArray& darkOverlay, float left, float to
 
 void Camera::update(float deltaTime) {
 	draw_all_ui();
-	if (has_velocity())
+
+	if (dragging) click_and_drag();
+	else if (has_velocity())
 		apply_velocity(deltaTime);
 }
 void Camera::draw_all_ui() {
@@ -66,24 +68,19 @@ void Camera::handle_events(sf::Event event) {
 	else if (auto release = event.getIf<sf::Event::MouseButtonReleased>()) {
 		if (release->button == MOUSE_1) {
 			velocity *= PAN_MULTIPLIER;
-			//std::cout << "released camera drag. Velocity = (" << velocity.x
-			//	<< ", " << velocity.y << ")" << std::endl;
 			dragging = false;
 		}
 	}
-	else if (auto scroll = event.getIf<sf::Event::MouseWheelScrolled>()) {
+	else if (auto click = event.getIf<sf::Event::MouseButtonPressed>())
+		register_click(*click);
+	else if (auto scroll = event.getIf<sf::Event::MouseWheelScrolled>()) 
 		zoom(*scroll);
-	}
 }
-void Camera::register_click(sf::Event event) {
-	if (locked) return;
-
-	if (auto click = event.getIf<sf::Event::MouseButtonPressed>()) {
-		if (click->button == MOUSE_1) {
-			velocity = { 0.f,0.f };
-			dragOrigin = mousePos;
-			dragging = true;
-		}
+void Camera::register_click(sf::Event::MouseButtonPressed click) {
+	if (click.button == MOUSE_1) {
+		velocity = { 0.f,0.f };
+		dragOrigin = mousePos;
+		dragging = true;
 	}
 }
 

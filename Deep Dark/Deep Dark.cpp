@@ -3,23 +3,38 @@
 #include <iostream>
 #include <fstream>
 #include "StageManager.h"
+#include "StateManager.h"
 #include "ButtonManager.h"
 #include "Tween.h"
-#include "json.hpp"
-#include "Camera.h"
+#include "StageGameState.h"
 
 using json = nlohmann::json;
 
 const float MAX_DELTA_TIME = 0.033f;
-const unsigned int FRAMERATE_LIMIT = 30;
+const unsigned int FRAMERATE_LIMIT = 60;
 const int ASPECT_WIDTH = 900;
 const int ASPECT_HEIGHT = 800;
 sf::Vector2f MOUSE_POS{ 0.f,0.f };
 sf::Color WINDOW_COLOR(22, 27, 54);
 
-void set_mouse_position(sf::RenderWindow& window) {
-    sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-    MOUSE_POS = window.mapPixelToCoords(mousePos);
+sf::Text fpsText(baseFont);
+float timeSinceLastFPSUpdate = 0.0f;
+const float FPSTimer = 0.5f;
+
+void set_mouse_position(sf::RenderWindow& window, Camera& cam) {
+    sf::Vector2i mouseScreenPos = sf::Mouse::getPosition(window);
+    MOUSE_POS = window.mapPixelToCoords(mouseScreenPos);
+    cam.set_mouse_pos(MOUSE_POS, mouseScreenPos);
+}
+void set_fps_text(float deltaTime) {
+    timeSinceLastFPSUpdate += deltaTime;
+    if (timeSinceLastFPSUpdate < FPSTimer) return;
+
+    timeSinceLastFPSUpdate = 0.0f;
+    float fps = 1 / deltaTime;
+    std::stringstream ss;
+    ss << "FPS: " << std::fixed << std::setprecision(1) << fps;
+    fpsText.setString(ss.str());
 }
 int main()
 {
@@ -30,52 +45,36 @@ int main()
 
     sf::Clock clock;
     sf::RenderWindow window(sf::VideoMode({ ASPECT_WIDTH, ASPECT_WIDTH }), "SFML works!");
-  
-    window.setFramerateLimit(FRAMERATE_LIMIT);
-
-    Camera cam(window);
+    //window.setFramerateLimit(FRAMERATE_LIMIT);
 
     Surge::init_animations();
     BaseCannon::init_animations();
 
+    fpsText.setCharacterSize(20);
+    fpsText.setFillColor(sf::Color::White);
+    fpsText.setPosition({ 600, 50 });
+
+    Camera cam(window);
+    StateManager stateManager(cam);
+
     std::vector<std::string> slots = { "configs/player_units/soldier/soldier.json"};
     std::ifstream stageFile("configs/stage_data/stage_1.json");
-    /*
-    std::string content((std::istreambuf_iterator<char>(stageFile)),
-        std::istreambuf_iterator<char>());
-    std::cout << "File contents:\n" << content << std::endl;
-
-    // Reset stream and parse
-    stageFile.clear();
-    stageFile.seekg(0);
-    return 0;
-    
-    try {
-        std::ifstream stageFile("configs/stage_data/stage_1.json");
-        json stageJson = json::parse(stageFile);
-    }
-    catch (const json::parse_error& e) {
-        std::cout << "Parse error: " << e.what() << std::endl;
-        std::cout << "Error ID: " << e.id << std::endl;
-        std::cout << "Byte position: " << e.byte << std::endl;
-    }
-    */
     json stageJson = json::parse(stageFile);
     stageFile.close();
-    StageManager stageManager(stageJson, slots, cam);
+    
+    StageEnterData stageEnterData(stageJson, slots, cam);
+    stateManager.switch_state(&stageEnterData);
+  //  StageManager stageManager(stageJson, slots, cam);
 
     while (window.isOpen())
     {
-        set_mouse_position(window);
-        cam.set_mouse_pos(MOUSE_POS);
-        stageManager.ui.check_mouse_hover(MOUSE_POS);
-
+        set_mouse_position(window, cam);
         float deltaTime = clock.restart().asSeconds();
-        deltaTime = std::min(deltaTime, MAX_DELTA_TIME);
+       // deltaTime = std::min(deltaTime, MAX_DELTA_TIME);
 
         while (const std::optional event = window.pollEvent()){
-            stageManager.handle_events(*event);
-            cam.handle_events(*event);
+            stateManager.handle_events(*event);
+
             if (event->is<sf::Event::Closed>())
                 window.close();
             else if (auto size = event->getIf<sf::Event::Resized>()) {
@@ -84,18 +83,14 @@ int main()
                 cam.uiView.setSize(sf::Vector2f(size->size));
                 window.setView(cam.view);
             }
-            else if (event->is<sf::Event::MouseButtonPressed>()) {
-                stageManager.ui.register_click(MOUSE_POS);
-                cam.register_click(*event);
-            }
         }
 
-        if (cam.dragging) cam.click_and_drag();
+        set_fps_text(deltaTime);
 
         window.clear(WINDOW_COLOR);
-
-        stageManager.update_game_ticks(window, deltaTime);
-        cam.update(deltaTime);
+        cam.queue_ui_draw(&fpsText);
+        stateManager.update(deltaTime);
+        stateManager.render();
         window.display();
     }
 }

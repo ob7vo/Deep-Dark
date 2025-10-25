@@ -63,22 +63,16 @@ void FireWall::start_animation(SurgeAnimationStates newState) {
 	animationState = newState;
 	fireWallAni[static_cast<int>(newState)].reset(aniTime, currentFrame, sprite);
 };
-int ShockWave::draw(sf::RenderWindow& window, float deltaTime) {
+int ShockWave::update_animation( float deltaTime) {
 	auto events = shockWaveAni[static_cast<int>(animationState) - 1].update(aniTime, currentFrame, deltaTime, sprite);
 	sprite.setPosition(pos);
-	window.draw(sprite);
-
 	return events;
 }
-int FireWall::draw(sf::RenderWindow& window, float deltaTime) {
-	auto events = fireWallAni[static_cast<int>(animationState)].update(aniTime, currentFrame, deltaTime, sprite);
-	window.draw(sprite);
-	return events;
+int FireWall::update_animation(float deltaTime) {
+	return fireWallAni[static_cast<int>(animationState)].update(aniTime, currentFrame, deltaTime, sprite);
 }
-int OrbitalStrike::draw(sf::RenderWindow& window, float deltaTime) {
-	auto events = orbitalStrikeAni.update(aniTime, currentFrame, deltaTime, sprite);
-	window.draw(sprite);
-	return events;
+int OrbitalStrike::update_animation(float deltaTime) {
+	return orbitalStrikeAni.update(aniTime, currentFrame, deltaTime, sprite);
 }
 
 bool in_surge_range(float enemyXPos, float xPos, float range){ 
@@ -116,8 +110,8 @@ void Surge::attack_units(Lane& lanes) {
 			hitUnits.push_back(it->id);
 	}
 }
-void ShockWave::tick(sf::RenderWindow& window, float deltaTime, Stage& stage) {
-	auto events = draw(window, deltaTime);
+void ShockWave::tick(float deltaTime, Stage& stage) {
+	auto events = update_animation(deltaTime);
 	attack_units(stage.get_lane(currentLane));
 
 	switch (animationState) {
@@ -134,8 +128,8 @@ void ShockWave::tick(sf::RenderWindow& window, float deltaTime, Stage& stage) {
 			readyForRemoval = true;
 	}
 }
-void FireWall::tick(sf::RenderWindow& window, float deltaTime, Stage& stage) {
-	auto events = draw(window, deltaTime);
+void FireWall::tick(float deltaTime, Stage& stage) {
+	auto events = update_animation(deltaTime);
 
 	switch (animationState) {
 	case SurgeAnimationStates::START_UP:
@@ -160,8 +154,8 @@ void FireWall::tick(sf::RenderWindow& window, float deltaTime, Stage& stage) {
 			readyForRemoval = true;
 	}
 }
-void OrbitalStrike::tick(sf::RenderWindow& window, float deltaTime, Stage& stage)  {
-	auto events = draw(window, deltaTime);
+void OrbitalStrike::tick(float deltaTime, Stage& stage)  {
+	auto events = update_animation(deltaTime);
 
 	if (Animation::check_for_event(AnimationEvent::ATTACK, events))
 		for (int i = 0; i < stage.laneCount; i++)

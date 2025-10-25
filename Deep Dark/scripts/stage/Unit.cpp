@@ -53,7 +53,7 @@ void Unit::destroy_unit() {
 	std::cout << "destroying Unit with id #" << id << std::endl;
 	stage->cancel_tween(id);
 
-	stage->recorder.add_death(stats->team, currentLane, causeOfDeath);
+	stage->recorder->add_death(stats->team, currentLane, causeOfDeath);
 	if (is_summoned_unit()) stage->summonData->count--;
 
 	hp = 0;
@@ -88,16 +88,14 @@ void Unit::start_idle_or_attack_animation()  {
 		start_animation(UnitAnimationState::ATTACKING);
 	else start_animation(UnitAnimationState::IDILING);
 }
-int Unit::draw(sf::RenderWindow& window, float deltaTime) {
+int Unit::update_animation(float deltaTime) {
 	int events = (*aniMap)[static_cast<int>(animationState)].update(aniTime, currentFrame, deltaTime, sprite);
 	sprite.setPosition(pos);
 	marker.setPosition(pos);
-	window.draw(sprite);
-	window.draw(marker);
 
 	return events;
 }
-int Unit::draw_special(sf::RenderWindow& window, float deltaTime) {
+int Unit::update_animation_special(float deltaTime) {
 	if (!stats->specialAnimation) {
 		std::cout << "no special animation is availible" << std::endl;
 		return {};
@@ -106,8 +104,6 @@ int Unit::draw_special(sf::RenderWindow& window, float deltaTime) {
 	int events = stats->specialAnimation->update(aniTime, currentFrame, deltaTime, sprite);
 	sprite.setPosition(pos);
 	marker.setPosition(pos);
-	window.draw(sprite);
-	window.draw(marker);
 
 	return events;
 }
@@ -623,7 +619,7 @@ void Unit::try_attack_enemy_base(bool& hitEnemy) {
 }
 
 // Tick
-void Unit::tick(sf::RenderWindow& window, float deltaTime) {
+void Unit::tick(float deltaTime) {
 	if (overloaded()) deltaTime *= 0.5f;
 
 	attackCooldown -= deltaTime;
@@ -631,33 +627,33 @@ void Unit::tick(sf::RenderWindow& window, float deltaTime) {
 
 	switch (animationState) {
 	case UnitAnimationState::MOVING:
-		moving_state(window, deltaTime);
+		moving_state(deltaTime);
 		break;
 	case UnitAnimationState::ATTACKING:
-		attack_state(window, deltaTime);
+		attack_state(deltaTime);
 		break;
 	case UnitAnimationState::IDILING:
-		idling_state(window, deltaTime);
+		idling_state(deltaTime);
 		break;
 	case UnitAnimationState::KNOCKEDBACK:
-		knockback_state(window, deltaTime);
+		knockback_state(deltaTime);
 		break;
 	case UnitAnimationState::FALLING:
-		falling_state(window, deltaTime);
+		falling_state(deltaTime);
 		break;
 	case UnitAnimationState::JUMPING:
-		jumping_state(window, deltaTime);
+		jumping_state(deltaTime);
 		break;
 	case UnitAnimationState::PHASE:
-		phase_state(window, deltaTime);
+		phase_state(deltaTime);
 		break;
 	default:
-		waiting_state(window, deltaTime);
+		waiting_state(deltaTime);
 		break;
 	}
 }
-void Unit::moving_state(sf::RenderWindow& window, float deltaTime) {
-	draw(window, deltaTime);
+void Unit::moving_state(float deltaTime) {
+	update_animation(deltaTime);
 	move(deltaTime);
 
 	if (can_teleport())
@@ -679,8 +675,8 @@ void Unit::moving_state(sf::RenderWindow& window, float deltaTime) {
 			start_animation(UnitAnimationState::IDILING);
 	}
 }
-void Unit::attack_state(sf::RenderWindow& window, float deltaTime) {
-	int events = draw(window, deltaTime);
+void Unit::attack_state(float deltaTime) {
+	int events = update_animation(deltaTime);
 	if (Animation::check_for_event(AnimationEvent::FIRST_FRAME, events))
 		hitIndex = 0;
 	if (Animation::check_for_event(AnimationEvent::FINAL_FRAME, events)) {
@@ -698,16 +694,16 @@ void Unit::attack_state(sf::RenderWindow& window, float deltaTime) {
 		if (has_augment(SELF_DESTRUCT)) hp = 0;
 	}
 }
-void Unit::idling_state(sf::RenderWindow& window, float deltaTime) {
-	draw(window, deltaTime);
+void Unit::idling_state(float deltaTime) {
+	update_animation(deltaTime);
 	if (enemy_is_in_sight_range())
 		start_idle_or_attack_animation();
 	else if (!rust_type_and_near_gap())
 		start_animation(UnitAnimationState::MOVING);
 }
-void Unit::knockback_state(sf::RenderWindow& window, float deltaTime) {
-	draw(window, deltaTime);
-	if (can_teleport()) 
+void Unit::knockback_state(float deltaTime) {
+	update_animation(deltaTime);
+	if (can_teleport())
 		teleport();
 	else if (can_fall()) 
 		push_fall_request();
@@ -723,8 +719,8 @@ void Unit::knockback_state(sf::RenderWindow& window, float deltaTime) {
 		if (finishedType == RequestType::LAUNCH) finish_launch_tween();
 	}
 }
-void Unit::falling_state(sf::RenderWindow& window, float deltaTime) {
-	int events = draw(window, deltaTime);
+void Unit::falling_state(float deltaTime) {
+	int events = update_animation(deltaTime);
 	if (done_tweening_and_animating(events)) {
 		if (hp <= 0) destroy_unit();
 		else if (enemy_is_in_sight_range())
@@ -733,8 +729,8 @@ void Unit::falling_state(sf::RenderWindow& window, float deltaTime) {
 	}
 	else stage->update_tween(*this, deltaTime);
 }
-void Unit::jumping_state(sf::RenderWindow& window, float deltaTime) {
-	draw_special(window, deltaTime);
+void Unit::jumping_state(float deltaTime) {
+	update_animation_special(deltaTime);
 	if (!tweening()) {
 		if (hp <= 0) destroy_unit();
 		else if (enemy_is_in_sight_range())
@@ -743,8 +739,8 @@ void Unit::jumping_state(sf::RenderWindow& window, float deltaTime) {
 	}
 	else stage->update_tween(*this, deltaTime);
 }
-void Unit::phase_state(sf::RenderWindow& window, float deltaTime) {
-	auto events = draw_special(window, deltaTime);
+void Unit::phase_state(float deltaTime) {
+	auto events = update_animation_special(deltaTime);
 	if (Animation::check_for_event(AnimationEvent::FINAL_FRAME, events)) {
 		if (can_phase()) { // if can still phase
 			statuses &= ~PHASE;
@@ -765,11 +761,11 @@ void Unit::phase_state(sf::RenderWindow& window, float deltaTime) {
 		}
 	}
 }
-void Unit::is_phasing_state(sf::RenderWindow& window, float deltaTime) {
+void Unit::is_phasing_state(float deltaTime) {
 	if (attackCooldown <= 0)
 		start_special_animation(UnitAnimationState::PHASE);
 }
-void Unit::waiting_state(sf::RenderWindow& window, float deltaTime) {
+void Unit::waiting_state(float deltaTime) {
 	if (attackCooldown <= 0) {
 		if (animationState == UnitAnimationState::IS_PHASING)
 			start_special_animation(UnitAnimationState::PHASE);
@@ -781,18 +777,5 @@ void Unit::waiting_state(sf::RenderWindow& window, float deltaTime) {
 		}
 	}
 }
-
-const std::unordered_map<UnitAnimationState, Unit::StateFunc> stateMap = {
-	{UnitAnimationState::MOVING, &Unit::moving_state},
-	{UnitAnimationState::ATTACKING, &Unit::attack_state},
-	{UnitAnimationState::IDILING, &Unit::idling_state},
-	{UnitAnimationState::KNOCKEDBACK, &Unit::knockback_state},
-	{UnitAnimationState::FALLING, &Unit::falling_state},
-	{UnitAnimationState::JUMPING, &Unit::jumping_state},
-	{UnitAnimationState::PHASE, &Unit::phase_state},
-	{UnitAnimationState::IS_PHASING, &Unit::waiting_state},
-	{UnitAnimationState::WAITING, &Unit::waiting_state},
-	{UnitAnimationState::DYING, &Unit::waiting_state}
-};
 
 //	std::cout << "ID: " << id << " - hit, by UNIT, oldHp: " << oldHp << " - dmg taken : " << dmg << " - newHp : " << hp << std::endl;

@@ -42,7 +42,7 @@ bool Trap::enemy_in_trigger_range() {
 			return true;
 	return false;
 }
-void Trap::tick(sf::RenderWindow& window, float deltaTime, StageRecord& rec) {
+void Trap::tick( float deltaTime, StageRecord& rec) {
 	if (animating) {
 		int events = ani.update(deltaTime, sprite);
 		if (Animation::check_for_event(AnimationEvent::FINAL_FRAME, events)) {
@@ -54,7 +54,6 @@ void Trap::tick(sf::RenderWindow& window, float deltaTime, StageRecord& rec) {
 			trigger(rec);
 	}
 
-	window.draw(sprite);
 	timeLeft -= deltaTime;
 
 	if (timeLeft < 0 && enemy_in_trigger_range()) {

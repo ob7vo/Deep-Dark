@@ -13,10 +13,16 @@ float random_float(float min, float max) {
 	return dis(gen);
 }
 
-StageManager::StageManager(const json& stageJson, std::vector<std::string>& slotsJsonPaths, Camera& cam) :
-	stageRecorder(stageJson["lane_count"]), loadout(slotsJsonPaths), cam(cam),
-	ui(cam, *this), stage(stageJson, stageRecorder)
+void StageManager::create_stage(const json& stageJson) 
 {
+	int lanes = stageJson["lane_count"];
+	challenges.clear();
+	stageRecorder = StageRecord(lanes);
+	stage = Stage(stageJson, &stageRecorder);
+
+	bagCap = baseBagCap;
+	bagUpgradeCost = baseBagUpgradeCost;
+
 	ui.partsCountText.setString(std::format("$0/{}", bagCap));
 	ui.bagUpgradeCostText.setString(std::format("${}", bagUpgradeCost));
 
@@ -45,9 +51,23 @@ StageManager::StageManager(const json& stageJson, std::vector<std::string>& slot
 		std::format("Challenges Cleared: 0/{}", challenges.size()));
 	ui.clearedChallengesText.setCharacterSize(16);
 	ui.clearedChallengesText.setFillColor(sf::Color::Yellow);
+}
+void StageManager::unload_stage() {
+	challenges.clear();
+	stageRecorder = {};
+	stage = {};
 
-	bagCap = baseBagCap;
-	bagUpgradeCost = baseBagUpgradeCost;
+	clearedChallenges = 0;
+	timeSinceStart = 0.f;
+	selectedLane = 0;
+	parts = 0;
+	partsPerSecond = 5;
+	currentBagLevel = 1;
+	bagUpgradeCost = 20;
+	baseBagUpgradeCost = 20;
+	bagCap = 500;
+	baseBagCap = 500;
+	partsIncTimer = 0;
 }
 
 // Reading Inputs
@@ -64,7 +84,7 @@ void StageManager::upgrade_bag() {
 }
 void StageManager::pause() {
 	ui.paused = !ui.paused;
-	//cam.locked = ui.paused;
+	cam.change_lock(ui.paused);
 }
 bool StageManager::read_lane_switch_inputs(Key key) {
 	if (key == Key::Up) {
@@ -239,18 +259,17 @@ void StageManager::process_move_requests() {
 		stage.moveRequests.pop_back();
 	}
 }
-void StageManager::update_unit_ticks(sf::RenderWindow& window, float deltaTime) {
+void StageManager::update_unit_ticks(float deltaTime) {
 	//std::cout << "new update_unit_ticks() call" << std::endl;
 	for (auto& lane : stage.lanes) {
-		lane.draw(window);
-		if (lane.trap) lane.trap->tick(window, deltaTime, stageRecorder);
+		if (lane.trap) lane.trap->tick(deltaTime, stageRecorder);
 		for (auto it = lane.enemyUnits.begin(); it != lane.enemyUnits.end();) {
 			if (it->dead()) {
 				handle_enemy_unit_death(*it);
 				it = lane.enemyUnits.erase(it);
 			}
 			else {
-				it->tick(window, deltaTime);
+				it->tick(deltaTime);
 				++it;
 			}
 		}
@@ -262,35 +281,35 @@ void StageManager::update_unit_ticks(sf::RenderWindow& window, float deltaTime) 
 				it = lane.playerUnits.erase(it);
 			}
 			else {
-				it->tick(window, deltaTime);
+				it->tick(deltaTime);
 				++it;
 			}
 		}
 	}
 }
-void StageManager::update_ptr_ticks(sf::RenderWindow& window, float deltaTime) {
+void StageManager::update_ptr_ticks(float deltaTime) {
 	for (auto it = stage.surges.begin(); it != stage.surges.end();) {
 		if ((*it)->readyForRemoval) it = stage.surges.erase(it);
 		else {
-			(*it)->tick(window, deltaTime, stage);
+			(*it)->tick(deltaTime, stage);
 			++it;
 		}
 	}
 	for (auto it = stage.actionObjects.begin(); it != stage.actionObjects.end();) {
 		if ((*it)->readyForRemoval) it = stage.actionObjects.erase(it);
 		else {
-			(*it)->tick(window, deltaTime);
+			(*it)->tick(deltaTime);
 			++it;
 		}
 	}
 }
-void StageManager::update_base_ticks(sf::RenderWindow& window, float deltaTime) {
-	stage.playerBase.tick(stage, window, deltaTime);
-	stage.enemyBase.tick(stage, window, deltaTime);
+void StageManager::update_base_ticks(float deltaTime) {
+	stage.playerBase.tick(stage,deltaTime);
+	stage.enemyBase.tick(stage, deltaTime);
 }
 
 // UI
-void StageManager::only_draw(sf::RenderWindow& window) {
+void StageManager::draw(sf::RenderWindow& window) {
 	for (auto& lane : stage.lanes) {
 		lane.draw(window);
 		if (lane.trap) window.draw(lane.trap->sprite);
@@ -315,34 +334,20 @@ void StageManager::only_draw(sf::RenderWindow& window) {
 		window.draw((*it)->sprite);
 		++it;
 	}
-
-	draw_ui();
-}
-void StageManager::update_ui(float deltaTime) {
-	for (int i = 0; i < loadout.filledSlots; i++) 
-		loadout.slots[i].cooldown -= deltaTime;
-
-	ui.partsCountText.setString(std::format("#{}/{}", parts, bagCap));
-}
-void StageManager::draw_ui() {
-	loadout.draw_slots(cam, parts);
-	ui.draw();
 }
 
-void StageManager::update_game_ticks(sf::RenderWindow& window, float deltaTime) {
+void StageManager::update_game_ticks(float deltaTime) {
 	if (paused()) {
-		only_draw(window);
+		draw(cam.get_window());
 		return;
 	}
 
 	timeSinceStart += deltaTime;
 
 	spawn_enemies(deltaTime);
-	update_unit_ticks(window, deltaTime); // This is where the erase is called
-	update_ptr_ticks(window, deltaTime);
-	update_base_ticks(window, deltaTime);
+	update_unit_ticks(deltaTime); // This is where the erase is called
+	update_ptr_ticks(deltaTime);
+	update_base_ticks(deltaTime);
 	process_move_requests(); // this is where the other erase is called
 	increment_parts_and_notify(deltaTime);
-
-	update_and_draw_ui(deltaTime);
 }

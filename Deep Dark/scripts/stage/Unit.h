@@ -96,19 +96,19 @@ public:
 	void start_animation(UnitAnimationState newState);
 	void start_special_animation(UnitAnimationState specialState);
 	void start_idle_or_attack_animation();
-	int draw(sf::RenderWindow& window, float deltaTime);
-	int draw_special(sf::RenderWindow& window, float deltaTime);
+	int update_animation(float deltaTime);
+	int update_animation_special(float deltaTime);
 
-	void tick(sf::RenderWindow& window, float deltaTime);
-	void moving_state(sf::RenderWindow& window, float deltaTime);
-	void attack_state(sf::RenderWindow& window, float deltaTime);
-	void idling_state(sf::RenderWindow& window, float deltaTime);
-	void knockback_state(sf::RenderWindow& window, float deltaTime);
-	void falling_state(sf::RenderWindow& window, float deltaTime);
-	void jumping_state(sf::RenderWindow& window, float deltaTime);
-	void phase_state(sf::RenderWindow& window, float deltaTime);
-	void is_phasing_state(sf::RenderWindow& window, float deltaTime);
-	void waiting_state(sf::RenderWindow& window, float deltaTime);
+	void tick(float deltaTime);
+	void moving_state(float deltaTime);
+	void attack_state(float deltaTime);
+	void idling_state(float deltaTime);
+	void knockback_state(float deltaTime);
+	void falling_state(float deltaTime);
+	void jumping_state(float deltaTime);
+	void phase_state(float deltaTime);
+	void is_phasing_state(float deltaTime);
+	void waiting_state(float deltaTime);
 
 	void try_knockback(int oldHp, int hitIndex, const UnitStats* enemyStats);
 	void push_fall_request();

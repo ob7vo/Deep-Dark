@@ -6,9 +6,12 @@
 
 class Button
 {
-	sf::Vector2f pos = { 0.f,0.f };
 	sf::Vector2f bounds = { 0.f,0.f };
-	sf::Texture texture = defTexture;
+	sf::Vector2f pos = { 0.f,0.f };
+
+	sf::Texture idleTexture = defTexture;
+	sf::Texture hoverTexture = defTexture;
+
 public:
 	std::function<void()> onClick = NULL;
 	sf::Sprite sprite = sf::Sprite(defTexture);
@@ -17,11 +20,11 @@ public:
 
 	Button() = default;
 
-	void check_mouse_hover(sf::Vector2f mousePos);
-	bool is_hovering(sf::Vector2f mousePos);
+	bool check_mouse_hover(sf::Vector2i mPos);
+	bool is_hovering(sf::Vector2i mPos);
 	inline void set_new_params(sf::Vector2f normPos, sf::Vector2f scale, 
 		const std::string& path, Camera& cam) {
-		cam.set_sprite_params(normPos, scale, path, texture, sprite);
+		cam.set_sprite_params(normPos, scale, path, idleTexture, sprite);
 		pos = sprite.getPosition();
 		bounds = sprite.getGlobalBounds().size * 1.05f;
 
@@ -31,7 +34,7 @@ public:
 		float height = _bounds.size.y;
 		float width = _bounds.size.x;
 
-		cam.get_dark_overlay(darkOverlay, left, top, width, height);
+		cam.set_dark_overlay(darkOverlay, left, top, width, height);
 	}
 };
 

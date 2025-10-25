@@ -18,11 +18,11 @@ struct Menu
 	~Menu() = default;
 
 	virtual void draw() = 0;
-	virtual void register_click(sf::Vector2f mousePos) { 
-		buttonManager.register_click(mousePos); 
+	virtual void register_click() { 
+		buttonManager.register_click(cam); 
 	}
-	virtual void check_mouse_hover(sf::Vector2f mousePos){
-		buttonManager.check_mouse_hover(mousePos);
+	virtual void check_mouse_hover(){
+		buttonManager.check_mouse_hover(cam);
 	}
 
 	inline Button& get_button(int index) { return buttonManager.buttons[index]; }

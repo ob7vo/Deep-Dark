@@ -10,9 +10,10 @@ const float GUARANTEED_CHANCE = 100.0f;
 
 struct Hit {
 	int dmg = 0;
-	std::pair<int, int> laneReach;
-	std::pair<float, float> attackRange;
+	std::pair<int, int> laneReach = { 0,0 };
+	std::pair<float, float> attackRange = { 0.f,0.f };
 
+	Hit() = default;
 	Hit(int dmg, std::pair<int, int> laneReach = {}, std::pair<float, float> attackRange = {}) :
 		dmg(dmg), laneReach(laneReach), attackRange(attackRange) { }
 };
@@ -29,17 +30,17 @@ struct UnitStats {
 	float speed = 0;
 	float attackTime = 0;
 
-	std::vector<Hit> hits;
+	std::vector<Hit> hits = {};
 	int totalHits = 1;
 	float sightRange = 0;
-	std::pair<int, int> laneSight;
+	std::pair<int, int> laneSight = { 0,0 };
 	bool singleTarget = 0;
 
 	int unitTypes = 0;
 	int targetTypes = 0;
 	size_t immunities = 0;
 	size_t quickAugMask = 0;
-	std::vector<Augment> augments;	
+	std::vector<Augment> augments = {};
 
 	std::unique_ptr<Animation> specialAnimation = nullptr;
 
@@ -115,7 +116,7 @@ struct UnitStats {
 		return (it != augmentMap.end()) ? it->second : AugmentType::NONE;
 	}
 
-	UnitStats() : augments{} {}
+	UnitStats() = default;
 	UnitStats(const nlohmann::json& file, float magnification) : augments{} {
 		std::pair<int, int> baseRange = { 0,0 };
 

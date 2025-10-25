@@ -2,21 +2,23 @@
 #include <iostream>
 const float PADDING = 8.0f;
 const sf::Color highlightColor = sf::Color::Yellow;
-void Button::check_mouse_hover(sf::Vector2f mousePos) {
-	if (is_hovering(mousePos)) {
+bool Button::check_mouse_hover(sf::Vector2i mPos) {
+	if (is_hovering(mPos)) {
 		//if (!hovering) std::cout << "mouse over button" << std::endl;
 		sprite.setColor(highlightColor);
 		hovering = true;
+		return true;
 	}
 	else {
 		hovering = false;
 		sprite.setColor(sf::Color::White);
+		return false;
 	}
 }
 
-bool Button::is_hovering(sf::Vector2f mousePos) {
-	return mousePos.x >= pos.x - bounds.x / 2 - PADDING
-		&& mousePos.x <= pos.x + bounds.x / 2 + PADDING
-		&& mousePos.y >= pos.y - bounds.y / 2 - PADDING
-		&& mousePos.y <= pos.y + bounds.y / 2 + PADDING;
+bool Button::is_hovering(sf::Vector2i mPos) {
+	return mPos.x >= pos.x - bounds.x * 0.5f
+		&& mPos.x <= pos.x + bounds.x * 0.5f
+		&& mPos.y >= pos.y - bounds.y * 0.5f
+		&& mPos.y <= pos.y + bounds.y * 0.5f;
 }

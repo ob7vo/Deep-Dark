@@ -28,11 +28,12 @@ struct Slot {
 	UnitStats unitStats;
 	std::array<Animation, 5> aniMap;
 	
-	Slot() : empty(true), slotSprite(default_slot_texture()) {}
+	Slot() : empty(true), slotSprite(default_slot_texture()) { set_bounds(); }
 	Slot(const nlohmann::json& file, float levelBoost, sf::Texture& tex, float timer)
 		: unitStats(file, levelBoost), spawnTimer(timer), cooldown(0.f),
 		slotSprite(tex), empty(false) {
 		Animation::create_unit_animation_array(file, aniMap);
+		set_bounds();
 	}
 	inline void set_bounds() {
 		sf::FloatRect bounds = slotSprite.getGlobalBounds();
@@ -41,6 +42,7 @@ struct Slot {
 		height = bounds.size.y;
 		width = bounds.size.x;
 	}
+
 	inline void draw_cooldown_bar(Camera& cam, float percentage) {
 		//std::cout << "drawing bar with percentage: " << percentage << std::endl;
 		sf::VertexArray darkOverlay(sf::PrimitiveType::TriangleStrip, 4);
@@ -77,26 +79,14 @@ struct Slot {
 };
 struct Loadout{
 	std::array<Slot, 10> slots;
-	std::vector<sf::Texture> slotTextures;
+	std::vector<sf::Texture> slotTextures = {};
 	int filledSlots = 0;
-
-	Loadout(std::vector<std::string> jsonPaths) {
-		filledSlots = (int)jsonPaths.size();
-		for (size_t i = 0; i < filledSlots; i++) {
-			std::ifstream file(jsonPaths[i]);
-			nlohmann::json unitJson = nlohmann::json::parse(file);
-			float levelBoost = (float)unitJson["level"];
-			float timer = unitJson["recharge_timer"];
-			levelBoost = (levelBoost + 4) / 5.f;
-
-			std::string path = unitJson["path"];
-			std::string fileName = unitJson["slot_sprite"];
-			std::string fullPath = path + fileName;
-			slotTextures.emplace_back(sf::Texture(fullPath));
-			slots[i] = Slot(unitJson, levelBoost, slotTextures.back(), timer);
-		}
-
-		sf::Vector2f pos(250, 725);
+	
+	Loadout(Camera& cam) { set_slot_positions(cam); }
+	inline void set_slot_positions(Camera& cam) {
+		sf::Vector2f pos = cam.norm_to_pixels(UI::Stage::FIRST_UNIT_SLOT_POS);
+		sf::Vector2f inc = cam.norm_to_pixels(UI::Stage::UNIT_SLOT_INCREMENT);
+		float startX = pos.x;
 		for (int i = 0; i < 2; i++) {
 			for (int j = 0; j < 5; j++) {
 				int ind = i * 5 + j;
@@ -104,11 +94,33 @@ struct Loadout{
 				slot.slotSprite.setPosition(pos);
 				slot.slotSprite.setScale({ 2.5f,2.5f });
 				slot.set_bounds();
-				pos.x += 80;
+				pos.x += inc.x;
 			}
-			pos.x = 250;
-			pos.y += 50;
+			pos.x = startX;
+			pos.y += inc.y;
 		}
+	}
+	void create_loadout(std::vector<std::string> jsonPaths) {
+		slotTextures = {};
+		filledSlots = (int)jsonPaths.size();
+
+		for (size_t i = 0; i < filledSlots; i++)
+			set_slot(jsonPaths[i], i);
+		for (size_t j = filledSlots; j < 10; j++)
+			slots[j] = {};
+	}
+	inline void set_slot(std::string jsonPath, int slot) {
+		std::ifstream file(jsonPath);
+		nlohmann::json unitJson = nlohmann::json::parse(file);
+		float levelBoost = (float)unitJson["level"];
+		float timer = unitJson["recharge_timer"];
+		levelBoost = (levelBoost + 4) / 5.f;
+
+		std::string path = unitJson["path"];
+		std::string fileName = unitJson["slot_sprite"];
+		std::string fullPath = path + fileName;
+		slotTextures.emplace_back(sf::Texture(fullPath));
+		slots[slot] = Slot(unitJson, levelBoost, slotTextures.back(), timer);
 	}
 	inline void draw_slots(Camera& cam, int currentParts) {
 		for (int i = 0; i < 10; i++) {

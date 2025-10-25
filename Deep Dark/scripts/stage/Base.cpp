@@ -72,7 +72,7 @@ bool Base::try_fire_cannon() {
 
 	return true;
 }
-void Base::tick(Stage& stage, sf::RenderWindow& window, float deltaTime) {
+void Base::tick(Stage& stage, float deltaTime) {
 	if (cannonAnimation) {
 		auto events = cannonAnimation->update(deltaTime, sprite);
 
@@ -84,7 +84,6 @@ void Base::tick(Stage& stage, sf::RenderWindow& window, float deltaTime) {
 		}
 	}
 
-	window.draw(sprite);
 	cooldown -= deltaTime;
 	if (team == PLAYER_BASE || !cannon || on_cooldown()) return;
 

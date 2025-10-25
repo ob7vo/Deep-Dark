@@ -1,6 +1,7 @@
 #pragma once
 #include "SFML\Graphics.hpp"
 #include "Bounds.h"
+#include "UILayout.h"
 #include <iostream>
 
 const float MIN_ZOOM = 0.6f;
@@ -19,6 +20,7 @@ class Camera
 	sf::RenderWindow& window;
 	sf::VertexArray darkScreenOverlay = sf::VertexArray(sf::PrimitiveType::TriangleStrip, 4);
 	sf::Vector2f mousePos = { 0.f, 0.f };
+	sf::Vector2i mouseScreenPos = { 0,0 };
 
 	Bounds limits;
 	bool locked = false;
@@ -38,12 +40,12 @@ public:
 	bool dragging = false;
 
 	Camera(sf::RenderWindow& window);
-	void get_dark_overlay(sf::VertexArray& overlay, float left, float top, float width, float height, float percentage = 0.f);
+	void set_dark_overlay(sf::VertexArray& overlay, float left, float top, float width, float height, float percentage = 0.f);
 	void update(float deltaTime);
 	void draw_all_ui();
 
 	void handle_events(sf::Event event);
-	void register_click(sf::Event event);
+	void register_click(sf::Event::MouseButtonPressed event);
 
 	void zoom(sf::Event::MouseWheelScrolled scroll);
 	void zoom(sf::Keyboard::Key key);
@@ -63,13 +65,19 @@ public:
 
 	inline void set_bounds(sf::FloatRect newBounds) { limits.set_bounds(newBounds); }
 	inline Bounds get_bounds() { return limits; }
-	inline void lock_camera() { 
-		locked = true; 
-		dragging = false; 
-		velocity = { 0.f, 0.f };
+	inline void change_lock(bool lock) {
+		if (lock) {
+			locked = true;
+			dragging = false;
+			velocity = { 0.f, 0.f };
+		}
+		else
+			locked = false;
 	}
-	inline void unlock_camera() { locked = false; }
-	inline void set_mouse_pos(sf::Vector2f mPos) { mousePos = mPos; }
+	inline void swap_camera_lock() { change_lock(!locked); }
+	inline void set_mouse_pos(sf::Vector2f mPos, sf::Vector2i mS_Pos) { 
+		mousePos = mPos; mouseScreenPos = mS_Pos;
+	}
 	inline bool has_velocity() {
 		return std::abs(velocity.x) > 0.1f && std::abs(velocity.y) > 0.1f;
 	}
@@ -79,13 +87,10 @@ public:
 		float y = uiView.getSize().y * relative.y;
 		return { x,y };
 	}
-	inline sf::Vector2f get_sprite_scale_from_viewport(
-		const sf::Sprite& sprite,
-		sf::Vector2f targetViewportSize)  // {0.2f, 0.1f} = 20% width, 10% height
-	{
+	inline sf::Vector2f get_norm_sprite_scale(const sf::Sprite& sprite, sf::Vector2f normScale) {
 		// Get the sprite's original pixel dimensions
 		sf::FloatRect bounds = sprite.getLocalBounds();
-		sf::Vector2f targetPixelSize = norm_to_pixels(targetViewportSize);
+		sf::Vector2f targetPixelSize = norm_to_pixels(normScale);
 
 		float scaleX = targetPixelSize.x / bounds.size.x;
 		float scaleY = targetPixelSize.y / bounds.size.y;
@@ -99,15 +104,14 @@ public:
 		if (!texture.loadFromFile(path)) std::cout << "wrong path for btn texture" << std::endl;
 		sprite = sf::Sprite(texture);
 
-		scale = get_sprite_scale_from_viewport(sprite, scale);
+		scale = get_norm_sprite_scale(sprite, scale);
 		sprite.setScale(scale);
 		sprite.setPosition(_pos);
 		sprite.setOrigin(sprite.getLocalBounds().size * 0.5f);
 	}
-	inline void draw_grey_screen(float transperency) { 
-		//std::cout << "drawing dark camera overlay" << std::endl;
-		queue_ui_draw(&darkScreenOverlay);
-	}
+	inline void draw_grey_screen(float transperency) { queue_ui_draw(&darkScreenOverlay); }
 	inline void close_window() { window.close(); }
 	inline sf::RenderWindow& get_window() const { return window; }
+	inline sf::Vector2f& get_mouse_world_position() { return mousePos; }
+	inline sf::Vector2i& get_mouse_screen_position() { return mouseScreenPos; }
 };

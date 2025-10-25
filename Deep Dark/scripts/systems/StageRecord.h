@@ -4,9 +4,9 @@
 #include <iostream>
 
 struct UnitRecord {
-	std::vector<int> deaths;
+	std::vector<int> deaths = {};
 	int totalDeaths = 0;
-	std::vector<int> unitsSpawned;
+	std::vector<int> unitsSpawned = {};
 	int totalSpawns = 0;
 
 	int deathsBySurges = 0;
@@ -15,6 +15,7 @@ struct UnitRecord {
 	int deathsByTraps = 0;
 	int deathsByCannons = 0;
 
+	UnitRecord() = default;
 	UnitRecord(int laneCount) {
 		deaths.reserve(laneCount);
 		unitsSpawned.reserve(laneCount);
@@ -49,6 +50,7 @@ struct StageRecord
 	int partsSpent = 0;
 	int trapsTriggered = 0;
 
+	StageRecord() = default;
 	StageRecord(int lanes) : 
 		enemyRecorder(lanes), playerRecorder(lanes) {}
 

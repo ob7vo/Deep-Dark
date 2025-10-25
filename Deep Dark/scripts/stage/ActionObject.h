@@ -27,7 +27,7 @@ struct ActionObject
 	ActionObject(ActionObjConfig& config);
 	~ActionObject() = default;
 
-	void tick(sf::RenderWindow& window, float deltaTime);
+	void tick(float deltaTime);
 	virtual void action() = 0;
 	virtual void create_animation() = 0;
 };

@@ -28,7 +28,7 @@ EnemySpawner::EnemySpawner(const json& jsonFile, const json& file){
 	Animation::create_unit_animation_array(jsonFile, aniArr);
 	enemyStats = UnitStats(jsonFile, magnification);
 }
-Stage::Stage(const json& stageFile, StageRecord& rec) : recorder(rec),
+Stage::Stage(const json& stageFile, StageRecord* rec) : recorder(rec),
 	enemyBase(stageFile, -1), playerBase(stageFile, 1)
 {
 	laneCount = stageFile["lane_count"];
@@ -103,7 +103,7 @@ Unit* Stage::create_unit(int laneIndex, const UnitStats* unitStats, std::array<A
 		return nullptr;
 	}
 
-	recorder.add_spawn(unitStats->team, laneIndex);
+	recorder->add_spawn(unitStats->team, laneIndex);
 	sf::Vector2f spawnPos = lanes[laneIndex].get_spawn_pos(unitStats->team);
 
 	//	std::cout << "emplacing back new unit" << std::endl;
@@ -229,20 +229,5 @@ int Stage::find_lane_to_knock_to(Unit& unit, int inc) {
 	}
 	return unit.currentLane;
 }
-
-void Stage::only_draw(sf::RenderWindow& window) {
-	for (auto& lane : lanes) {
-		lane.draw(window);
-		for (auto it = lane.enemyUnits.begin(); it != lane.enemyUnits.end();) {
-			window.draw(it->get_sprite());
-			++it;
-		}
-		for (auto it = lane.playerUnits.begin(); it != lane.playerUnits.end();) {
-			window.draw(it->get_sprite());
-			++it;
-		}
-	}
-}
-
 //	else if (lane.playerTeleporter && lane.playerTeleporter->check_if_on_teleporter(it->pos.x))
 	//	teleport_unit(lane.playerTeleporter, it);

@@ -4,11 +4,12 @@
 #include <memory>
 
 struct Stage;
+const sf::Texture defBaseTexture("sprites/defaultTexture.png");
 
 class Base
 {
 private:
-	sf::Sprite sprite;
+	sf::Sprite sprite = sf::Sprite(defBaseTexture);
 	int team = 0;
 	int maxHp = 0;
 	int hp = 0;
@@ -22,12 +23,14 @@ public:
 	Animation* cannonAnimation = nullptr;
 	sf::Vector2f pos = {0.f, 0.f};
 
+
+	Base() = default;
 	Base(const nlohmann::json& stageFile, int team);
 	void create_cannon(std::string path, float mag);
 
 	void take_damage(int dmg);
 	bool try_fire_cannon();
-	void tick(Stage& stage, sf::RenderWindow& window, float deltaTime);
+	void tick(Stage& stage, float deltaTime);
 
 	//void get_animation_ptr(std::string cannonType);
 	inline bool enemy_in_range(float xPos) {

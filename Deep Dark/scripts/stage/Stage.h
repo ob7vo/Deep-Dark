@@ -54,25 +54,26 @@ struct EnemySpawner {
 };
 struct Stage
 {
-	StageRecord& recorder;
+	StageRecord* recorder = nullptr;
 
-	std::vector<Lane> lanes;
+	std::vector<Lane> lanes = {};
 	int laneCount = 0;
 	int nextUnitID = 0;
 	int selectedLane = 0;
 
-	std::vector<EnemySpawner> enemySpawners;
-	std::vector<MoveRequest> moveRequests;
-	std::vector<std::unique_ptr<Surge>> surges;
-	std::vector<std::unique_ptr<ActionObject>> actionObjects;
+	std::vector<EnemySpawner> enemySpawners = {};
+	std::vector<MoveRequest> moveRequests = {};
+	std::vector<std::unique_ptr<Surge>> surges = {};
+	std::vector<std::unique_ptr<ActionObject>> actionObjects = {};
 
-	std::unordered_map<int, UnitTween> unitTweens;
+	std::unordered_map<int, UnitTween> unitTweens = {};
 	std::unique_ptr<Summon> summonData = nullptr;
 
-	Base enemyBase;
-	Base playerBase;
+	Base enemyBase = {};
+	Base playerBase = {};
 
-	Stage(const nlohmann::json& stageFile, StageRecord& recorder);
+	Stage() = default;
+	Stage(const nlohmann::json& stageFile, StageRecord* recorder);
 
 	Unit* create_unit(int laneIndex, const UnitStats* unitStats, std::array<Animation, 5>* aniMap);
 	void create_summon(Unit& unit);
