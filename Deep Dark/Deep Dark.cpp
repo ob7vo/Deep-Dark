@@ -57,13 +57,16 @@ int main()
     Camera cam(window);
     StateManager stateManager(cam);
 
+    /*
     std::vector<std::string> slots = { "configs/player_units/soldier/soldier.json"};
     std::ifstream stageFile("configs/stage_data/stage_1.json");
     json stageJson = json::parse(stageFile);
     stageFile.close();
     
     StageEnterData stageEnterData(stageJson, slots, cam);
-    stateManager.switch_state(&stageEnterData);
+    */
+    OnStateEnterData enterData(GameState::Type::MAIN_MENU);
+    stateManager.switch_state(&enterData);
   //  StageManager stageManager(stageJson, slots, cam);
 
     while (window.isOpen())
@@ -88,10 +91,15 @@ int main()
         set_fps_text(deltaTime);
 
         window.clear(WINDOW_COLOR);
+
         cam.queue_ui_draw(&fpsText);
         stateManager.update(deltaTime);
         stateManager.render();
+
         window.display();
+
+        if (auto enterData = stateManager.gameState->get_next_state()) 
+            stateManager.switch_state(enterData);
     }
 }
 

@@ -1,7 +1,7 @@
 #include "StageGameState.h"
 
 StageGameState::StageGameState(Camera& cam) : stageUI(cam), loadout(cam),
-stageManager(cam, stageUI, loadout){
+stageManager(cam, stageUI, loadout), GameState(cam){
 	stageUI.stageManager = &stageManager;
 }
 void StageGameState::update_ui(float deltaTime) {
@@ -15,7 +15,7 @@ void StageGameState::update(float deltaTime) {
 	stageManager.update_game_ticks(deltaTime);
 	update_ui(deltaTime);
 }
-void StageGameState::render(Camera& cam) {
+void StageGameState::render() {
 	stageManager.draw(cam.get_window());
 	loadout.draw_slots(cam, stageManager.parts);
 	stageUI.draw();
@@ -28,7 +28,7 @@ void StageGameState::handle_events(sf::Event event) {
 void StageGameState::on_enter(OnStateEnterData* enterData) {
 	if (StageEnterData* stageData = dynamic_cast<StageEnterData*>(enterData)) {
 		loadout.create_loadout(stageData->loadoutSlots);
-		loadout.set_slot_positions(stageData->cam);
+		loadout.set_slot_positions(cam);
 		stageManager.create_stage(stageData->stageJson);
 	}
 	else {
@@ -39,7 +39,4 @@ void StageGameState::on_enter(OnStateEnterData* enterData) {
 void StageGameState::on_exit() {
 	stageManager.unload_stage();
 	loadout.slotTextures = {};
-}
-GameState::Type StageGameState::get_next_state() {
-	return GameState::Type::STAGE;
 }

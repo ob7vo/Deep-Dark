@@ -1,7 +1,6 @@
 #pragma once
 #include "SFML\Graphics.hpp"
 #include "Bounds.h"
-#include "UILayout.h"
 #include <iostream>
 
 const float MIN_ZOOM = 0.6f;

@@ -6,17 +6,17 @@ const int START_MENU_BTNS = 3;
 struct StartMenu : public Menu<START_MENU_BTNS> {
 	sf::Text startText = sf::Text(baseFont);
 	bool openedSettings = false;
-
+	
 	StartMenu(Camera& cam);
 	~StartMenu() = default;
 
 	void draw() override;
 	void register_click() override;
 	void check_mouse_hover() override;
+	void reset_positions() override;
 
-	void start_game();
-	void quit_game();
-	void open_settings();
+	inline void quit_game() { cam.close_window(); }
+	inline void open_settings() { openedSettings = !openedSettings; }
 
 	inline Button& startBtn() { return buttonManager.buttons[0]; }
 	inline Button& quitBtn() { return buttonManager.buttons[1]; }

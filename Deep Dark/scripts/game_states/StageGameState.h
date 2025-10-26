@@ -11,21 +11,20 @@ public:
 	~StageGameState() = default;
 
 	void update(float deltaTime) override;
-	void render(Camera& cam) override;
+	void render() override;
 	void handle_events(sf::Event event) override;
 	void on_enter(OnStateEnterData* enterData) override;
 	void on_exit() override;
 	void update_ui(float deltaTime) override;
 
-	Type get_next_state() override;
 };
 
 struct StageEnterData : public OnStateEnterData {
 	const nlohmann::json stageJson;
 	std::vector<std::string> loadoutSlots;
 
-	StageEnterData(const nlohmann::json& stageJson, std::vector<std::string>& loadoutSlots,
-		Camera& cam) : stageJson(stageJson), loadoutSlots(loadoutSlots), 
-		OnStateEnterData(GameState::Type::STAGE, cam) {}
+	StageEnterData(const nlohmann::json& stageJson, std::vector<std::string>& loadoutSlots) 
+		: stageJson(stageJson), loadoutSlots(loadoutSlots), 
+		OnStateEnterData(GameState::Type::STAGE) {}
 	~StageEnterData() = default;
 };

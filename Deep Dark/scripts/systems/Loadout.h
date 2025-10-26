@@ -5,6 +5,9 @@
 #include "Camera.h"
 #include <fstream>
 
+const sf::Vector2f FIRST_SLOT_POS = { 0.278f, 0.84375f };
+const sf::Vector2f SLOT_INCREMENT = { 0.089f, 0.0625f };
+
 static sf::Texture& default_slot_texture() {
 	static sf::Texture defaultTex;
 	static bool initialized = false;
@@ -84,8 +87,8 @@ struct Loadout{
 	
 	Loadout(Camera& cam) { set_slot_positions(cam); }
 	inline void set_slot_positions(Camera& cam) {
-		sf::Vector2f pos = cam.norm_to_pixels(UI::Stage::FIRST_UNIT_SLOT_POS);
-		sf::Vector2f inc = cam.norm_to_pixels(UI::Stage::UNIT_SLOT_INCREMENT);
+		sf::Vector2f pos = cam.norm_to_pixels(FIRST_SLOT_POS);
+		sf::Vector2f inc = cam.norm_to_pixels(SLOT_INCREMENT);
 		float startX = pos.x;
 		for (int i = 0; i < 2; i++) {
 			for (int j = 0; j < 5; j++) {

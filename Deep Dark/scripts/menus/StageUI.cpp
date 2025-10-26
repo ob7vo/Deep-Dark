@@ -1,5 +1,7 @@
 #include "StageUI.h"
 #include "StageManager.h"
+#include "UILayout.h"
+
 using namespace UI::Stage;
 
 StageUI::StageUI(Camera& cam) : Menu(cam), pauseMenu(cam, *this){
@@ -22,6 +24,17 @@ void StageUI::create_buttons() {
 	upgradeBagBtn().set_new_params(BAG_BTN_POS, BAG_BTN_SIZE, texPath2, cam);
 	std::string texPath3 = "sprites/ui/stage_ui/fire_cannon.png";
 	fireCannonBtn().set_new_params(CANNON_BTN_POS, CANNON_BTN_SIZE, texPath3, cam);
+}
+void StageUI::reset_positions() {
+	partsCountText.setPosition(cam.norm_to_pixels(PARTS_TEXT_POS));
+	bagUpgradeCostText.setPosition(cam.norm_to_pixels(BAG_COST_TEXT_POS));
+	clearedChallengesText.setPosition(cam.norm_to_pixels(CHALLENGES_TEXT_POS));
+
+	pauseBtn().sprite.setPosition(cam.norm_to_pixels(PAUSE_BTN_POS));
+	upgradeBagBtn().sprite.setPosition(cam.norm_to_pixels(BAG_COST_TEXT_POS));
+	fireCannonBtn().sprite.setPosition(cam.norm_to_pixels(CANNON_BTN_POS));
+
+	pauseMenu.reset_positions();
 }
 void StageUI::draw() {
 	cam.queue_ui_draw(&partsCountText);
@@ -78,6 +91,14 @@ Menu(cam), stageUI(ui) {
 	std::string texPath3 = "sprites/ui/stage_ui/pause_menu.png";
 	cam.set_sprite_params(PAUSE_MENU_POS, PAUSE_MENU_SIZE,
 		texPath3, pauseMenuTexture, pauseMenuSprite);
+}
+void StagePauseMenu::reset_positions() {
+	pauseText.setPosition(cam.norm_to_pixels(PAUSE_TEXT_POS));
+
+	closeMenuBtn().sprite.setPosition(cam.norm_to_pixels(CLOSE_MENU_BTN_POS));
+	closeGameBtn().sprite.setPosition(cam.norm_to_pixels(CLOSE_GAME_BTN_POS));
+
+	pauseMenuSprite.setPosition(cam.norm_to_pixels(PAUSE_MENU_POS));
 }
 void StagePauseMenu::draw() {
 	cam.draw_grey_screen(0.5f);

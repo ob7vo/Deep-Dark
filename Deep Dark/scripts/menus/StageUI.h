@@ -16,6 +16,7 @@ struct StagePauseMenu : public Menu<STAGE_PAUSE_MENU_BUTTONS> {
 	StagePauseMenu(Camera& cam, StageUI& ui);
 
 	void draw() override;
+	void reset_positions() override;
 
 	void close_menu();
 	void close_game();
@@ -38,6 +39,7 @@ struct StageUI : public Menu<STAGE_UI_BUTTONS> {
 	void draw() override;
 	void register_click() override;
 	void check_mouse_hover() override;
+	void reset_positions() override;
 
 	void pause();
 	void upgrade_bag();

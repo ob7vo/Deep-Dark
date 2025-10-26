@@ -1,7 +1,9 @@
 #include "StateManager.h"
 #include "StageGameState.h"
+#include "MainMenusGameState.h"
 
 StateManager::StateManager(Camera& cam) : cam(cam) {
+	gameStateMap[0] = new MainMenusGameState(cam);
 	gameStateMap[2] = new StageGameState(cam);
 }
 void StateManager::update(float deltaTime) {
@@ -12,7 +14,7 @@ void StateManager::update(float deltaTime) {
 		cam.apply_velocity(deltaTime);
 }
 void StateManager::render() {
-	gameState->render(cam);
+	gameState->render();
 	cam.draw_all_ui();
 }
 void StateManager::handle_events(sf::Event event) {

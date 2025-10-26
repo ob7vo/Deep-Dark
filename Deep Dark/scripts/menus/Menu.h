@@ -1,6 +1,5 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "UILayout.h"
 #include "ButtonManager.h"
 
 const sf::Font baseFont("fonts/KOMIKAX_.ttf");
@@ -24,8 +23,8 @@ struct Menu
 	virtual void check_mouse_hover(){
 		buttonManager.check_mouse_hover(cam);
 	}
+	virtual void reset_positions() = 0;
 
 	inline Button& get_button(int index) { return buttonManager.buttons[index]; }
-	
 };
 
