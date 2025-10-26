@@ -34,6 +34,8 @@ struct StageManager
 	std::vector<Challenge> challenges = {};
 	int clearedChallenges = 0;
 
+	StageUI ui;
+
 	float timeSinceStart = 0.f;
 	int selectedLane = 0;
 

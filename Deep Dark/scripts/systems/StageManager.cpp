@@ -51,6 +51,9 @@ void StageManager::create_stage(const json& stageJson)
 		std::format("Challenges Cleared: 0/{}", challenges.size()));
 	ui.clearedChallengesText.setCharacterSize(16);
 	ui.clearedChallengesText.setFillColor(sf::Color::Yellow);
+
+	bagCap = baseBagCap;
+	bagUpgradeCost = baseBagUpgradeCost;
 }
 void StageManager::unload_stage() {
 	challenges.clear();
@@ -334,6 +337,8 @@ void StageManager::draw(sf::RenderWindow& window) {
 		window.draw((*it)->sprite);
 		++it;
 	}
+
+	draw_ui();
 }
 
 void StageManager::update_game_ticks(float deltaTime) {
