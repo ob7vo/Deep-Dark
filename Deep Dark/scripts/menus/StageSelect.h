@@ -13,6 +13,7 @@ struct StageSelect : public Menu<STAGE_SELECT_BTNS> {
       void draw() override;
       void check_mouse_hover() override;
       void register_click() override;
+      void reset_positions() override;
 
       inline Button& stageBtn(int stage) {
           return buttonManager.buttons[stage];
