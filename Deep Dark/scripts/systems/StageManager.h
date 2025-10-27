@@ -75,7 +75,6 @@ struct StageManager
 	void handle_enemy_unit_death(Unit& unit);
 	void handle_player_unit_death(Unit& unit);
 
-	inline void printy() { std::cout << selectedLane << std::endl; }
 	inline bool try_spend_parts(int partsToSpend) {
 		if (parts < partsToSpend) return false;
 
