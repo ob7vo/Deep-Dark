@@ -311,7 +311,6 @@ void StageManager::update_base_ticks(float deltaTime) {
 	stage.enemyBase.tick(stage, deltaTime);
 }
 
-// UI
 void StageManager::draw(sf::RenderWindow& window) {
 	for (auto& lane : stage.lanes) {
 		lane.draw(window);
@@ -337,16 +336,8 @@ void StageManager::draw(sf::RenderWindow& window) {
 		window.draw((*it)->sprite);
 		++it;
 	}
-
-	draw_ui();
 }
-
 void StageManager::update_game_ticks(float deltaTime) {
-	if (paused()) {
-		draw(cam.get_window());
-		return;
-	}
-
 	timeSinceStart += deltaTime;
 
 	spawn_enemies(deltaTime);

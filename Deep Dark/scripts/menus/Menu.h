@@ -1,6 +1,5 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "UILayout.h"
 #include "ButtonManager.h"
 
 const sf::Font baseFont("fonts/KOMIKAX_.ttf");

@@ -34,8 +34,6 @@ struct StageManager
 	std::vector<Challenge> challenges = {};
 	int clearedChallenges = 0;
 
-	StageUI ui;
-
 	float timeSinceStart = 0.f;
 	int selectedLane = 0;
 
@@ -62,8 +60,6 @@ struct StageManager
 	void update_base_ticks(float deltaTime);
 
 	void draw(sf::RenderWindow& window);
-	void update_ui(float deltaTime);
-	void draw_ui();
 
 	void handle_events(sf::Event event);
 	bool read_lane_switch_inputs(Key key);
@@ -79,10 +75,6 @@ struct StageManager
 	void handle_enemy_unit_death(Unit& unit);
 	void handle_player_unit_death(Unit& unit);
 
-	inline void update_and_draw_ui(float deltaTime) {
-		update_ui(deltaTime); 
-		draw_ui();
-	}
 	inline void printy() { std::cout << selectedLane << std::endl; }
 	inline bool try_spend_parts(int partsToSpend) {
 		if (parts < partsToSpend) return false;
