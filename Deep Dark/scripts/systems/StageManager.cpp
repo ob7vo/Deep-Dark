@@ -337,16 +337,9 @@ void StageManager::draw(sf::RenderWindow& window) {
 		window.draw((*it)->sprite);
 		++it;
 	}
-
-	draw_ui();
 }
 
 void StageManager::update_game_ticks(float deltaTime) {
-	if (paused()) {
-		draw(cam.get_window());
-		return;
-	}
-
 	timeSinceStart += deltaTime;
 
 	spawn_enemies(deltaTime);
