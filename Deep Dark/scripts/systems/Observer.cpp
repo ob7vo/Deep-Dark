@@ -6,10 +6,10 @@ bool Challenge::notify(StageManager& manager) {
 
 	switch (challengeType) {
 	case ChallengeType::CLEAR_TIME:
-		return compare(manager.timeSinceStart, value);
+		return compare((int)manager.timeSinceStart, value);
 	case ChallengeType::UNITS_AT_ONCE: {
-		int totalUnitsOfTeam = get_current_unit_count(manager);
-		return compare(totalUnitsOfTeam, value);
+		size_t totalUnitsOfTeam = get_current_unit_count(manager);
+		return compare((int)totalUnitsOfTeam, value);
 	}
 	case ChallengeType::CHALLENGES_CLEARED: {
 		int challengesCleared = 0;
@@ -69,8 +69,8 @@ int* Challenge::get_target_ptr(StageManager& manager) {
 
 	return nullptr;
 }
-int Challenge::get_current_unit_count(StageManager& manager) {
-	int total = 0;
+size_t Challenge::get_current_unit_count(StageManager& manager) {
+	size_t total = 0;
 	if (lane < 0 || lane > manager.stage.laneCount) {
 		for (auto& l : manager.stage.lanes)
 			total += l.get_unit_count(team);

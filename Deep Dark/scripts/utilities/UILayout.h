@@ -1,10 +1,11 @@
 #pragma once
 #include "SFML/System/Vector2.hpp"
+#include <array>
 
 namespace UI {
 	namespace StartMenu {
 		// Buttons
-		constexpr sf::Vector2f QUIT_BTN_POS = { 0.35f, 0.65f };
+		constexpr sf::Vector2f QUIT_BTN_POS = { 0.3f, 0.65f };
 		constexpr sf::Vector2f QUIT_BTN_SIZE = { 0.3f, 0.1f };
 
 		constexpr sf::Vector2f START_BTN_POS = { 0.65f, 0.65f };
@@ -45,5 +46,16 @@ namespace UI {
 
 		constexpr  sf::Vector2f FIRST_UNIT_SLOT_POS = { 0.278f, 0.84375f };
 		constexpr  sf::Vector2f UNIT_SLOT_INCREMENT = { 0.089f, 0.0625f };
+	}
+	namespace StageSelect {
+		constexpr sf::Vector2f RETURN_BTN_POS = { .2f,.2f };
+		constexpr sf::Vector2f RETURN_BTN_SIZE = { .1f, .1f };
+
+		constexpr sf::Vector2f STAGE_NODE_SIZE = { 0.12f, 0.12f };
+		constexpr std::array<sf::Vector2f, 3> STAGE_NODE_POS_ARR = { {
+			{350.f,350.f},
+			{1400.f, 250.f},
+			{350.f, 1400.f}
+		} };
 	}
 }

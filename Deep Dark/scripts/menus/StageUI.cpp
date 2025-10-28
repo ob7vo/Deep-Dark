@@ -19,11 +19,11 @@ void StageUI::create_buttons() {
 
 	std::string texPath1 = "sprites/ui/stage_ui/stage_pause.png";
 
-	pauseBtn().set_new_params(PAUSE_BTN_POS, PAUSE_BTN_SIZE, texPath1, cam);
+	pauseBtn().set_ui_params(PAUSE_BTN_POS, PAUSE_BTN_SIZE, texPath1, cam);
 	std::string texPath2 = "sprites/ui/stage_ui/upgrade_bag.png";
-	upgradeBagBtn().set_new_params(BAG_BTN_POS, BAG_BTN_SIZE, texPath2, cam);
+	upgradeBagBtn().set_ui_params(BAG_BTN_POS, BAG_BTN_SIZE, texPath2, cam);
 	std::string texPath3 = "sprites/ui/stage_ui/fire_cannon.png";
-	fireCannonBtn().set_new_params(CANNON_BTN_POS, CANNON_BTN_SIZE, texPath3, cam);
+	fireCannonBtn().set_ui_params(CANNON_BTN_POS, CANNON_BTN_SIZE, texPath3, cam);
 }
 void StageUI::reset_positions() {
 	partsCountText.setPosition(cam.norm_to_pixels(PARTS_TEXT_POS));
@@ -54,13 +54,13 @@ void StageUI::register_click() {
 	if (paused)
 		pauseMenu.register_click();
 	else
-		buttonManager.register_click(cam);
+		buttonManager.register_click(cam.get_mouse_screen_position());
 }
 void StageUI::check_mouse_hover() {
 	if (paused)
 		pauseMenu.check_mouse_hover();
 	else
-		buttonManager.check_mouse_hover(cam);
+		buttonManager.check_mouse_hover(cam.get_mouse_screen_position());
 }
 void StageUI::pause() {
 	stageManager->pause();
@@ -81,9 +81,9 @@ Menu(cam), stageUI(ui) {
 	pauseText.setString("game is PAUSED baby");
 
 	std::string texPath1 = "sprites/ui/stage_ui/close_game.png";
-	closeGameBtn().set_new_params(CLOSE_GAME_BTN_POS, CLOSE_GAME_BTN_SIZE, texPath1, cam);
+	closeGameBtn().set_ui_params(CLOSE_GAME_BTN_POS, CLOSE_GAME_BTN_SIZE, texPath1, cam);
 	std::string texPath2 = "sprites/ui/stage_ui/close_menu.png";
-	closeMenuBtn().set_new_params(CLOSE_MENU_BTN_POS, CLOSE_MENU_BTN_SIZE, texPath2, cam);
+	closeMenuBtn().set_ui_params(CLOSE_MENU_BTN_POS, CLOSE_MENU_BTN_SIZE, texPath2, cam);
 
 	closeGameBtn().onClick = [this]() { close_game(); };
 	closeMenuBtn().onClick = [this]() { close_menu(); };

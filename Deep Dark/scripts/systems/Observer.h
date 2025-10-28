@@ -90,8 +90,9 @@ struct Challenge{
 		case '!': return ComparisonType::NOT;
 		case '&': return ComparisonType::BITWISE_AND;
 		}
+		return ComparisonType::GREATER_THAN;
 	}
-	inline int get_current_unit_count(StageManager& manager);
+	size_t get_current_unit_count(StageManager& manager);
 	int* get_target_ptr(StageManager& manager);
 };
 

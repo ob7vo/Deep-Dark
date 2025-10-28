@@ -23,10 +23,14 @@ public:
 
 	enum class Type {
 		MAIN_MENU = 0,
-		UPGRADING = 1,
+		PREP = 1,
 		STAGE = 2
 	};
 
+	inline void reset() {
+		nextStateEnterData = nullptr;
+		readyToEndState = false;
+	}
 	inline OnStateEnterData* get_next_state() {
 		return readyToEndState ? nextStateEnterData.get() : nullptr;
 	}

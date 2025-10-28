@@ -107,9 +107,9 @@ struct Loadout{
 		slotTextures = {};
 		filledSlots = (int)jsonPaths.size();
 
-		for (size_t i = 0; i < filledSlots; i++)
+		for (int i = 0; i < filledSlots; i++)
 			set_slot(jsonPaths[i], i);
-		for (size_t j = filledSlots; j < 10; j++)
+		for (int j = filledSlots; j < 10; j++)
 			slots[j] = {};
 	}
 	inline void set_slot(std::string jsonPath, int slot) {

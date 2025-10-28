@@ -56,8 +56,11 @@ void Camera::draw_all_ui() {
 	tempUIDrawQueue.clear();
 
 	window.setView(view);
-}
 
+	for (auto& draw : cullingDrawQueue)
+		if (draw) window.draw(*draw);
+	cullingDrawQueue.clear();
+}
 void Camera::handle_events(sf::Event event) {
 	if (locked) return;
 

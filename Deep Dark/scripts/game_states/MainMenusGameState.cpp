@@ -1,35 +1,33 @@
 #include "MainMenusGameState.h"
-#include "StageGameState.h"
+#include "PreparationState.h"
 #include "json.hpp"
 #include <fstream>
 
-MainMenusGameState::MainMenusGameState(Camera& cam) :
+MainMenusState::MainMenusState(Camera& cam) :
 startMenu(cam), GameState(cam){
 	startMenu.startBtn().onClick = [this]() {start_game(); };
 }
-void MainMenusGameState::update(float deltaTime) {
+void MainMenusState::update(float deltaTime) {
 	startMenu.check_mouse_hover();
 }
-void MainMenusGameState::render() {
+void MainMenusState::render() {
 	startMenu.draw();
 }
-void MainMenusGameState::handle_events(sf::Event event) {
+void MainMenusState::handle_events(sf::Event event) {
 	if (event.is<sf::Event::MouseButtonPressed>())
 		startMenu.register_click();
 }
-void MainMenusGameState::on_enter(OnStateEnterData* enterData) {
+void MainMenusState::on_enter(OnStateEnterData* enterData) {
 	startMenu.openedSettings = false;
+	cam.change_lock(true);
 }
-void MainMenusGameState::on_exit() {
+void MainMenusState::on_exit() {
 	startMenu.reset_positions();
 }
 
-void MainMenusGameState::start_game() {
-	std::vector<std::string> slots = { "configs/player_units/soldier/soldier.json" };
-	std::ifstream stageFile("configs/stage_data/stage_1.json");
-	nlohmann::json stageJson = nlohmann::json::parse(stageFile);
-	stageFile.close();
-
-	nextStateEnterData = std::make_unique<StageEnterData>(stageJson, slots);
+void MainMenusState::start_game() {
+	MenuType cur = MenuType::STAGE_SELECT;
+	MenuType prev = MenuType::START;
+	nextStateEnterData = std::make_unique<PrepEnterData>(cur, prev);
 	readyToEndState = true;
 }

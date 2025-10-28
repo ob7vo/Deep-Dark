@@ -33,6 +33,7 @@ public:
 	sf::View uiView;
 	std::vector<sf::Drawable*> uiDrawQueue;
 	std::vector<std::unique_ptr<sf::Drawable>> tempUIDrawQueue; // for UI created on the Stack
+	std::vector<sf::Drawable*> cullingDrawQueue; // for world objects
 
 	sf::Vector2f dragOrigin{ 0.f,0.f };
 	sf::Vector2f velocity{ 0.f,0.f };
@@ -55,6 +56,16 @@ public:
 	sf::Vector2f get_pos_within_bounds(sf::Vector2f targetPos);
 	void update_pos(sf::Vector2f pos);
 
+	inline void reset() {
+		view = window.getDefaultView();
+		uiView = view;
+		pos = view.getCenter();
+		dragging = false;
+	}
+
+	inline void queue_draw(sf::Drawable* draw, sf::FloatRect rect) {
+		if (within_camera(rect)) cullingDrawQueue.emplace_back(draw);
+	}
 	inline void queue_ui_draw(sf::Drawable* draw) { uiDrawQueue.emplace_back(draw); }
 	template<typename T>
 	inline void queue_temp_ui_draw(const T& drawable) {
@@ -64,6 +75,17 @@ public:
 
 	inline void set_bounds(sf::FloatRect newBounds) { limits.set_bounds(newBounds); }
 	inline Bounds get_bounds() { return limits; }
+	inline bool within_camera(sf::FloatRect rect) {
+		sf::Vector2f center = view.getCenter();
+		sf::Vector2f size = view.getSize();
+
+		return !(
+			rect.position.x + rect.size.x < center.x - size.x * .5f ||// Too far left
+			rect.position.x > center.x + size.x * .5f ||              // Too far right
+			rect.position.y + rect.size.y < center.y - size.y * .5f ||// Too far up
+			rect.position.y > center.y + size.y * .5f                 // Too far down
+			);
+	}
 	inline void change_lock(bool lock) {
 		if (lock) {
 			locked = true;
@@ -109,6 +131,7 @@ public:
 		sprite.setOrigin(sprite.getLocalBounds().size * 0.5f);
 	}
 	inline void draw_grey_screen(float transperency) { queue_ui_draw(&darkScreenOverlay); }
+
 	inline void close_window() { window.close(); }
 	inline sf::RenderWindow& get_window() const { return window; }
 	inline sf::Vector2f& get_mouse_world_position() { return mousePos; }

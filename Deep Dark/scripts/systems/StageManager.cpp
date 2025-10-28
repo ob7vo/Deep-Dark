@@ -26,7 +26,7 @@ void StageManager::create_stage(const json& stageJson)
 	ui.partsCountText.setString(std::format("$0/{}", bagCap));
 	ui.bagUpgradeCostText.setString(std::format("${}", bagUpgradeCost));
 
-	int challengeCount = stageJson["challenges"].size();
+	size_t challengeCount = stageJson["challenges"].size();
 	challenges.reserve(challengeCount);
 	for (auto& ch : stageJson["challenges"]) {
 		std::string desc = ch.value("description", "");

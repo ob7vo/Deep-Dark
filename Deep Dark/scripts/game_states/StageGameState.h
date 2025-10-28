@@ -2,13 +2,13 @@
 #include "GameState.h"
 #include "StageManager.h"
 
-class StageGameState : public GameState {
+class StageState : public GameState {
 	StageManager stageManager;
 	Loadout loadout;
 	StageUI stageUI;
 public:
-	StageGameState(Camera& cam);
-	~StageGameState() = default;
+	StageState(Camera& cam);
+	~StageState() = default;
 
 	void update(float deltaTime) override;
 	void render() override;
@@ -17,6 +17,7 @@ public:
 	void on_exit() override;
 	void update_ui(float deltaTime) override;
 
+	void quit_stage();
 };
 
 struct StageEnterData : public OnStateEnterData {

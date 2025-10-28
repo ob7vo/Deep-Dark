@@ -2,11 +2,11 @@
 #include "GameState.h"
 #include "StartMenu.h"
 
-class MainMenusGameState : public GameState {
+class MainMenusState : public GameState {
 	StartMenu startMenu;
 public:
-	MainMenusGameState(Camera& cam);
-	~MainMenusGameState() = default;
+	MainMenusState(Camera& cam);
+	~MainMenusState() = default;
 
 	void update(float deltaTime) override;
 	void render() override;

@@ -4,7 +4,7 @@ const float PADDING = 8.0f;
 const sf::Color highlightColor = sf::Color::Yellow;
 bool Button::check_mouse_hover(sf::Vector2i mPos) {
 	if (is_hovering(mPos)) {
-		//if (!hovering) std::cout << "mouse over button" << std::endl;
+		if (!hovering) std::cout << "mouse over button" << std::endl;
 		sprite.setColor(highlightColor);
 		hovering = true;
 		return true;
