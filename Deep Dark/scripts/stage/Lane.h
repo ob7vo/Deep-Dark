@@ -90,7 +90,7 @@ struct Lane {
 		if (playerTeleporter) window.draw(playerTeleporter->shape);
 		if (enemyTeleporter) window.draw(enemyTeleporter->shape);
 	}
-	inline int get_unit_count(int team) {
+	inline size_t get_unit_count(int team) {
 		if (std::abs(team) != 1) return playerUnits.size() + enemyUnits.size();
 		else return get_source(team).size();
 	}

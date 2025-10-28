@@ -138,7 +138,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="scripts\game_states\MainMenusGameState.cpp" />
+    <ClCompile Include="scripts\game_states\PreparationState.cpp" />
     <ClCompile Include="scripts\game_states\StageGameState.cpp" />
+    <ClCompile Include="scripts\menus\ArmoryMenu.cpp" />
+    <ClCompile Include="scripts\menus\StageSelect.cpp" />
     <ClCompile Include="scripts\menus\StageUI.cpp" />
     <ClCompile Include="scripts\menus\StartMenu.cpp" />
     <ClCompile Include="scripts\systems\Observer.cpp" />
@@ -159,8 +162,11 @@
   <ItemGroup>
     <ClInclude Include="scripts\game_states\GameState.h" />
     <ClInclude Include="scripts\game_states\MainMenusGameState.h" />
+    <ClInclude Include="scripts\game_states\PreparationState.h" />
     <ClInclude Include="scripts\game_states\StageGameState.h" />
+    <ClInclude Include="scripts\menus\ArmoryMenu.h" />
     <ClInclude Include="scripts\menus\Menu.h" />
+    <ClInclude Include="scripts\menus\StageSelect.h" />
     <ClInclude Include="scripts\menus\StageUI.h" />
     <ClInclude Include="scripts\menus\StartMenu.h" />
     <ClInclude Include="scripts\systems\Observer.h" />

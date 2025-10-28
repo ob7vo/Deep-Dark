@@ -69,6 +69,15 @@
     <ClCompile Include="scripts\menus\StartMenu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="scripts\menus\StageSelect.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scripts\game_states\PreparationState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="scripts\menus\ArmoryMenu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="scripts\systems\StageManager.h">
@@ -168,6 +177,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="scripts\menus\StartMenu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scripts\menus\StageSelect.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scripts\game_states\PreparationState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="scripts\menus\ArmoryMenu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,10 +1,12 @@
 #include "StateManager.h"
 #include "StageGameState.h"
 #include "MainMenusGameState.h"
+#include "PreparationState.h"
 
 StateManager::StateManager(Camera& cam) : cam(cam) {
-	gameStateMap[0] = new MainMenusGameState(cam);
-	gameStateMap[2] = new StageGameState(cam);
+	gameStateMap[0] = new MainMenusState(cam);
+	gameStateMap[1] = new PreparationState(cam);
+	gameStateMap[2] = new StageState(cam);
 }
 void StateManager::update(float deltaTime) {
 	gameState->update(deltaTime);
@@ -22,9 +24,14 @@ void StateManager::handle_events(sf::Event event) {
 	cam.handle_events(event);
 }
 void StateManager::switch_state(OnStateEnterData* newState) {
-	if (gameState) gameState->on_exit();
+	GameState* oldState = gameState;
 
 	gameState = gameStateMap[(int)newState->stateType];
 	stateType = newState->stateType;
 	gameState->on_enter(newState);
+
+	if (oldState) {
+		oldState->on_exit();
+		oldState->reset();
+	}
 }
