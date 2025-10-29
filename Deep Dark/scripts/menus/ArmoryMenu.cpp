@@ -1,6 +1,8 @@
 #include "ArmoryMenu.h"
 #include "UILayout.h"
 
+using namespace UI::ArmoryMenu;
+
 ArmoryMenu::ArmoryMenu(Camera& cam) : Menu(cam) {
 
 	reset_positions();
