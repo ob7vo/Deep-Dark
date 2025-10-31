@@ -53,7 +53,7 @@
   ],
   "enemy_spawns": [
     {
-      "json_path": "configs/enemy_units/mushroom/mushroom.json",
+      "unit_id": 102,
       "total_spawns": 8,
       "magnification": 1.5,
 
@@ -62,7 +62,7 @@
       "lane_indexes": [ 0, 2, 2, 1, 0, 1, 1, 0 ]
     },
     {
-      "json_path": "configs/enemy_units/droid_2/droid2.json",
+      "unit_id": 101,
       "total_spawns": 6,
       "magnification": 1.5,
 

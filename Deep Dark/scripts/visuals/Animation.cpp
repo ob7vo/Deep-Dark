@@ -1,5 +1,6 @@
 #include "Animation.h"
 #include <iostream>
+
 using json = nlohmann::json;
 const float KNOCKBACK_DURATION = 1.4f;
 const float FALL_DURATION = 1.25f;
@@ -10,8 +11,9 @@ AnimationFrame::AnimationFrame(sf::IntRect rect, float duration, int events) :
     this->rect = rect;
     this->duration = duration;
 }
-Animation::Animation(std::string spritePath, int frameCount, float rate, int textureSizes[2], 
-    int cellSizes[2], std::vector<std::pair<int, AnimationEvent>> events, bool loops)
+
+Animation::Animation(std::string spritePath, int frameCount, float rate, 
+    sf::Vector2i cellSize, ani_event_map events, bool loops)
 {
     this->loops = loops;
     time = 0.0f;
@@ -19,23 +21,20 @@ Animation::Animation(std::string spritePath, int frameCount, float rate, int tex
     if (!texture.loadFromFile(spritePath)) {
         (void)texture.loadFromFile("sprites/defaultTexture.png");
         std::cerr << "Failed to load texture: " << spritePath << std::endl;
+        return;
     }
+
+    sf::Vector2u texSize = texture.getSize();
 	this->frameCount = frameCount;
 
-	int textureWidth = textureSizes[0]; // 0 = texture width
-	int textureHeight = textureSizes[1]; // 1 = texture height
-    int cellWidth = cellSizes[0];     // Individual frame width
-    int cellHeight = cellSizes[1];    // Individual frame height
-    sf::Vector2i size(cellWidth, cellHeight);
-
-    int columns = textureWidth / cellWidth;   // How many frames per row
-    int rows = textureHeight / cellHeight;    // How many rows
+    int columns = texSize.x / cellSize.x;   // How many frames per row
+    int rows = texSize.y / cellSize.y;    // How many rows
 
     int frame = 0;
     frames.reserve(frameCount);  
     for (int row = 0; row < rows && frame < frameCount; row++) {
         for (int col = 0; col < columns && frame < frameCount; col++) {
-            sf::IntRect rect({ col * cellWidth, row * cellHeight }, size);
+            sf::IntRect rect({ col * cellSize.x, row * cellSize.y }, cellSize);
             frames.emplace_back(rect, rate, 0);
             frame++; 
         }
@@ -115,8 +114,7 @@ Animation Animation::create_unit_animation(const json& file, std::string ani, bo
         throw std::runtime_error("Missing required animation: " + ani);
 
     std::string path = file["path"];
-    std::string texture = file["animations"][ani]["texture"];
-    std::string fullPath = path + texture;
+    std::string fullPath = path + ani;
 
     int frames = file["animations"][ani]["frames"];
    
@@ -130,22 +128,18 @@ Animation Animation::create_unit_animation(const json& file, std::string ani, bo
     }
     else rate = 1.f / file["animations"][ani].value("fps", 1);
 
-    int texWidth = file["animations"][ani]["texture_size"][0];
-    int texHeight = file["animations"][ani]["texture_size"][1];
     int cellWidth = file["animations"][ani]["cell_size"][0];
     int cellHeight = file["animations"][ani]["cell_size"][1];
-    int texSizes[2] = { texWidth, texHeight };
-    int cellSizes[2] = { cellWidth, cellHeight };
+    sf::Vector2i cellSizes = { cellWidth, cellHeight };
 
-
-    std::vector <std::pair<int, AnimationEvent>> events;
+    ani_event_map events;
     if (file["animations"][ani].contains("attack_frames")) {
         std::vector<int> attack_frames = file["animations"][ani]["attack_frames"];
         for (int i = 0; i < attack_frames.size(); i++)
             events.emplace_back(attack_frames[i], AnimationEvent::ATTACK);
     }
 
-    return Animation(fullPath, frames, rate, texSizes, cellSizes, events, loops);
+    return Animation(fullPath, frames, rate, cellSizes, events, loops);
 }
 void Animation::create_unit_animation_array(const json& unitFile, std::array<Animation, 5>& aniMap) {
     aniMap[0] = Animation::create_unit_animation(unitFile, "move", true);

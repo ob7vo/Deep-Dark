@@ -3,6 +3,10 @@
 #include <array>
 
 namespace UI {
+	namespace ArmoryMenu {
+		constexpr sf::Vector2f FIRST_SLOT_POS = { 0.278f, 0.2f };
+		constexpr sf::Vector2f SLOT_INCREMENT = { 0.089f, 0.0625f };
+	}
 	namespace StartMenu {
 		// Buttons
 		constexpr sf::Vector2f QUIT_BTN_POS = { 0.3f, 0.65f };
@@ -57,5 +61,8 @@ namespace UI {
 			{1400.f, 250.f},
 			{350.f, 1400.f}
 		} };
+	}
+	namespace Workshop {
+
 	}
 }

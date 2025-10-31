@@ -2,7 +2,7 @@
   "unit_id": 103,
   "level": 1,
   "name": "drone",
-  "path": "configs/enemy_units/drone/",
+  "path": "configs/enemy_units/103/",
   "team": -1,
   "parts_dropped": 2,
   "single_target": false,
@@ -18,36 +18,26 @@
   },
   "animations": {
     "move": {
-      "texture": "dr_MOVE.png",
-      "texture_size": [ 320, 32 ],
       "cell_size": [ 32, 32 ],
       "frames": 10,
       "fps": 6
     },
     "idle": {
-      "texture": "dr_IDLE.png",
-      "texture_size": [ 256, 32 ],
       "cell_size": [ 32, 32 ],
       "frames": 8,
       "fps": 6
     },
     "knockback": {
-      "texture": "dr_HURT.png",
-      "texture_size": [ 128, 32 ],
       "cell_size": [ 32, 32 ],
       "frames": 4
     },
     "attack": {
-      "texture": "dr_ATTACK.png",
-      "texture_size": [ 384, 32 ],
       "cell_size": [ 32, 32 ],
       "attack_frames": [ 8 ],
       "frames": 12,
       "fps": 6
     },
     "falling": {
-      "texture": "dr_IDLE.png",
-      "texture_size": [ 256, 32 ],
       "cell_size": [ 32, 32 ],
       "frames": 8
     }

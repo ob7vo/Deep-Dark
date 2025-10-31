@@ -48,7 +48,7 @@ struct EnemySpawner {
 
 	std::vector<int> laneSpawnIndexes;
 
-	EnemySpawner(const nlohmann::json& unitJsonPath, const nlohmann::json& file);
+	EnemySpawner(const nlohmann::json& spawnerData);
 
 	inline bool can_force_spawn(float time) { return forcedSpawnTimes.size() > 0 && time > forcedSpawnTimes[0].first; }
 };

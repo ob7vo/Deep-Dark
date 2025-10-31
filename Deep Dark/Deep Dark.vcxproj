@@ -199,8 +199,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="configs\base _data\player_bases\p_wave_base.json" />
-    <None Include="configs\enemy_units\drone\drone.json" />
-    <None Include="configs\enemy_units\mushroom\mushroom.json" />
     <None Include="configs\player_units\archdemon\archdemon.json" />
     <None Include="data\base data\enemy bases\orbitral base\orbital base.json" />
     <None Include="data\enemy units\droid 2\droid2.json" />

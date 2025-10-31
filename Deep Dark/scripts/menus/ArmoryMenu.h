@@ -4,8 +4,9 @@
 const int ARMORY_BTNS = 10;
 
 struct ArmoryMenu : public Menu<ARMORY_BTNS> {
+
     sf::Text armoryText = sf::Text(baseFont);
-    std::vector<std::string> equippedUnits = {};
+    std::vector<int> equippedUnits = {};
 
     ArmoryMenu(Camera& cam);
     ~ArmoryMenu() = default;

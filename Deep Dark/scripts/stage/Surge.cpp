@@ -175,26 +175,22 @@ void Surge::init_animations() {
 
 	// SHOCK WAVE
 	std::string spritePath = "sprites/surges/wave_active.png";
-	int textureSize[2] = { 320, 32 }, cellSize[2] = { 32,32 };
-	shockWaveAni[0] = Animation(spritePath, 10, .1f, textureSize, cellSize, events, true);
+	sf::Vector2i cellSize = { 32,32 };
+	shockWaveAni[0] = Animation(spritePath, 10, .1f, cellSize, events, true);
 	spritePath = "sprites/surges/wave_ending.png";
-	textureSize[0] = 256;
-	shockWaveAni[1] = Animation(spritePath, 8, .1f, textureSize, cellSize, events, false);
+	shockWaveAni[1] = Animation(spritePath, 8, .1f, cellSize, events, false);
 
 	// FIRE WALL
 	spritePath = "sprites/surges/surge_start_up.png";
-	int fw_textureSize[2] = { 384, 32 };
-	fireWallAni[0] = Animation(spritePath, 12, .05f, fw_textureSize, cellSize, events, false);
+	fireWallAni[0] = Animation(spritePath, 12, .05f, cellSize, events, false);
 	spritePath = "sprites/surges/surge_active.png";
-	fireWallAni[1] = Animation(spritePath, 8, .1f, textureSize, cellSize, events, true);
+	fireWallAni[1] = Animation(spritePath, 8, .1f, cellSize, events, true);
 	spritePath = "sprites/surges/surge_ending.png";
-	fw_textureSize[0] = 288;
-	fireWallAni[2] = Animation(spritePath, 9, .05f, fw_textureSize, cellSize, events, false);
+	fireWallAni[2] = Animation(spritePath, 9, .05f, cellSize, events, false);
 
 	// ORBITAL STRIKE
 	spritePath = "sprites/surges/orbital_strike_active.png";
-	int os_textureSize[2] = { 1152, 96 }, os_cellSize[2] = { 96,96 };
+	sf::Vector2i os_cellSize = { 96,96 };
 	events.emplace_back(4, AnimationEvent::ATTACK);
-	orbitalStrikeAni = Animation(spritePath, 12, .2f, os_textureSize, os_cellSize, events, false);
-	// errpr?
+	orbitalStrikeAni = Animation(spritePath, 12, .2f, os_cellSize, events, false);
 }

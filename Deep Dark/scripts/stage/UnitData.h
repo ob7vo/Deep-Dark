@@ -21,6 +21,7 @@ struct Hit {
 struct UnitStats {
 	int unitId = 0;
 	float magnification = 1.f;
+	float timer = 0.f;
 
 	int team = 0;
 	int parts = 0;
@@ -127,6 +128,7 @@ struct UnitStats {
 		}
 
 		this->magnification = magnification;
+		timer = file.value("recharge_timer", 0.f);
 		unitId = file["unit_id"];
 		team = file["team"];	
 		if (team == TEAM_PLAYER) parts = file["parts_cost"];
@@ -238,6 +240,7 @@ struct UnitStats {
 		p = json.value("parts", p);
 		return p;
 	}
+
 };
 struct UnitData {
 	UnitStats stats;
@@ -245,6 +248,27 @@ struct UnitData {
 	UnitData(const nlohmann::json& file, float mag) :
 		stats(file, mag) {
 		Animation::create_unit_animation_array(file, ani);
+	}
+
+	static const std::string& get_unit_folder_path(int id) {
+		return std::format("configs/unit_data/{}/", id);
+	}
+	static const nlohmann::json& get_unit_json(int id) {
+		const std::string path = get_unit_folder_path(id) + "unit_data.json";
+		std::ifstream file(path);
+		return nlohmann::json::parse(file);
+	}
+	static sf::Texture& get_slot_texture(int id) {
+		const std::string path = get_unit_folder_path(id) + "slot.png";
+		sf::Texture slotTex;
+
+		if (!slotTex.loadFromFile(path)) 
+			std::cerr << "wrong slot texture path\n";
+
+		return slotTex;
+	}
+	static const UnitStats& create_unit_stats(int id) {
+		return UnitStats(get_unit_json(id), 1.f);
 	}
 };
 struct Summon {

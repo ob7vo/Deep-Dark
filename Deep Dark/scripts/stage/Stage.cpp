@@ -11,22 +11,23 @@ using json = nlohmann::json;
 	bool inf, std::vector<std::pair<float,int>> forcedSpawns = {})
 	: totalSpawns(totalSpawns), minSpawnDelay(minDelay), maxSpawnDelay(maxDelay), forcedSpawnTimes(forcedSpawns),
 	laneToSpawn(laneIndexes), firstSpawnTime(firstSpawnTime), enemyStats(jsonFile, magnification), infinite(inf) */
-EnemySpawner::EnemySpawner(const json& jsonFile, const json& file){
-	totalSpawns = file["total_spawns"];
-	float magnification = file["magnification"];
-	firstSpawnTime = file["first_spawn_time"];
-	spawnDelays = file["spawn_delays"];
-	std::vector<int> laneIndexes = file["lane_indexes"];
+EnemySpawner::EnemySpawner(const json& spawnerData){
+	totalSpawns = spawnerData["total_spawns"];
+	float magnification = spawnerData["magnification"];
+	firstSpawnTime = spawnerData["first_spawn_time"];
+	spawnDelays = spawnerData["spawn_delays"];
+	std::vector<int> laneIndexes = spawnerData["lane_indexes"];
 	laneSpawnIndexes = laneIndexes;
-	infinite = file.contains("infinite");
+	infinite = spawnerData.contains("infinite");
 
-	if (file.contains("forced_spawn_times"))
-		for (auto& forcedTime : file["forced_spawn_times"])
+	if (spawnerData.contains("forced_spawn_times"))
+		for (auto& forcedTime : spawnerData["forced_spawn_times"])
 			forcedSpawnTimes.emplace_back((float)forcedTime[0], (int)forcedTime[1]);
 	nextSpawnTime = firstSpawnTime;
 
-	Animation::create_unit_animation_array(jsonFile, aniArr);
-	enemyStats = UnitStats(jsonFile, magnification);
+	const json unitFile = UnitData::get_unit_json(spawnerData["unit_id"]);
+	Animation::create_unit_animation_array(unitFile, aniArr);
+	enemyStats = UnitStats(unitFile, magnification);
 }
 Stage::Stage(const json& stageFile, StageRecord* rec) : recorder(rec),
 	enemyBase(stageFile, -1), playerBase(stageFile, 1)
@@ -78,14 +79,8 @@ Stage::Stage(const json& stageFile, StageRecord* rec) : recorder(rec),
 			lanes[lane].trap = std::make_unique<Trap>(lanes[lane], trap);
 		}
 	}
-	for (auto& spawnData : stageFile["enemy_spawns"]) {
-		std::string path = spawnData["json_path"];
-		std::ifstream file(path);
-		json enemyJson = json::parse(file);
-		file.close();
-
-		enemySpawners.emplace_back(enemyJson, spawnData);
-	}
+	for (auto& spawnData : stageFile["enemy_spawns"])
+		enemySpawners.emplace_back(spawnData);
 }
 MoveRequest::MoveRequest(Unit& unit, int newLane, float fallTo, RequestType type) :
 unitId(unit.id), team(unit.stats->team), currentLane(unit.currentLane),
