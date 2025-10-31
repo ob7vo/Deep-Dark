@@ -1,8 +1,7 @@
 {
   "unit_id": 1,
   "name": "archdemon",
-  "path": "configs/player_units/archdemon/",
-  "slot_sprite": "archdemon_slot.png",
+  "path": "configs/player_units/1/",
   "level": 1,
   "team": 1,
   "parts_cost": 7,
@@ -29,36 +28,26 @@
   },
   "animations": {
     "move": {
-      "texture": "ad_MOVE.png",
-      "texture_size": [ 768, 128 ],
       "cell_size": [ 128, 128 ],
       "frames": 6,
       "fps": 6
     },
     "idle": {
-      "texture": "ad_MOVE.png",
-      "texture_size": [ 768, 128 ],
       "cell_size": [ 128, 128 ],
       "frames": 6,
       "fps": 3
     },
     "knockback": {
-      "texture": "ad_HURT.png",
-      "texture_size": [ 512, 128 ],
       "cell_size": [ 128, 128 ],
       "frames": 4
     },
     "attack": {
-      "texture": "ad_ATTACK.png",
-      "texture_size": [ 3840, 128 ],
       "cell_size": [ 256, 128 ],
       "attack_frames": [ 10, 12 ],
       "frames": 15,
       "fps": 10
     },
     "falling": {
-      "texture": "ad_FALL.png",
-      "texture_size": [ 1024, 128 ],
       "cell_size": [ 128, 128 ],
       "frames": 8
     }

@@ -85,8 +85,8 @@ void BaseCannon::init_animations() {
 	std::vector<std::pair<int, AnimationEvent>> events;
 	events.emplace_back(15, AnimationEvent::ATTACK);
 	std::string path = "configs/base_data/base_sprite.png";
-	int textureSize[2] = { 2016, 64 }, cellSize[2] = { 96,64 };
-	waveCannonAni = Animation(path, 21, .15f, textureSize, cellSize, events, false);
-	//waveCannonAni
+	sf::Vector2i cellSize = { 96,64 };
+
+	waveCannonAni = Animation(path, 21, .15f, cellSize, events, false);
 }
 Animation* BaseCannon::ga_ptr() { return &waveCannonAni; }

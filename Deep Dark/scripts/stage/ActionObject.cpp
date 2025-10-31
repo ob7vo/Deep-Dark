@@ -38,11 +38,11 @@ void UnitSpawner::create_animation() {
 	std::vector<std::pair<int, AnimationEvent>> events;
 	std::string path = stats->has_augment(CLONE) ? "sprites/action_objs/cloner.png" :
 		"sprites/action_objs/drop_box.png";
-	int textureSize[2] = { 1008, 40 }, cellSize[2] = { 48,40 };
+	sf::Vector2i cellSize = { 48,40 };
 	int frames = 21;
 	float rate = 0.1f;
 	events.emplace_back(14, TRIGGER);
-	ani = Animation(path, frames, rate, textureSize, cellSize, events, false);
+	ani = Animation(path, frames, rate, cellSize, events, false);
 
 	sprite.setTexture(ani.texture);
 	ani.reset(sprite);
@@ -52,11 +52,11 @@ void UnitSpawner::create_animation() {
 void SurgeSpawner::create_animation() {
 	std::vector<std::pair<int, AnimationEvent>> events;
 	std::string path = "sprites/action_objs/surge_spawner.png";
-	int textureSize[2] = { 1008, 40 }, cellSize[2] = { 48,40 };
+	sf::Vector2i cellSize = { 48,40 };
 	int frames = 21;
 	float rate = 0.09f;
 	events.emplace_back(14, TRIGGER);
-	ani = Animation(path, frames, rate, textureSize, cellSize, events, false);
+	ani = Animation(path, frames, rate, cellSize, events, false);
 
 	sprite.setTexture(ani.texture);
 	ani.reset(sprite);

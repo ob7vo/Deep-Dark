@@ -103,12 +103,12 @@ struct Loadout{
 			pos.y += inc.y;
 		}
 	}
-	void create_loadout(std::vector<std::string> jsonPaths) {
+	void create_loadout(std::vector<int> ids) {
 		slotTextures = {};
-		filledSlots = (int)jsonPaths.size();
+		filledSlots = (int)ids.size();
 
 		for (int i = 0; i < filledSlots; i++)
-			set_slot(jsonPaths[i], i);
+			set_slot(UnitData::get_unit_json(ids[i]), i);
 		for (int j = filledSlots; j < 10; j++)
 			slots[j] = {};
 	}

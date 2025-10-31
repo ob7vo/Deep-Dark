@@ -2,7 +2,7 @@
   "unit_id": 102,
   "level": 1,
   "name": "mushroom",
-  "path": "configs/enemy_units/mushroom/",
+  "path": "configs/enemy_units/102/",
   "team": -1,
   "parts_dropped": 15,
   "single_target": false,
@@ -26,36 +26,26 @@
   },
   "animations": {
     "move": {
-      "texture": "mush_MOVE.png",
-      "texture_size": [ 640, 64 ],
       "cell_size": [ 80, 64 ],
       "frames": 8,
       "fps": 4
     },
     "idle": {
-      "texture": "mush_idle.png",
-      "texture_size": [ 560, 64 ],
       "cell_size": [ 80, 64 ],
       "frames": 7,
       "fps": 7
     },
     "knockback": {
-      "texture": "mush_HURT.png",
-      "texture_size": [ 400, 64 ],
       "cell_size": [ 80, 64 ],
       "frames": 5
     },
     "attack": {
-      "texture": "mush_hit.png",
-      "texture_size": [ 1920, 64 ],
       "cell_size": [ 80, 64 ],
       "attack_frames": [ 3, 6 ],
       "frames": 24,
       "fps": 8
     },
     "falling": {
-      "texture": "mush_idle.png",
-      "texture_size": [ 560, 64 ],
       "cell_size": [ 80, 64 ],
       "frames": 7
     }

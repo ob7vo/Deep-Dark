@@ -12,6 +12,9 @@ const enum AnimationEvent {
 	TRIGGER = 1 << 4,
 	TRIGGER_2 = 1 << 5
 };
+
+using ani_event_map = std::vector<std::pair<int, AnimationEvent>>;
+
 struct AnimationFrame {
 	sf::IntRect rect;
 	float duration = 0.0f;
@@ -28,8 +31,8 @@ struct Animation {
 	int frameCount = 0;
 
 	Animation() = default;
-	Animation(std::string spritePath, int frames, float framerate, int textureSizes[2], 
-		int cellSizes[2], std::vector<std::pair<int, AnimationEvent>> events, bool loops);
+	Animation(std::string spritePath, int frames, float framerate, 
+		sf::Vector2i cellSizes, ani_event_map events, bool loops = true);
 
 	int update(float deltaTime, sf::Sprite& sprite);
 	int update(float& time, int& curFrame, float deltaTime, sf::Sprite& sprite);

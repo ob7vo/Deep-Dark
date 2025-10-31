@@ -22,9 +22,9 @@ public:
 
 struct StageEnterData : public OnStateEnterData {
 	const nlohmann::json stageJson;
-	std::vector<std::string> loadoutSlots;
+	std::vector<int> loadoutSlots;
 
-	StageEnterData(const nlohmann::json& stageJson, std::vector<std::string>& loadoutSlots) 
+	StageEnterData(const nlohmann::json& stageJson, std::vector<int>& loadoutSlots) 
 		: stageJson(stageJson), loadoutSlots(loadoutSlots), 
 		OnStateEnterData(GameState::Type::STAGE) {}
 	~StageEnterData() = default;

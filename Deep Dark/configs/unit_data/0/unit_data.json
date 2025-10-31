@@ -1,8 +1,7 @@
 {
   "unit_id": 0,
   "name": "soldier",
-  "path": "configs/player_units/soldier/",
-  "slot_sprite": "soldier_slot.png",
+  "path": "configs/player_units/0/",
   "level": 1,
   "team": 1,
   "parts_cost": 0,
@@ -21,43 +20,31 @@
   },
   "animations": {
     "move": {
-      "texture": "WALK.png",
-      "texture_size": [ 768, 84 ],
       "cell_size": [ 96, 84 ],
       "frames": 8,
       "fps": 8
     },
     "idle": {
-      "texture": "IDLE.png",
-      "texture_size": [ 672, 84 ],
       "cell_size": [ 96, 84 ],
       "frames": 7,
       "fps": 10
     },
     "knockback": {
-      "texture": "HURT.png",
-      "texture_size": [ 384, 84 ],
       "cell_size": [ 96, 84 ],
       "frames": 4
     },
     "attack": {
-      "texture": "ATTACK.png",
-      "texture_size": [ 576, 84 ],
       "cell_size": [ 96, 84 ],
       "attack_frames": [ 4 ],
       "frames": 6,
       "fps": 12
     },
     "falling": {
-      "texture": "JUMP.png",
-      "texture_size": [ 480, 84 ],
       "cell_size": [ 96, 84 ],
       "frames": 5
     },
     "special": {
       "type": "jump",
-      "texture": "JUMP.png",
-      "texture_size": [ 480, 84 ],
       "cell_size": [ 96, 84 ],
       "frames": 5,
       "fps": 3

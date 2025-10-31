@@ -126,7 +126,7 @@ Animation Trap::get_trap_animation(TrapType type) {
 	std::vector<std::pair<int, AnimationEvent>> events;
 	// starts off as LAUNCH_PAD
 	std::string spritePath = "sprites/traps/launch_pad.png";
-	int textureSize[2] = { 1536, 32 }, cellSize[2] = { 96,32 };
+	sf::Vector2i cellSize = { 96,32 };
 	int frames = 16;
 	float rate = 0.2f;
 
@@ -136,8 +136,7 @@ Animation Trap::get_trap_animation(TrapType type) {
 		break;
 	case TrapType::TRAP_DOOR: {
 		spritePath = "sprites/traps/trap_door.png";
-		textureSize[0] = 3456;
-		cellSize[0] = 144;
+		cellSize.x = 144;
 		frames = 24;
 		rate = .3f;
 		events.emplace_back(5, TRIGGER);
@@ -146,12 +145,12 @@ Animation Trap::get_trap_animation(TrapType type) {
 	}
 	default: {
 		spritePath = "sprites/traps/flat_dmg.png";
-		textureSize[0] = 800;
-		cellSize[0] = 32;
+		cellSize.x = 32;
 		frames = 25;
 		rate = .15f;
 		events.emplace_back(13, TRIGGER);
 	}
 	}
-	return Animation(spritePath, frames, rate, textureSize, cellSize, events, false);
+
+	return Animation(spritePath, frames, rate, cellSize, events, false);
 }
