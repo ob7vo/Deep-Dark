@@ -7,8 +7,8 @@
   "parts_dropped": 15,
   "single_target": false,
   "stats": {
-    "hp": 75,
-    "knockbacks": 3,
+    "hp": 2000,
+    "knockbacks": 1,
     "speed": 45.0,
     "attack_time": 0.0,
     "sight_range": 85.0,

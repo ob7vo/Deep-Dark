@@ -1,0 +1,62 @@
+{
+  "unit_id": 1,
+  "gear": 2,
+  "name": "Evil Sorceror",
+  "team": 1,
+  "parts_cost": 14,
+  "recharge_timer": 1.0,
+  "single_target": false,
+  "stats": {
+    "hp": 150,
+    "knockbacks": 4,
+    "speed": 55.5,
+    "attack_time": 1.0,
+    "sight_range": 200.0,
+    "lane_sight": [ 0, 0 ],
+    "hits": [
+      {
+        "dmg": 45,
+        "attack_range": [ 0, 200.0 ]
+      },
+      {
+        "dmg": 45,
+        "attack_range": [ 0, 275.0 ]
+      }
+    ]
+  },
+  "animations": {
+    "move": {
+      "cell_size": [ 250, 250 ],
+      "frames": 8,
+      "fps": 6
+    },
+    "idle": {
+      "cell_size": [ 250, 250 ],
+      "frames": 8,
+      "fps": 5
+    },
+    "knockback": {
+      "cell_size": [ 250, 250 ],
+      "frames": 3
+    },
+    "attack": {
+      "cell_size": [ 250, 250 ],
+      "attack_frames": [ 5, 13 ],
+      "frames": 16,
+      "fps": 7
+    },
+    "falling": {
+      "cell_size": [ 250, 250 ],
+      "frames": 2
+    }
+  },
+  "augments": [
+    {
+      "augment": "terminate",
+      "value": 0.5
+    }
+  ],
+  "types": [ "rusted", "ancient" ],
+  "target_types": [ "all" ],
+  "quick_augment_masks": [ "bully" ]
+}
