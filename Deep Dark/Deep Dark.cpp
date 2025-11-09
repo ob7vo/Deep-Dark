@@ -1,9 +1,9 @@
 //#include "imgui/imgui.h"
 //#include "imgui/imgui-SFML.h"
-#include <iostream>
-#include <fstream>
+#include "game_saves/SaveSystem.h"
 #include "StageManager.h"
 #include "StateManager.h"
+#include "PreparationState.h"
 #include "ButtonManager.h"
 #include "Tween.h"
 #include "StageGameState.h"
@@ -15,7 +15,7 @@ const unsigned int FRAMERATE_LIMIT = 60;
 const int ASPECT_WIDTH = 900;
 const int ASPECT_HEIGHT = 800;
 sf::Vector2f MOUSE_POS{ 0.f,0.f };
-sf::Color WINDOW_COLOR(22, 27, 54);
+sf::Color WINDOW_COLOR(54, 2, 11);
 
 sf::Text fpsText(baseFont);
 float timeSinceLastFPSUpdate = 0.0f;
@@ -47,8 +47,11 @@ int main()
     sf::RenderWindow window(sf::VideoMode({ ASPECT_WIDTH, ASPECT_WIDTH }), "SFML works!");
     //window.setFramerateLimit(FRAMERATE_LIMIT);
 
+    TextureManager::initialize();
     Surge::init_animations();
     BaseCannon::init_animations();
+
+    SaveSystem::Get().initialize();
 
     fpsText.setCharacterSize(20);
     fpsText.setFillColor(sf::Color::White);
@@ -57,17 +60,18 @@ int main()
     Camera cam(window);
     StateManager stateManager(cam);
 
+    // pair <id, gear>
     /*
-    std::vector<std::string> slots = { "configs/player_units/soldier/soldier.json"};
+    std::vector<std::pair<int,int>> slots =  { {0,3}, {1,2} };
     std::ifstream stageFile("configs/stage_data/stage_1.json");
     json stageJson = json::parse(stageFile);
     stageFile.close();
     
-    StageEnterData stageEnterData(stageJson, slots, cam);
+    StageEnterData stageEnterData(stageJson, slots, {0, -1});
     */
-    OnStateEnterData enterData(GameState::Type::MAIN_MENU);
-    stateManager.switch_state(&enterData);
-  //  StageManager stageManager(stageJson, slots, cam);
+    PrepEnterData prepData(MenuType::ARMORY_EQUIP, MenuType::HOME_BASE);
+   // OnStateEnterData enterData(GameState::Type::MAIN_MENU);
+    stateManager.switch_state(&prepData);
 
     while (window.isOpen())
     {

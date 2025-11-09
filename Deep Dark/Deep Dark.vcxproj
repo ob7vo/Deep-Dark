@@ -77,7 +77,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)scripts\game_states\;$(ProjectDir)scripts\visuals\;$(ProjectDir)scripts\systems\;$(ProjectDir)scripts\misc\;$(ProjectDir)scripts\stage\;$(ProjectDir)scripts\menus\;$(ProjectDir)scripts\utilities\;C:\Users\amaec\source\repos\Deep Dark\Deep Dark\TGUI;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include\game_states\;$(ProjectDir)\include\visuals\;$(ProjectDir)\include\systems\;$(ProjectDir)\include\misc\;$(ProjectDir)\include\stage\;$(ProjectDir)include\menus\;$(ProjectDir)\include\utilities\;$(ProjectDir)\game_saves\;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -93,7 +93,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)scripts\game_states\;$(ProjectDir)scripts\visuals\;$(ProjectDir)scripts\systems\;$(ProjectDir)scripts\misc\;$(ProjectDir)scripts\stage\;$(ProjectDir)scripts\menus\;$(ProjectDir)scripts\utilities\;C:\Users\amaec\source\repos\Deep Dark\Deep Dark\TGUI;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include\game_states\;$(ProjectDir)\include\visuals\;$(ProjectDir)\include\systems\;$(ProjectDir)\include\misc\;$(ProjectDir)\include\stage\;$(ProjectDir)include\menus\;$(ProjectDir)\include\utilities\;$(ProjectDir)\game_saves\;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -109,7 +109,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)scripts\game_states\;$(ProjectDir)scripts\visuals\;$(ProjectDir)scripts\systems\;$(ProjectDir)scripts\misc\;$(ProjectDir)scripts\stage\;$(ProjectDir)scripts\menus\;$(ProjectDir)scripts\utilities\;C:\Users\amaec\source\repos\Deep Dark\Deep Dark\TGUI;C:\Users\amaec\source\SFML-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include\game_states\;$(ProjectDir)\include\visuals\;$(ProjectDir)\include\systems\;$(ProjectDir)\include\misc\;$(ProjectDir)\include\stage\;$(ProjectDir)include\menus\;$(ProjectDir)\include\utilities\;$(ProjectDir)\game_saves\;C:\Users\amaec\source\SFML-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -127,7 +127,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)scripts\game_states\;$(ProjectDir)scripts\visuals\;$(ProjectDir)scripts\systems\;$(ProjectDir)scripts\misc\;$(ProjectDir)scripts\stage\;$(ProjectDir)scripts\menus\;$(ProjectDir)scripts\utilities\;C:\Users\amaec\source\repos\Deep Dark\Deep Dark\TGUI;C:\Users\amaec\source\SFML-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include\game_states\;$(ProjectDir)\include\visuals\;$(ProjectDir)\include\systems\;$(ProjectDir)\include\misc\;$(ProjectDir)\include\stage\;$(ProjectDir)include\menus\;$(ProjectDir)\include\utilities\;$(ProjectDir)\game_saves\;C:\Users\amaec\source\SFML-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -137,72 +137,89 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="scripts\game_states\MainMenusGameState.cpp" />
-    <ClCompile Include="scripts\game_states\PreparationState.cpp" />
-    <ClCompile Include="scripts\game_states\StageGameState.cpp" />
-    <ClCompile Include="scripts\menus\ArmoryMenu.cpp" />
-    <ClCompile Include="scripts\menus\StageSelect.cpp" />
-    <ClCompile Include="scripts\menus\StageUI.cpp" />
-    <ClCompile Include="scripts\menus\StartMenu.cpp" />
-    <ClCompile Include="scripts\systems\Observer.cpp" />
-    <ClCompile Include="scripts\systems\Camera.cpp" />
-    <ClCompile Include="scripts\stage\ActionObject.cpp" />
-    <ClCompile Include="scripts\stage\BaseCannon.cpp" />
+    <ClCompile Include="game_saves\SaveSystem.cpp" />
     <ClCompile Include="Deep Dark.cpp" />
-    <ClCompile Include="scripts\stage\Base.cpp" />
-    <ClCompile Include="scripts\stage\Stage.cpp" />
-    <ClCompile Include="scripts\stage\Surge.cpp" />
-    <ClCompile Include="scripts\stage\Unit.cpp" />
-    <ClCompile Include="scripts\systems\StateManager.cpp" />
-    <ClCompile Include="scripts\visuals\Button.cpp" />
-    <ClCompile Include="scripts\systems\StageManager.cpp" />
-    <ClCompile Include="scripts\visuals\Animation.cpp" />
-    <ClCompile Include="scripts\stage\Trap.cpp" />
+    <ClCompile Include="source\game_states\MainMenusGameState.cpp" />
+    <ClCompile Include="source\game_states\PreparationState.cpp" />
+    <ClCompile Include="source\game_states\StageGameState.cpp" />
+    <ClCompile Include="source\menus\ArmoryMenu.cpp" />
+    <ClCompile Include="source\menus\StageSelect.cpp" />
+    <ClCompile Include="source\menus\StageUI.cpp" />
+    <ClCompile Include="source\menus\StartMenu.cpp" />
+    <ClCompile Include="source\stage\ActionObject.cpp" />
+    <ClCompile Include="source\stage\Base.cpp" />
+    <ClCompile Include="source\stage\BaseCannon.cpp" />
+    <ClCompile Include="source\stage\Projectile.cpp" />
+    <ClCompile Include="source\stage\Stage.cpp" />
+    <ClCompile Include="source\stage\Surge.cpp" />
+    <ClCompile Include="source\stage\Trap.cpp" />
+    <ClCompile Include="source\stage\Unit.cpp" />
+    <ClCompile Include="source\systems\Camera.cpp" />
+    <ClCompile Include="source\systems\Observer.cpp" />
+    <ClCompile Include="source\systems\StageManager.cpp" />
+    <ClCompile Include="source\systems\StateManager.cpp" />
+    <ClCompile Include="source\systems\TextureManager.cpp" />
+    <ClCompile Include="source\utilities\Augment.cpp" />
+    <ClCompile Include="source\utilities\Pathing.cpp" />
+    <ClCompile Include="source\utilities\ProjectileData.cpp" />
+    <ClCompile Include="source\utilities\UnitData.cpp" />
+    <ClCompile Include="source\visuals\Animation.cpp" />
+    <ClCompile Include="source\visuals\Button.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="scripts\game_states\GameState.h" />
-    <ClInclude Include="scripts\game_states\MainMenusGameState.h" />
-    <ClInclude Include="scripts\game_states\PreparationState.h" />
-    <ClInclude Include="scripts\game_states\StageGameState.h" />
-    <ClInclude Include="scripts\menus\ArmoryMenu.h" />
-    <ClInclude Include="scripts\menus\Menu.h" />
-    <ClInclude Include="scripts\menus\StageSelect.h" />
-    <ClInclude Include="scripts\menus\StageUI.h" />
-    <ClInclude Include="scripts\menus\StartMenu.h" />
-    <ClInclude Include="scripts\systems\Observer.h" />
-    <ClInclude Include="scripts\systems\StateManager.h" />
-    <ClInclude Include="scripts\utilities\Bounds.h" />
-    <ClInclude Include="scripts\misc\ChallengeTypes.h" />
-    <ClInclude Include="scripts\systems\Camera.h" />
-    <ClInclude Include="scripts\stage\ActionObject.h" />
-    <ClInclude Include="scripts\stage\BaseCannon.h" />
-    <ClInclude Include="scripts\misc\UnitEnums.h" />
-    <ClInclude Include="scripts\utilities\Easing.hpp" />
-    <ClInclude Include="scripts\misc\json.hpp" />
-    <ClInclude Include="scripts\stage\Base.h" />
-    <ClInclude Include="scripts\stage\Lane.h" />
-    <ClInclude Include="scripts\stage\Stage.h" />
-    <ClInclude Include="scripts\stage\StatusEffect.h" />
-    <ClInclude Include="scripts\stage\Surge.h" />
-    <ClInclude Include="scripts\stage\Teleporter.h" />
-    <ClInclude Include="scripts\stage\Unit.h" />
-    <ClInclude Include="scripts\stage\UnitData.h" />
-    <ClInclude Include="scripts\utilities\UILayout.h" />
-    <ClInclude Include="scripts\visuals\Button.h" />
-    <ClInclude Include="scripts\systems\ButtonManager.h" />
-    <ClInclude Include="scripts\systems\Loadout.h" />
-    <ClInclude Include="scripts\systems\StageManager.h" />
-    <ClInclude Include="scripts\systems\Tween.h" />
-    <ClInclude Include="scripts\visuals\Animation.h" />
-    <ClInclude Include="scripts\stage\Trap.h" />
-    <ClInclude Include="scripts\systems\StageRecord.h" />
+    <ClInclude Include="game_saves\SaveSystem.h" />
+    <ClInclude Include="include\game_states\GameState.h" />
+    <ClInclude Include="include\game_states\MainMenusGameState.h" />
+    <ClInclude Include="include\game_states\PreparationState.h" />
+    <ClInclude Include="include\game_states\StageGameState.h" />
+    <ClInclude Include="include\menus\ArmoryMenu.h" />
+    <ClInclude Include="include\menus\Menu.h" />
+    <ClInclude Include="include\menus\StageSelect.h" />
+    <ClInclude Include="include\menus\StageUI.h" />
+    <ClInclude Include="include\menus\StartMenu.h" />
+    <ClInclude Include="include\misc\ChallengeTypes.h" />
+    <ClInclude Include="include\misc\json.hpp" />
+    <ClInclude Include="include\misc\UnitEnums.h" />
+    <ClInclude Include="include\stage\ActionObject.h" />
+    <ClInclude Include="include\stage\Base.h" />
+    <ClInclude Include="include\stage\BaseCannon.h" />
+    <ClInclude Include="include\stage\Lane.h" />
+    <ClInclude Include="include\stage\Projectile.h" />
+    <ClInclude Include="include\utilities\Augment.h" />
+    <ClInclude Include="include\utilities\Pathing.h" />
+    <ClInclude Include="include\utilities\ProjectileData.h" />
+    <ClInclude Include="include\stage\Stage.h" />
+    <ClInclude Include="include\stage\StatusEffect.h" />
+    <ClInclude Include="include\stage\Surge.h" />
+    <ClInclude Include="include\stage\Teleporter.h" />
+    <ClInclude Include="include\stage\Trap.h" />
+    <ClInclude Include="include\stage\Unit.h" />
+    <ClInclude Include="include\utilities\UnitData.h" />
+    <ClInclude Include="include\systems\ButtonManager.h" />
+    <ClInclude Include="include\systems\Camera.h" />
+    <ClInclude Include="include\systems\Loadout.h" />
+    <ClInclude Include="include\systems\Observer.h" />
+    <ClInclude Include="include\systems\StageManager.h" />
+    <ClInclude Include="include\systems\StageRecord.h" />
+    <ClInclude Include="include\systems\StateManager.h" />
+    <ClInclude Include="include\systems\TextureManager.h" />
+    <ClInclude Include="include\systems\Tween.h" />
+    <ClInclude Include="include\utilities\Bounds.h" />
+    <ClInclude Include="include\utilities\Easing.hpp" />
+    <ClInclude Include="include\utilities\UILayout.h" />
+    <ClInclude Include="include\visuals\Animation.h" />
+    <ClInclude Include="include\visuals\Button.h" />
+    <ClInclude Include="include\visuals\Slider.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="configs\base _data\player_bases\p_wave_base.json" />
-    <None Include="configs\player_units\archdemon\archdemon.json" />
-    <None Include="data\base data\enemy bases\orbitral base\orbital base.json" />
-    <None Include="data\enemy units\droid 2\droid2.json" />
-    <None Include="data\stage data\stage 1.json" />
+    <None Include="configs\proj_data\0\proj_data.json" />
+    <None Include="configs\unit_data\1\unit_data.json" />
+    <None Include="configs\base data\enemy bases\orbitral base\orbital base.json" />
+    <None Include="configs\unit_data\101\unit_data.json" />
+    <None Include="configs\stage data\stage 1.json" />
+    <None Include="game_saves\stage_save.json" />
+    <None Include="game_saves\unit_save.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

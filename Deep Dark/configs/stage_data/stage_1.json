@@ -20,7 +20,7 @@
       "player_spawn_position": 200,
       "enemy_spawn_position": 800,
       "y_position": 400.0,
-      "gaps": [ [ 2475.0, 525.0 ] ]
+      "gaps": [ [ 220.0, 300.0 ] ]
     },
     {
       "player_spawn_position": 200,
@@ -57,7 +57,7 @@
       "total_spawns": 8,
       "magnification": 1.5,
 
-      "first_spawn_time": 92.0,
+      "first_spawn_time": 1.0,
       "spawn_delays": [ 33.67, 35.21 ],
       "lane_indexes": [ 0, 2, 2, 1, 0, 1, 1, 0 ]
     },

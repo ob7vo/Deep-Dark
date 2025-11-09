@@ -1,7 +1,7 @@
 {
   "unit_id": 1,
+  "gear": 1,
   "name": "archdemon",
-  "path": "configs/player_units/1/",
   "level": 1,
   "team": 1,
   "parts_cost": 7,

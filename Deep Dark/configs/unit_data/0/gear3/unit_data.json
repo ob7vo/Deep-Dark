@@ -1,0 +1,87 @@
+{
+  "unit_id": 0,
+  "gear": 3,
+  "name": "Cursed Soldier",
+  "level": 1,
+  "team": 1,
+  "parts_cost": 5,
+  "recharge_timer": 2.5,
+  "single_target": false,
+  "stats": {
+    "hp": 150,
+    "knockbacks": 2,
+    "speed": 75.0,
+    "attack_time": 2.25,
+    "sight_range": 225.0,
+    "lane_sight": [ 1, 1 ],
+    "hits": [
+      {
+        "dmg": 30,
+        "lane_reach": [ 0, 1 ],
+        "attack_range": [ -10, 225 ]
+      },
+      {
+        "dmg": 30,
+        "lane_reach": [ 1, 0 ],
+        "attack_range": [ -35, 250 ]
+      },
+      {
+        "dmg": 65,
+        "lane_reach": [ 1, 1 ],
+        "attack_range": [ -75, 300 ]
+      }
+    ]
+  },
+  "animations": {
+    "move": {
+      "cell_size": [ 162, 162 ],
+      "frames": 8,
+      "fps": 8
+    },
+    "idle": {
+      "cell_size": [ 162, 162 ],
+      "frames": 10,
+      "fps": 5
+    },
+    "knockback": {
+      "cell_size": [ 162, 162 ],
+      "frames": 3
+    },
+    "attack": {
+      "cell_size": [ 162, 162 ],
+      "attack_frames": [ 5, 10, 19 ],
+      "frames": 21,
+      "fps": 7
+    },
+    "falling": {
+      "cell_size": [ 162, 162 ],
+      "frames": 3
+    },
+    "jump": {
+      "cell_size": [ 162, 162 ],
+      "frames": 3,
+      "fps": 3
+    }
+  },
+  "augments": [
+    {
+      "augment": "__orbital_strike",
+      "value": 200.0,
+      "value2": 50.0,
+      "percentage": 100.0,
+      "active_hits": [ 0 ],
+      "surge_level": 3
+    },
+    {
+      "augment": "projectile",
+      "active_hits": [ 0 ],
+      "int_value": 0
+    }
+  ],
+  "types": [ "typeless" ],
+  "target_types": [ "all" ],
+  "quick_augment_masks": [ "code_breaker", "heavyweight", "bully" ],
+  "cores": [
+    ["maxHp_*_2.5", "hit2_=_200","speed_+_30"]
+  ]
+}
