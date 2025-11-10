@@ -12,6 +12,7 @@
 
 const int p_team = 1;
 const float FLOOR = 900;
+const float INACTIVE_SPAWNER = 10000.f;
 
 const float HITBOX_TIMER = 0.75f;
 const float HITBOX_HEIGHT = 60.f;
@@ -44,7 +45,7 @@ struct EnemySpawner {
 	UnitAniMap aniArr;
 
 	float nextSpawnTime = 10000.f;
-	float firstSpawnTime = 0.f;
+	float percentThreshold = 101.f;
 	std::pair<float, float> spawnDelays;
 	std::vector<std::pair<float, int>> forcedSpawnTimes;
 
