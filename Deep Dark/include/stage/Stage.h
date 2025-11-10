@@ -43,14 +43,14 @@ struct EnemySpawner {
 	UnitStats enemyStats;
 	UnitAniMap aniArr;
 
-	float nextSpawnTime;
-	float firstSpawnTime;
+	float nextSpawnTime = 10000.f;
+	float firstSpawnTime = 0.f;
 	std::pair<float, float> spawnDelays;
 	std::vector<std::pair<float, int>> forcedSpawnTimes;
 
 	int currentSpawnIndex = 0;
-	int totalSpawns;
-	bool infinite;
+	int totalSpawns = 0;
+	bool infinite = false;
 
 	std::vector<int> laneSpawnIndexes;
 
@@ -90,6 +90,7 @@ struct Stage
 	void create_summon(Unit& unit);
 	SummonData* try_get_summon_data(int summonId, float magnification);
 	void try_revive_unit(UnitSpawner* spawner);
+	void update_enemy_base_percentage(int percentage);
 
 	Surge* create_surge(Unit& unit, const Augment& surge);
 	void create_surge(BaseCannon* pCannon, const Augment& surge);
