@@ -12,16 +12,17 @@ using json = nlohmann::json;
 EnemySpawner::EnemySpawner(const json& spawnerData, Stage& stage){
 	totalSpawns = spawnerData["total_spawns"];
 	float magnification = spawnerData["magnification"];
-	firstSpawnTime = spawnerData["first_spawn_time"];
-	spawnDelays = spawnerData["spawn_delays"];
+	float firstSpawnTime = spawnerData["first_spawn_time"];
+	spawnDelays = spawnerData["spawn_delays"].get<std::pair<float,float>(); // min-max pair.
 	std::vector<int> laneIndexes = spawnerData["lane_indexes"];
 	laneSpawnIndexes = laneIndexes;
 	infinite = spawnerData.contains("infinite");
+	percentThreshold = spawnerData.value("percent_threshold", 101.0f); 
 
 	if (spawnerData.contains("forced_spawn_times"))
 		for (auto& forcedTime : spawnerData["forced_spawn_times"])
 			forcedSpawnTimes.emplace_back((float)forcedTime[0], (int)forcedTime[1]);
-	nextSpawnTime = firstSpawnTime;
+	nextSpawnTime = firstSpawnTime + INACTIVE_SPAWNER;
 
 	int id = spawnerData["unit_id"];
 	const json unitFile = UnitData::get_unit_json(id);
@@ -32,6 +33,16 @@ EnemySpawner::EnemySpawner(const json& spawnerData, Stage& stage){
 		if (aug.augType == PROJECTILE) 
 			stage.projConfigs[id] = ProjectileConfig(id, magnification);
 }
+void Stage::update_enemy_base_percentage(int percentage){
+	for (auto& spawner : enemySpawners){
+		if (spawner.currentSpawnIndex >= 0 || 
+			percentage > spawner.percentThreshold) continue;
+
+		spawner.currentSpawnIndex = 0;
+		spawner.nextSpawnTime -= INACTIVE_SPAWNER;
+	}
+{
+	
 Stage::Stage(const json& stageFile, StageRecord* rec) : recorder(rec),
 	enemyBase(stageFile, -1), playerBase(stageFile, 1)
 {
@@ -86,6 +97,7 @@ Stage::Stage(const json& stageFile, StageRecord* rec) : recorder(rec),
 	for (auto& spawnData : stageFile["enemy_spawns"]) {
 		enemySpawners.emplace_back(spawnData, *this);
 	}
+	update_enemy_base_percent(100.0f);
 }
 MoveRequest::MoveRequest(Unit& unit, int newLane, float fallTo, RequestType type) :
 unitId(unit.id), team(unit.stats->team), currentLane(unit.currentLane),
