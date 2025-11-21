@@ -18,10 +18,10 @@ class Unit {
 private:
 	Stage* stage; // Current Stage
 	float attackCooldown = 0;
-	UnitAnimationState animationState = UnitAnimationState::MOVING;
+	UnitAnimationState animationState = UnitAnimationState::MOVE;
 
 	float aniTime = 0.f;
-	int currentFrame = 0;
+	int currentFrame = 0, lastAttackFrame = 0;
 	UnitAniMap* aniMap; // Owned by Enemy Spawners and Loadout slots
 	sf::Sprite sprite;
 
@@ -79,6 +79,8 @@ public:
 	bool try_proc_augment(const std::vector<Augment>& augments, AugmentType target, int hits = 0);
 	bool rust_type_and_near_gap();
 	bool can_make_surge(const Augment& aug);
+	/// <summary> Will run the Terminate check with a temp integer that is dmg subtracted from hp
+	/// </summary>
 	bool try_terminate_unit(Unit& enemyUnit, int dmg = 0);
 
 	void attack();
@@ -145,7 +147,7 @@ public:
 	inline bool pending_death() const {return hp <= 0;}
 	inline bool dead() const { return hp <= 0 && animationState == UnitAnimationState::DYING; }
 	inline bool falling() const { return animationState == UnitAnimationState::FALLING; }
-	inline bool in_knockback() const { return animationState == UnitAnimationState::KNOCKEDBACK; }
+	inline bool in_knockback() const { return animationState == UnitAnimationState::KNOCKBACK; }
 	inline bool can_fall() const { return !floating_type() && over_gap(); }
 
 	inline bool rusted_tyoe() const { return stats->rusted_tyoe(); }
@@ -181,6 +183,13 @@ public:
 	inline UnitAniMap* get_ani_map() { return aniMap; }
 
 	inline bool can_phase() const { return statuses & PHASE; }
+	inline void draw(sf::RenderWindow& window) {
+		window.draw(sprite);
+		window.draw(marker);
+	}
+	inline void reset_attack_index() {
+		hitIndex = 0; lastAttackFrame = -1;
+	}
 	inline sf::Sprite& get_sprite() { return sprite; }
 	inline UnitAnimationState get_state() { return animationState; }
 

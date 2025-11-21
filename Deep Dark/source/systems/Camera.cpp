@@ -8,16 +8,16 @@ const auto MOUSE_2 = sf::Mouse::Button::Right;
 const float PAN_MULTIPLIER = 3.f;
 
 Camera::Camera(sf::RenderWindow& window) : window(window) {
-	view = window.getDefaultView();
-	uiView = view;
-	pos = view.getCenter();
-	sf::Vector2f boundsSize = view.getSize() * 2.f;
+	worldView = window.getDefaultView();
+	uiView = worldView;
+	pos = worldView.getCenter();
+	sf::Vector2f boundsSize = worldView.getSize() * 2.f;
 	sf::Vector2f topLeft = { -100,-100 };//{ -ASPECT_WIDTH * 0.5f, -ASPECT_HEIGHT * 0.5f };
 	sf::FloatRect bound(topLeft, boundsSize);
 	set_bounds(bound);
 
 	sf::Vector2f uiTopLeft = uiView.getCenter();
-	set_dark_overlay(darkScreenOverlay, 0, 0, view.getSize().x, view.getSize().y);
+	set_dark_overlay(darkScreenOverlay, 0, 0, worldView.getSize().x, worldView.getSize().y);
 }
 void Camera::set_dark_overlay(sf::VertexArray& darkOverlay, float left, float top, float width, float height, float percentage) {
 	darkOverlay = sf::VertexArray(sf::PrimitiveType::TriangleStrip, 4);
@@ -54,7 +54,7 @@ void Camera::draw_all_ui() {
 		if (u_draw) window.draw(*u_draw);
 	tempUIDrawQueue.clear();
 
-	window.setView(view);
+	window.setView(worldView);
 
 	for (auto& draw : cullingDrawQueue)
 		if (draw) window.draw(*draw);
@@ -97,7 +97,7 @@ void Camera::zoom(Key key) {
 		zoomLevel = std::max(zoomLevel - ZOOM_SPEED, MIN_ZOOM);
 
 	sf::Vector2f newSize = (sf::Vector2f)window.getSize() * zoomLevel;
-	view.setSize(newSize);
+	worldView.setSize(newSize);
 	update_pos(pos);
 }
 void Camera::zoom(sf::Event::MouseWheelScrolled scroll) {
@@ -111,16 +111,16 @@ void Camera::zoom(sf::Event::MouseWheelScrolled scroll) {
 	sf::Vector2f newPos = mousePos - newOffset;
 
 	sf::Vector2f newSize = (sf::Vector2f)window.getSize() * zoomLevel;
-	view.setSize(newSize);
+	worldView.setSize(newSize);
 	update_pos(newPos);
 }
 
 // Moving
 void Camera::update_pos(sf::Vector2f newPos) {
 	pos = get_pos_within_bounds(newPos);
-	view.setCenter(pos);
+	worldView.setCenter(pos);
 
-	window.setView(view);
+	window.setView(worldView);
 }
 void Camera::apply_velocity(float deltaTime) {
 	sf::Vector2f newPos = pos + (velocity * deltaTime);
@@ -151,7 +151,7 @@ void Camera::click_and_drag() {
 	update_pos(newPos);
 }
 sf::Vector2f Camera::get_pos_within_bounds(sf::Vector2f targetPos) {
-	sf::Vector2f halfSize = view.getSize() * 0.5f;
+	sf::Vector2f halfSize = worldView.getSize() * 0.5f;
 
 	//bounds.he
 	float x = std::clamp(targetPos.x, limits.left + halfSize.x, limits.right - halfSize.x);

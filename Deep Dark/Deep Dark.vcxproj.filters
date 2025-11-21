@@ -99,6 +99,9 @@
     <ClCompile Include="source\systems\TextureManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="source\menus\WorkshopMenu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\game_states\GameState.h">
@@ -182,13 +185,13 @@
     <ClInclude Include="include\stage\Unit.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\misc\UnitEnums.h">
+    <ClInclude Include="include\enums\UnitEnums.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\misc\ChallengeTypes.h">
+    <ClInclude Include="include\enums\ChallengeTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\misc\json.hpp">
+    <ClInclude Include="include\enums\json.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\utilities\UILayout.h">
@@ -228,6 +231,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\visuals\Slider.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\utilities\ArmorySlot.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\menus\WorkshopMenu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

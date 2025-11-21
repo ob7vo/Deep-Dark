@@ -32,7 +32,7 @@ struct Surge
 	bool readyForRemoval = 0;
 	bool createdByCannon = false;
 
-	float width = 10.f;
+	float halfWidth = 10.f;
 	sf::Vector2f pos;
 	int currentLane = 0;
 
@@ -44,6 +44,7 @@ struct Surge
 	int currentFrame = 0;
 	SurgeAnimationStates animationState;
 	sf::Sprite sprite;
+	sf::RectangleShape hitbox = sf::RectangleShape({32.f,32.f});
 
 	std::vector<int> hitUnits;
 
@@ -58,12 +59,21 @@ struct Surge
 	virtual int update_animation(float deltaTime) = 0;
 	virtual void start_animation(SurgeAnimationStates newState) {};
 	virtual bool never_hit_unit(int id) { return !already_hit_unit(id); }
+	
+	bool valid_target(Unit& unit);
 
+	inline void draw(sf::RenderWindow& window) {
+		window.draw(sprite);
+		window.draw(hitbox);
+	}
 	inline bool already_hit_unit(int id) { 
 		return std::find(hitUnits.begin(), hitUnits.end(), id) != hitUnits.end(); 
 	}
 	inline bool immune_to_surge_type(size_t unitImmunities) const { return surgeType & unitImmunities; }
 	inline bool targeted_by_unit(int enemyTargetTypes) const { return stats->targeted_by_unit(enemyTargetTypes); }
+	inline bool in_range(float x) {
+		return x >= pos.x - halfWidth && x <= pos.x + halfWidth;
+	}
 	inline int get_dmg() { return stats->get_hit_stats(hitIndex).dmg; }
 
 	static void init_animations();

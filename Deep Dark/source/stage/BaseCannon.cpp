@@ -21,6 +21,7 @@ const int zero = 0;
 
 BaseCannon::BaseCannon(const json& baseJson, float magnification) :
 	cannonStats(UnitStats::create_cannon(baseJson, magnification)), team(baseJson["team"]), pos{} {
+
 }
 WaveCannon::WaveCannon(const json& baseJson, float magnification) :BaseCannon(baseJson, magnification), 
 shockWave(Augment::cannon(SHOCK_WAVE, baseJson["surge_level"])) {}
@@ -86,7 +87,8 @@ void BaseCannon::init_animations() {
 	events.emplace_back(15, AnimationEvent::ATTACK);
 	std::string path = "configs/base_data/base_sprite.png";
 	sf::Vector2i cellSize = { 96,64 };
+	sf::Vector2f origin = { 48,64 };
 
-	waveCannonAni = Animation(path, 21, .15f, cellSize, events, false);
+	waveCannonAni = Animation(path, 21, .15f, cellSize, origin, events, false);
 }
 Animation* BaseCannon::ga_ptr() { return &waveCannonAni; }

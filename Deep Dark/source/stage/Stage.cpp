@@ -10,10 +10,11 @@ const int MAX_PROJECTILES = 10;
 using json = nlohmann::json;
 
 EnemySpawner::EnemySpawner(const json& spawnerData, Stage& stage){
+	currentSpawnIndex = -1;
 	totalSpawns = spawnerData["total_spawns"];
 	float magnification = spawnerData["magnification"];
 	float firstSpawnTime = spawnerData["first_spawn_time"];
-	spawnDelays = spawnerData["spawn_delays"].get<std::pair<float,float>(); // min-max pair.
+	spawnDelays = spawnerData["spawn_delays"].get<std::pair<float,float>>(); // min-max pair.
 	std::vector<int> laneIndexes = spawnerData["lane_indexes"];
 	laneSpawnIndexes = laneIndexes;
 	infinite = spawnerData.contains("infinite");
@@ -26,22 +27,36 @@ EnemySpawner::EnemySpawner(const json& spawnerData, Stage& stage){
 
 	int id = spawnerData["unit_id"];
 	const json unitFile = UnitData::get_unit_json(id);
-	Animation::create_unit_animation_array(unitFile, aniArr);
+	Animation::setup_unit_animation_map(unitFile, aniArr);
 	enemyStats = UnitStats::enemy(unitFile, magnification);
 
 	for (auto& aug : enemyStats.augments) 
-		if (aug.augType == PROJECTILE) 
+		if (aug.augType & PROJECTILE) 
 			stage.projConfigs[id] = ProjectileConfig(id, magnification);
 }
-void Stage::update_enemy_base_percentage(int percentage){
-	for (auto& spawner : enemySpawners){
-		if (spawner.currentSpawnIndex >= 0 || 
-			percentage > spawner.percentThreshold) continue;
+void Stage::break_spawner_thresholds(float timeSinceStart) {
+	float percentage = enemyBase.get_hp_percentage();
+	enemyBase.tookDmgThisFrame = false;
 
+	std::cout << "updating bade percentage\n";
+	for (auto& spawner : enemySpawners) {
+		if (spawner.currentSpawnIndex >= 0) {
+			std::cout << "Spawn Index is >= 0: " << spawner.currentSpawnIndex << std::endl;
+			continue;
+		}
+		if (percentage > spawner.percentThreshold) {
+			std::cout << "threshold not met. SpawnerThreshold: [" << spawner.percentThreshold
+				<< "] - Current Base Percent: " << percentage << std::endl;
+			continue;
+		}
+	//	if (spawner.currentSpawnIndex >= 0 ||
+	//		percentage > spawner.percentThreshold) continue;
 		spawner.currentSpawnIndex = 0;
-		spawner.nextSpawnTime -= INACTIVE_SPAWNER;
+		spawner.nextSpawnTime -= (INACTIVE_SPAWNER - timeSinceStart);
+		std::cout << "Activating spawner. First spawn at: " <<
+			spawner.nextSpawnTime << std::endl;
 	}
-{
+}
 	
 Stage::Stage(const json& stageFile, StageRecord* rec) : recorder(rec),
 	enemyBase(stageFile, -1), playerBase(stageFile, 1)
@@ -97,11 +112,12 @@ Stage::Stage(const json& stageFile, StageRecord* rec) : recorder(rec),
 	for (auto& spawnData : stageFile["enemy_spawns"]) {
 		enemySpawners.emplace_back(spawnData, *this);
 	}
-	update_enemy_base_percent(100.0f);
+
+	break_spawner_thresholds();
 }
-MoveRequest::MoveRequest(Unit& unit, int newLane, float fallTo, RequestType type) :
+MoveRequest::MoveRequest(Unit& unit, int newLane, float axisPos, RequestType type) :
 unitId(unit.id), team(unit.stats->team), currentLane(unit.currentLane),
-newLane(newLane), pos(fallTo), type(type) {}
+newLane(newLane), axisPos(axisPos), type(type) {}
 
 Lane& Stage::get_closest_lane(float y) {
 	int closest = 0;
@@ -156,7 +172,7 @@ void Stage::try_revive_unit(UnitSpawner* spawner) {
 
 		newUnit->statuses |= CODE_BREAKER;
 		newUnit->pos = spawner->sprite.getPosition();
-		newUnit->start_animation(UnitAnimationState::MOVING);
+		newUnit->start_animation(UnitAnimationState::MOVE);
 	}
 }
 SummonData* Stage::try_get_summon_data(int summonId, float magnification) {
@@ -312,5 +328,28 @@ int Stage::find_lane_to_knock_to(Unit& unit, int inc) {
 	}
 	return unit.currentLane;
 }
+
+void MoveRequest::move_unit_by_request(Unit& unit, Stage& stage) {
+	unit.currentLane = newLane;
+
+	switch (type) { 
+	case RequestType::FALL:
+		unit.fall(axisPos);
+		break;
+	case RequestType::SQUASH:
+		unit.squash(axisPos);
+		break;
+	case RequestType::JUMP:
+		unit.jump(axisPos);
+		break;
+	case RequestType::TELEPORT:
+		unit.pos = { axisPos, stage.lanes[newLane].yPos };
+		break;
+	default:
+		unit.launch(axisPos);
+		break;
+	}
+}
+
 //	else if (lane.playerTeleporter && lane.playerTeleporter->check_if_on_teleporter(it->pos.x))
 	//	teleport_unit(lane.playerTeleporter, it);

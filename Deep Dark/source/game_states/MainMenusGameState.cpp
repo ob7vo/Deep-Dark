@@ -27,7 +27,7 @@ void MainMenusState::on_exit() {
 
 void MainMenusState::start_game() {
 	MenuType cur = MenuType::STAGE_SELECT;
-	MenuType prev = MenuType::START;
+	MenuType prev = MenuType::MAIN_MENU;
 	nextStateEnterData = std::make_unique<PrepEnterData>(cur, prev);
 	readyToEndState = true;
 }

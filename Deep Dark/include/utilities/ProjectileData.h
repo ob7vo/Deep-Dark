@@ -11,6 +11,7 @@ namespace ProjData {
 struct ProjectileStats {
 	int team = 0;
 	int hits = 0;
+	float maxLifespan = 999.f;
 
 	int dmg = 0;
 	float height = 0;

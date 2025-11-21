@@ -26,30 +26,36 @@
   "animations": {
     "move": {
       "cell_size": [ 48, 48 ],
+      "origin": [ 12, 48 ],
       "frames": 4,
       "fps": 4
     },
     "idle": {
       "cell_size": [ 48, 48 ],
+      "origin": [ 12, 48 ],
       "frames": 4,
       "fps": 6
     },
     "knockback": {
       "cell_size": [ 48, 48 ],
+      "origin": [ 12, 48 ],
       "frames": 4
     },
     "attack": {
       "cell_size": [ 48, 48 ],
+      "origin": [12, 48],
       "attack_frames": [ 5, 6 ],
       "frames": 7,
       "fps": 14
     },
     "falling": {
       "cell_size": [ 48, 48 ],
+      "origin": [12, 48],
       "frames": 4
     },
     "phase": {
       "cell_size": [ 48, 48 ],
+      "origin": [12, 48],
       "frames": 4,
       "fps": 4
     }

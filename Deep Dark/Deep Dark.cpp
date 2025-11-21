@@ -12,7 +12,7 @@ using json = nlohmann::json;
 
 const float MAX_DELTA_TIME = 0.033f;
 const unsigned int FRAMERATE_LIMIT = 60;
-const int ASPECT_WIDTH = 900;
+const int ASPECT_WIDTH = 400;
 const int ASPECT_HEIGHT = 800;
 sf::Vector2f MOUSE_POS{ 0.f,0.f };
 sf::Color WINDOW_COLOR(54, 2, 11);
@@ -32,6 +32,7 @@ void set_fps_text(float deltaTime) {
 
     timeSinceLastFPSUpdate = 0.0f;
     float fps = 1 / deltaTime;
+
     std::stringstream ss;
     ss << "FPS: " << std::fixed << std::setprecision(1) << fps;
     fpsText.setString(ss.str());
@@ -44,7 +45,9 @@ int main()
         << SFML_VERSION_PATCH << std::endl;
 
     sf::Clock clock;
-    sf::RenderWindow window(sf::VideoMode({ ASPECT_WIDTH, ASPECT_WIDTH }), "SFML works!");
+    sf::RenderWindow window(sf::VideoMode({ ASPECT_WIDTH, ASPECT_HEIGHT }), "SFML works!",
+        sf::Style::Titlebar | sf::Style::Close);
+ 
     //window.setFramerateLimit(FRAMERATE_LIMIT);
 
     TextureManager::initialize();
@@ -61,18 +64,21 @@ int main()
     StateManager stateManager(cam);
 
     // pair <id, gear>
-    /*
-    std::vector<std::pair<int,int>> slots =  { {0,3}, {1,2} };
+    /**/
+    std::array<ArmorySlot, 10> slots = ArmorySlot::default_armory_loadout();
     std::ifstream stageFile("configs/stage_data/stage_1.json");
     json stageJson = json::parse(stageFile);
     stageFile.close();
     
-    StageEnterData stageEnterData(stageJson, slots, {0, -1});
-    */
-    PrepEnterData prepData(MenuType::ARMORY_EQUIP, MenuType::HOME_BASE);
+    StageEnterData stageEnterData(stageJson, slots);
+    //*/
+
+    PrepEnterData prepData(MenuType::ARMORY_EQUIP, MenuType::STAGE_SELECT);
    // OnStateEnterData enterData(GameState::Type::MAIN_MENU);
     stateManager.switch_state(&prepData);
 
+    sf::RectangleShape shape({ 30.f,30.f });
+    shape.setPosition({ 200.f, 400.f });
     while (window.isOpen())
     {
         set_mouse_position(window, cam);
@@ -84,12 +90,9 @@ int main()
 
             if (event->is<sf::Event::Closed>())
                 window.close();
-            else if (auto size = event->getIf<sf::Event::Resized>()) {
-                // Update the view to the new size
-                cam.view.setSize(sf::Vector2f(size->size));
-                cam.uiView.setSize(sf::Vector2f(size->size));
-                window.setView(cam.view);
-            }
+            else if (auto key = event->getIf<sf::Event::KeyPressed>())
+                if (key->code == sf::Keyboard::Key::E)
+                    shape.move({ 50.f,0 });
         }
 
         set_fps_text(deltaTime);
@@ -99,6 +102,7 @@ int main()
         cam.queue_ui_draw(&fpsText);
         stateManager.update(deltaTime);
         stateManager.render();
+        window.draw(shape);
 
         window.display();
 

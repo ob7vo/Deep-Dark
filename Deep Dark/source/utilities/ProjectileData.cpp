@@ -23,6 +23,7 @@ namespace ProjData {
 void ProjectileStats::setup(const nlohmann::json& projJson) {
     team = projJson["stats"]["team"];
     hits = projJson["stats"].value("hits", 10);
+    maxLifespan = projJson["stats"].value("max_lifespan", 999.f);
 
     dmg = projJson["stats"]["dmg"];
     height = projJson["stats"]["height"];

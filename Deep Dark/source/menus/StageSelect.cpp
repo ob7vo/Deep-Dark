@@ -6,11 +6,13 @@ using namespace UI::StageSelect;
 StageSelect::StageSelect(Camera& cam) : Menu(cam){
   	std::string texPath = "sprites/ui/stage_select/stage_node.png";
 	for (int i = 0; i < STAGES; i++) 
-		stageBtn(i).set_world_params(STAGE_NODE_POS_ARR[i], STAGE_NODE_SIZE, texPath, cam);
+		stageBtn(i).setup_world(STAGE_NODE_POS_ARR[i], STAGE_NODE_SIZE, texPath, cam);
 	
 	std::string texPath2 = "sprites/ui/stage_select/return_btn.png";
 	returnBtn().set_ui_params(RETURN_BTN_POS, RETURN_BTN_SIZE, texPath2, cam);
 
+	std::string texPath3 = "sprites/ui/stage_select/armory_btn.png";
+	armoryBtn().set_ui_params(ARMORY_BTN_POS, ARMORY_BTN_SIZE, texPath3, cam);
 	//reset_positions();
 }
 
@@ -19,6 +21,7 @@ void StageSelect::reset_positions() {
 		stageBtn(i).set_pos(STAGE_NODE_POS_ARR[i]);
 
 	returnBtn().set_norm_pos(RETURN_BTN_POS, cam);
+	armoryBtn().set_norm_pos(ARMORY_BTN_POS, cam);
 }
 
 void StageSelect::draw() {

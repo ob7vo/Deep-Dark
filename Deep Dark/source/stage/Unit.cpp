@@ -22,7 +22,7 @@ const float STATUS_ICON_SPACING = 40.f;
 
 Unit::Unit(Stage* curStage, sf::Vector2f startPos, int startingLane, const UnitStats* data,
 	UnitAniMap* p_aniMap, int id)
-	: sprite(get_default_texture()), marker({ 20.f,40.f }), currentLane(startingLane), stage(curStage),
+	: sprite(get_default_texture()), marker({ 13.f,35.f }), currentLane(startingLane), stage(curStage),
 	aniMap(p_aniMap), stats(data), id(id)
 {
 	activeStatuses.reserve(MAX_EFFECTS);
@@ -42,7 +42,7 @@ Unit::Unit(Stage* curStage, sf::Vector2f startPos, int startingLane, const UnitS
 
 	marker.setOrigin(marker.getSize());
 
-	start_animation(UnitAnimationState::MOVING);
+	start_animation(UnitAnimationState::MOVE);
  	//std::cout << "new Unit has been created, TEAM: " << data->team << std::endl;
 }
 Unit::Unit(Stage* stage, Surge& surge) :
@@ -95,8 +95,8 @@ void Unit::start_animation(UnitAnimationState newState) {
 }
 void Unit::start_idle_or_attack_animation()  {
 	if (attackCooldown <= 0) 
-		start_animation(UnitAnimationState::ATTACKING);
-	else start_animation(UnitAnimationState::IDLING);
+		start_animation(UnitAnimationState::ATTACK);
+	else start_animation(UnitAnimationState::IDLE);
 }
 int Unit::update_animation(float deltaTime) {
 	int events = (*aniMap)[animationState].update(aniTime, currentFrame, deltaTime, sprite);
@@ -125,7 +125,7 @@ void Unit::knockback(float force) {
 	create_tween(newPos, KNOCKBACK_DURATION * force, RequestType::KNOCKBACK);
 	if (tween) tween->easingFuncX = EasingType::OUT_CUBIC;
 
-	start_animation(UnitAnimationState::KNOCKEDBACK);
+	start_animation(UnitAnimationState::KNOCKBACK);
 }
 void Unit::fall(float newY) {
 	sf::Vector2f newPos({ pos.x, newY });
@@ -141,7 +141,7 @@ void Unit::squash(float newY) {
 	create_tween(newPos, SQUASH_DURATION, RequestType::SQUASH);
 	if (tween) tween->easingFuncY = EasingType::OUT_BOUNCE;
 
-	start_animation(UnitAnimationState::KNOCKEDBACK);
+	start_animation(UnitAnimationState::KNOCKBACK);
 }
 void Unit::launch(float newY) {
 //	std::cout << "starting launch" << std::endl;
@@ -150,16 +150,16 @@ void Unit::launch(float newY) {
 	create_tween(newPos, LAUNCHING_DURATION,RequestType::LAUNCH);
 	if (tween) tween->easingFuncY = EasingType::OUT_QUART;
 
-	start_animation(UnitAnimationState::KNOCKEDBACK);
+	start_animation(UnitAnimationState::KNOCKBACK);
 }
 void Unit::teleport() {
 	Teleporter* tp = stage->lanes[currentLane].get_teleporter(stats->team);
 	if (!tp || !stage->can_push_move_request(id)) return;
 
-	start_animation(UnitAnimationState::MOVING);
+	start_animation(UnitAnimationState::MOVE);
 	std::cout << "FOUND teleporter" << std::endl;
 	if (tp->connectedLane != currentLane)
-		stage->push_move_request(id, currentLane, tp->connectedLane, stats->team, tp->xDestination, RequestType::TELEPORT);
+		stage->push_move_request(*this, tp->connectedLane, tp->xDestination, RequestType::TELEPORT);
 	else pos = { tp->xDestination, stage->lanes[tp->connectedLane].yPos };
 }
 void Unit::jump(float newX) {
@@ -358,7 +358,7 @@ bool Unit::rust_type_and_near_gap() {
 		float edge = player_team() ? gap.first : gap.second;
 		float dist = (edge - pos.x) * stats->team;
 
-		if (dist > 0 || dist <= RUST_TYPE_LEDGE_RANGE)
+		if (dist > 0 && dist <= RUST_TYPE_LEDGE_RANGE)
 			return true;
 	}
 	return false;
@@ -614,6 +614,7 @@ void Unit::attack() {
 
 	bool hitEnemy = process_attack_on_lanes();
 	handle_post_attack_effects(hitEnemy);
+	lastAttackFrame = currentFrame;
 	hitIndex = (hitIndex + 1) % stats->totalHits;
 }
 bool Unit::process_attack_on_lanes() {
@@ -719,16 +720,16 @@ void Unit::tick(float deltaTime) {
 	update_status_effects(deltaTime);
 
 	switch (animationState) {
-	case UnitAnimationState::MOVING:
+	case UnitAnimationState::MOVE:
 		moving_state(deltaTime);
 		break;
-	case UnitAnimationState::ATTACKING:
+	case UnitAnimationState::ATTACK:
 		attack_state(deltaTime);
 		break;
-	case UnitAnimationState::IDLING:
+	case UnitAnimationState::IDLE:
 		idling_state(deltaTime);
 		break;
-	case UnitAnimationState::KNOCKEDBACK:
+	case UnitAnimationState::KNOCKBACK:
 		knockback_state(deltaTime);
 		break;
 	case UnitAnimationState::FALLING:
@@ -765,25 +766,24 @@ void Unit::moving_state(float deltaTime) {
 		if (has_augment(LEAP)) 
 			if (try_leap()) return;
 		if (rust_type_and_near_gap())
-			start_animation(UnitAnimationState::IDLING);
+			start_animation(UnitAnimationState::IDLE);
 	}
 }
 void Unit::attack_state(float deltaTime) {
 	int events = update_animation(deltaTime);
-	if (Animation::check_for_event(AnimationEvent::FIRST_FRAME, events))
-		hitIndex = 0;
-	if (Animation::check_for_event(AnimationEvent::FINAL_FRAME, events)) {
+	if (events & FIRST_FRAME) reset_attack_index();
+	if (events & FINAL_FRAME) {
 		attackCooldown = stats->attackTime;
 		if (has_augment(SELF_DESTRUCT)) destroy_unit();
 		else if (enemy_is_in_sight_range()) 
 			start_idle_or_attack_animation();	
-		else if (!rusted_tyoe() || (rusted_tyoe() && !can_fall()))
-			start_animation(UnitAnimationState::MOVING);
+		else if (!rust_type_and_near_gap())
+			start_animation(UnitAnimationState::MOVE);
 		else
-			start_animation(UnitAnimationState::IDLING);
+			start_animation(UnitAnimationState::IDLE);
 	}
-	if (Animation::check_for_event(AnimationEvent::ATTACK, events)) {
-		attack();
+	if (events & ATTACK) {
+		if (lastAttackFrame != currentFrame) attack();
 		if (has_augment(SELF_DESTRUCT)) hp = 0;
 	}
 }
@@ -792,7 +792,7 @@ void Unit::idling_state(float deltaTime) {
 	if (enemy_is_in_sight_range())
 		start_idle_or_attack_animation();
 	else if (!rust_type_and_near_gap())
-		start_animation(UnitAnimationState::MOVING);
+		start_animation(UnitAnimationState::MOVE);
 }
 void Unit::knockback_state(float deltaTime) {
 	update_animation(deltaTime);
@@ -805,7 +805,7 @@ void Unit::knockback_state(float deltaTime) {
 		if (hp <= 0) destroy_unit();
 		else if (enemy_is_in_sight_range())
 			start_idle_or_attack_animation();
-		else start_animation(UnitAnimationState::MOVING);
+		else start_animation(UnitAnimationState::MOVE);
 	}
 	else {
 		RequestType finishedType = update_tween(deltaTime);
@@ -819,7 +819,7 @@ void Unit::falling_state(float deltaTime) {
 		if (hp <= 0) destroy_unit();
 		else if (enemy_is_in_sight_range())
 			start_idle_or_attack_animation();
-		else start_animation(UnitAnimationState::MOVING);
+		else start_animation(UnitAnimationState::MOVE);
 	}
 	else update_tween(deltaTime);
 }
@@ -830,7 +830,7 @@ void Unit::jumping_state(float deltaTime) {
 		if (hp <= 0) destroy_unit();
 		else if (enemy_is_in_sight_range())
 			start_idle_or_attack_animation();
-		else start_animation(UnitAnimationState::MOVING);
+		else start_animation(UnitAnimationState::MOVE);
 	}
 	else update_tween(deltaTime);
 }
@@ -853,7 +853,7 @@ void Unit::phase_state(float deltaTime) {
 			if (hp <= 0) destroy_unit();
 			else if (enemy_is_in_sight_range())
 				start_idle_or_attack_animation();
-			else start_animation(UnitAnimationState::MOVING);
+			else start_animation(UnitAnimationState::MOVE);
 		}
 	}
 }
@@ -865,7 +865,7 @@ void Unit::waiting_state(float deltaTime) {
 			if (enemy_is_in_sight_range())
 				start_idle_or_attack_animation();
 			else
-				start_animation(UnitAnimationState::MOVING);
+				start_animation(UnitAnimationState::MOVE);
 		}
 	}
 }

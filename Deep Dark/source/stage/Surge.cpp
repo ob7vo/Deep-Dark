@@ -19,10 +19,13 @@ Surge::Surge(const UnitStats* stats, int curLane, sf::Vector2f pos, AugmentType 
 {
 	hitUnits.reserve(12);
 	sprite.setPosition(pos);
+	hitbox.setPosition(pos);
 }
 ShockWave::ShockWave(const UnitStats* stats, int curLane, int level, sf::Vector2f pos, Stage& stage) :
-	Surge(stats, curLane, pos, SHOCK_WAVE), id(stage.nextUnitID++){
-	width = SW_WIDTH;
+	Surge(stats, curLane, pos, SHOCK_WAVE), id(stage.nextUnitID++) {
+	halfWidth = SW_WIDTH * 0.5f;
+	hitbox.setSize({ SW_WIDTH, 25.f });
+	hitbox.setOrigin({ halfWidth, 25.f });
 
 	sf::Vector2f endPos = pos;
 	endPos.x += (SW_BASE_DISTANCE + (SW_DISTANCE_PER_LEVEL * level - 1)) * stats->team;
@@ -31,7 +34,6 @@ ShockWave::ShockWave(const UnitStats* stats, int curLane, int level, sf::Vector2
 	tween = std::make_unique<UnitTween>(pos, endPos, timeLeft, RequestType::NONE);
 	if (tween) tween->easingFuncX = EasingType::LINEAR;
 
-	sprite.setOrigin({ 16, 32 });
 	animationState = SurgeAnimationStates::ACTIVE;
 	shockWaveAni[0].reset(aniTime, currentFrame, sprite);
 }
@@ -39,21 +41,26 @@ FireWall::FireWall(const UnitStats* stats, int curLane, int level, sf::Vector2f 
 	Surge(stats, curLane, pos, FIRE_WALL), level(level)
 {
 	permanentHitUnits.reserve(15);
-	width = FW_WIDTH;
+	halfWidth = FW_WIDTH * 0.5f;
+	hitbox.setSize({ FW_WIDTH, 30.f });
+	hitbox.setOrigin({ halfWidth, 30.f });
 	timeLeft = FW_TIMER;
-	sprite.setOrigin({ 16, 32 });
+
 	animationState = SurgeAnimationStates::START_UP;
 	fireWallAni[0].reset(aniTime, currentFrame, sprite);
 }
 OrbitalStrike::OrbitalStrike(const UnitStats* stats, int curLane, sf::Vector2f pos) :
 	Surge(stats, curLane, pos, ORBITAL_STRIKE)
 {
-	width = OS_WIDTH;
-	sprite.setOrigin({ 48,48 });
+	halfWidth = OS_WIDTH * 0.5f;
+	hitbox.setSize({ OS_WIDTH, 150.f });
+	hitbox.setOrigin({ halfWidth, 75.f });
+
 	animationState = SurgeAnimationStates::ACTIVE;
 	orbitalStrikeAni.reset(aniTime, currentFrame, sprite);
 }
 
+// Animation functions
 void ShockWave::start_animation(SurgeAnimationStates newState) {
 	animationState = newState;
 	shockWaveAni[static_cast<int>(newState) - 1].reset(aniTime, currentFrame, sprite);
@@ -65,6 +72,8 @@ void FireWall::start_animation(SurgeAnimationStates newState) {
 int ShockWave::update_animation( float deltaTime) {
 	auto events = shockWaveAni[static_cast<int>(animationState) - 1].update(aniTime, currentFrame, deltaTime, sprite);
 	sprite.setPosition(pos);
+	hitbox.setPosition(pos);
+
 	return events;
 }
 int FireWall::update_animation(float deltaTime) {
@@ -74,9 +83,13 @@ int OrbitalStrike::update_animation(float deltaTime) {
 	return orbitalStrikeAni.update(aniTime, currentFrame, deltaTime, sprite);
 }
 
-bool in_surge_range(float enemyXPos, float xPos, float range){ 
-	return enemyXPos >= xPos - range && enemyXPos <= xPos + range;
+//Check
+bool Surge::valid_target(Unit& unit) {
+	return !already_hit_unit(unit.id) && !unit.invincible() && !unit.pending_death()
+		&& in_range(unit.pos.x);
 }
+
+// Attacking
 bool Surge::try_terminate_unit(Unit& enemyUnit, int dmg) {
 	if (!stats->has_augment(TERMINATE)) return false;
 	float threshold = stats->get_augment(TERMINATE).value;
@@ -93,8 +106,7 @@ void Surge::attack_units(Lane& lanes) {
 	std::vector<Unit>& enemyUnits = lanes.get_targets(stats->team);
 
 	for (auto it = enemyUnits.begin(); it != enemyUnits.end(); ++it) {
-		if (already_hit_unit(it->id) || it->invincible() || it->pending_death() ||
-			!(in_surge_range(it->pos.x, pos.x, width / 2))) continue;
+		if (valid_target((*it))) continue;
 
 		if (immune_to_surge_type(it->stats->immunities)) {
 			if (it->stats->surge_blocker()) {
@@ -175,21 +187,23 @@ void Surge::init_animations() {
 	// SHOCK WAVE
 	std::string spritePath = "sprites/surges/wave_active.png";
 	sf::Vector2i cellSize = { 32,32 };
-	shockWaveAni[0] = Animation(spritePath, 10, .1f, cellSize, events, true);
+	sf::Vector2f origin = { 16, 32 };
+	shockWaveAni[0] = Animation(spritePath, 10, .1f, cellSize, origin, events, true);
 	spritePath = "sprites/surges/wave_ending.png";
-	shockWaveAni[1] = Animation(spritePath, 8, .1f, cellSize, events, false);
+	shockWaveAni[1] = Animation(spritePath, 8, .1f, cellSize, origin, events, false);
 
 	// FIRE WALL
 	spritePath = "sprites/surges/surge_start_up.png";
-	fireWallAni[0] = Animation(spritePath, 12, .05f, cellSize, events, false);
+	fireWallAni[0] = Animation(spritePath, 12, .05f, cellSize, origin, events, false);
 	spritePath = "sprites/surges/surge_active.png";
-	fireWallAni[1] = Animation(spritePath, 8, .1f, cellSize, events, true);
+	fireWallAni[1] = Animation(spritePath, 8, .1f, cellSize, origin, events, true);
 	spritePath = "sprites/surges/surge_ending.png";
-	fireWallAni[2] = Animation(spritePath, 9, .05f, cellSize, events, false);
+	fireWallAni[2] = Animation(spritePath, 9, .05f, cellSize, origin, events, false);
 
 	// ORBITAL STRIKE
 	spritePath = "sprites/surges/orbital_strike_active.png";
 	sf::Vector2i os_cellSize = { 96,96 };
+	origin = { 48,48 };
 	events.emplace_back(4, AnimationEvent::ATTACK);
-	orbitalStrikeAni = Animation(spritePath, 12, .2f, os_cellSize, events, false);
+	orbitalStrikeAni = Animation(spritePath, 12, .2f, os_cellSize, origin, events, false);
 }

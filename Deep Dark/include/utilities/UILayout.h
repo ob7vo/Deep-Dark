@@ -3,12 +3,26 @@
 #include <array>
 
 namespace UI {
-	namespace ArmoryMenu {
-		constexpr sf::Vector2f FIRST_SLOT_POS = { 0.278f, 0.2f };
-		constexpr sf::Vector2f SLOT_INCREMENT = { 0.15f, 0.0625f };
+	constexpr sf::Vector2f ZERO = { 0.f, 0.f };
 
-		constexpr sf::Vector2f SLIDER_POS = { 0.5f, 0.6f };
+	namespace ArmoryMenu {
+		constexpr sf::Vector2f FIRST_SLOT_POS = { 0.225f, 0.15f };
+		constexpr sf::Vector2f SLOT_INCREMENT = { 0.15f, 0.1f };
+		constexpr sf::Vector2f SLOT_SCALE = { 0.06f, 0.06f };
+
+		constexpr sf::Vector2f SLIDER_SLOT_POS = { 0.1f, 0.8f };
+		constexpr sf::Vector2f SLIDER_SLOT_INCREMENT = { 0.1f, 0.f };
+		constexpr sf::Vector2f SLIDER_SLOT_SCLAE = { 0.08f, 0.08f };
+
+		constexpr sf::Vector2f DRAG_SLOT_ORIGIN = { 0.5f, 0.5f };
+		constexpr float DRAG_SLOT_OPACITY = 0.65f;
+
+		constexpr sf::Vector2f SLIDER_POS = { 0.1f, 0.6f };
 		constexpr sf::Vector2f SLIDER_SIZE = { 0.2f, 0.1f };
+		constexpr sf::Vector2f SLIDER_AXIS_BOUNDS = { 0.1f, 0.9f };
+
+		constexpr sf::Vector2f RETURN_BTN_POS = { 0.9f, 0.1f };
+		constexpr sf::Vector2f RETURN_BTN_SIZE = { 0.08f, 0.08f };
 		// 0.089f, 0.0625f
 	}
 	namespace StartMenu {
@@ -59,6 +73,9 @@ namespace UI {
 		constexpr sf::Vector2f RETURN_BTN_POS = { .2f,.2f };
 		constexpr sf::Vector2f RETURN_BTN_SIZE = { .1f, .1f };
 
+		constexpr sf::Vector2f ARMORY_BTN_POS = { .85f,.7f };
+		constexpr sf::Vector2f ARMORY_BTN_SIZE = { .1f, .1f };
+
 		constexpr sf::Vector2f STAGE_NODE_SIZE = { 0.12f, 0.12f };
 		constexpr std::array<sf::Vector2f, 3> STAGE_NODE_POS_ARR = { {
 			{350.f,350.f},
@@ -67,6 +84,32 @@ namespace UI {
 		} };
 	}
 	namespace Workshop {
+		constexpr sf::Vector2f RETURN_BTN_POS = { 0.1f, 0.1f };
+		constexpr sf::Vector2f RETURN_BTN_SIZE = { 0.05f, 0.05f };
 
+		constexpr sf::Vector2f STAT_ICON_POS = { 0.2f, 0.75f };
+		constexpr sf::Vector2f STAT_ICON_SIZE = { 0.07f, 0.07f };
+		constexpr sf::Vector2f STAT_ICON_INCREMENT = { 0.15f, 0.f };
+		constexpr sf::Vector2f STAT_TEXT_OFFSET = { 0.03f, 0.f };
+		constexpr float STAT_TEXT_SIZE = 0.025f;
+
+		// Slider and Borders
+		constexpr sf::Vector2f SLIDER_POS = { 0.2f, 0.65f };
+		constexpr sf::Vector2f SLIDER_AXIS_BOUNDS = { 0.2f, 0.8f };
+
+		// Unit Animation
+		constexpr sf::Vector2f UNIT_POS = { 0.5f, 0.45f };
+		constexpr sf::Vector2f UNIT_HURT_BOX_SIZE = { 0.015, 0.035 };
+
+		constexpr sf::Vector2f UNIT_NAME_TEXT_POS = { 0.5f,0.1f };
+		constexpr sf::Vector2f UNIT_DESC_TEXT_POS = { 0.5f, 0.15f };
+		constexpr float UNIT_TEXT_SIZE = 0.03f;
+
+		constexpr sf::Vector2f UNIT_PAUSE_BTN_POS = { 0.35f, 0.3f };
+		constexpr sf::Vector2f UNIT_PAUSE_BTN_SIZE = { 0.05f, 0.05f };
+
+		constexpr sf::Vector2f UNIT_ANIMATION_BTN_POS = { 0.65f, 0.25f };
+		constexpr sf::Vector2f UNIT_ANIMATION_BTN_INCREMENT = { 0.f, 0.075f };
+		constexpr sf::Vector2f UNIT_ANIMATION_BTN_SIZE = { 0.05f, 0.05f };
 	}
 }

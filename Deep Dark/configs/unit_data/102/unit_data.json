@@ -2,12 +2,11 @@
   "unit_id": 102,
   "level": 1,
   "name": "mushroom",
-  "path": "configs/enemy_units/102/",
   "team": -1,
   "parts_dropped": 15,
   "single_target": false,
   "stats": {
-    "hp": 2000,
+    "hp": 100,
     "knockbacks": 1,
     "speed": 45.0,
     "attack_time": 0.0,
@@ -27,26 +26,31 @@
   "animations": {
     "move": {
       "cell_size": [ 80, 64 ],
+      "origin": [20, 64],
       "frames": 8,
       "fps": 4
     },
     "idle": {
       "cell_size": [ 80, 64 ],
+      "origin": [20, 64],
       "frames": 7,
       "fps": 7
     },
     "knockback": {
       "cell_size": [ 80, 64 ],
+      "origin": [20, 64],
       "frames": 5
     },
     "attack": {
       "cell_size": [ 80, 64 ],
+      "origin": [20, 64],
       "attack_frames": [ 3, 6 ],
       "frames": 24,
       "fps": 8
     },
     "falling": {
       "cell_size": [ 80, 64 ],
+      "origin": [20, 64],
       "frames": 7
     }
   },

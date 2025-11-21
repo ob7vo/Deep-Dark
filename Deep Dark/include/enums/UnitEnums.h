@@ -3,7 +3,6 @@
 #include <iostream>
 #include "Augment.h"
 
-
 enum class RequestType {
 	NOT_DONE,
 	NONE,
@@ -19,10 +18,10 @@ enum class RequestType {
 enum class UnitAnimationState {
 	WAITING = -2,
 	PHASE = -1,
-	MOVING = 0,
-	ATTACKING = 1,
-	IDLING = 2,
-	KNOCKEDBACK = 3,
+	MOVE = 0,
+	ATTACK = 1,
+	IDLE = 2,
+	KNOCKBACK = 3,
 	FALLING = 4,
 	JUMPING = 5,
 	IS_PHASING = 6,
@@ -51,6 +50,8 @@ const enum UnitType { // comments depict the Types common builds
 };
 enum class SpawnCategory {
 	NORMAL,
+	DROPBOX,
+	REVIVE,
 	BOSS,
 	SUMMON
 };

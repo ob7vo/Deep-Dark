@@ -1,27 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #include "StageGameState.h"
 #include "PreparationState.h"
 #include "ArmoryMenu.h"
@@ -31,10 +7,8 @@ stageManager(cam, stageUI, loadout), GameState(cam){
 	stageUI.stageManager = &stageManager;
 	stageUI.pauseMenu.closeGameBtn().onClick = [this](bool m1) { if (m1) quit_stage(); };
 }
-StageEnterData::StageEnterData(const nlohmann::json& stageJson, ArmoryMenu& armory)
-	: stageJson(stageJson), loadoutSlots(armory.equippedUnits),
-	equippedCores(armory.equippedCores), OnStateEnterData(GameState::Type::STAGE) {
-}
+StageEnterData::StageEnterData(const nlohmann::json& stageJson, ArmoryMenu& armory) : 
+	stageJson(stageJson), slots(armory.slots), OnStateEnterData(GameState::Type::STAGE) {}
 
 void StageState::update_ui(float deltaTime) {
 	for (int i = 0; i < loadout.filledSlots; i++)
@@ -67,7 +41,7 @@ void StageState::quit_stage() {
 }
 void StageState::on_enter(OnStateEnterData* enterData) {
 	if (StageEnterData* stageData = dynamic_cast<StageEnterData*>(enterData)) {
-		loadout.create_loadout(stageData->loadoutSlots, stageData->equippedCores);
+		loadout.create_loadout(stageData->slots);
 		loadout.set_slot_positions(cam);
 		stageManager.create_stage(stageData->stageJson);
 

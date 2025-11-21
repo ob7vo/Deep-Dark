@@ -1,8 +1,8 @@
 #pragma once
 #include "Menu.h"
 
-const int STAGE_SELECT_BTNS = 4;
 const int STAGES = 3;
+const int STAGE_SELECT_BTNS = 2 + STAGES;
 
 struct StageSelect : public Menu<STAGE_SELECT_BTNS> {
     sf::Text selectStageText = sf::Text(baseFont);
@@ -19,4 +19,5 @@ struct StageSelect : public Menu<STAGE_SELECT_BTNS> {
         return buttonManager.buttons[stage];
     }
     inline Button& returnBtn() { return buttonManager.buttons[STAGES]; }
+    inline Button& armoryBtn() { return buttonManager.buttons[STAGES + 1]; }
 };
