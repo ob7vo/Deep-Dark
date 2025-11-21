@@ -1,6 +1,7 @@
 #pragma once
 #include "SFML\Graphics.hpp"
 #include "Bounds.h"
+#include "TextureManager.h"
 #include <iostream>
 
 const float MIN_ZOOM = 0.6f;
@@ -23,13 +24,17 @@ class Camera
 
 	Bounds limits;
 	bool locked = false;
+
+	/// <summary>Dragging UI or tooltips</summary>
+	sf::Sprite cursorUI = sf::Sprite(defTexture);
+	sf::Texture cursorUITexture;
 public:
 	float zoomLevel = 1;
 
 	float scrollSpeed = 4.f;
 	sf::Vector2f pos = { 0.f,0.f };
 
-	sf::View view;
+	sf::View worldView;
 	sf::View uiView;
 
 	std::vector<sf::Drawable*> uiDrawQueue;
@@ -59,9 +64,9 @@ public:
 	void update_pos(sf::Vector2f pos);
 
 	inline void reset() {
-		view = window.getDefaultView();
-		uiView = view;
-		pos = view.getCenter();
+		worldView = window.getDefaultView();
+		uiView = worldView;
+		pos = worldView.getCenter();
 		dragging = false;
 	}
 
@@ -83,8 +88,8 @@ public:
 	inline void set_bounds(sf::FloatRect newBounds) { limits.set_bounds(newBounds); }
 	inline Bounds get_bounds() { return limits; }
 	inline bool within_camera(sf::FloatRect rect) {
-		sf::Vector2f center = view.getCenter();
-		sf::Vector2f size = view.getSize();
+		sf::Vector2f center = worldView.getCenter();
+		sf::Vector2f size = worldView.getSize();
 
 		return !(
 			rect.position.x + rect.size.x < center.x - size.x * .5f ||// Too far left
@@ -93,6 +98,7 @@ public:
 			rect.position.y > center.y + size.y * .5f                 // Too far down
 			);
 	}
+
 	inline void change_lock(bool lock) {
 		if (lock) {
 			locked = true;
@@ -103,17 +109,35 @@ public:
 			locked = false;
 	}
 	inline void swap_camera_lock() { change_lock(!locked); }
+
 	inline void set_mouse_pos(sf::Vector2f mPos, sf::Vector2i mS_Pos) { 
 		mousePos = mPos; mouseScreenPos = mS_Pos;
 	}
+	inline void set_cursor_ui(sf::Texture& uiTex, sf::Vector2f normOrigin, float opacity, sf::Vector2f normScale) {
+		cursorUITexture = uiTex;
+		cursorUI.setTexture(cursorUITexture, true);
+
+		cursorUI.setScale(get_norm_sprite_scale(cursorUI, normScale));
+		sf::Vector2f origin = cursorUI.getLocalBounds().size * normOrigin;
+		cursorUI.setOrigin(origin);
+
+		sf::Color c = cursorUI.getColor();
+		c.a = (int)(255 * opacity);
+		cursorUI.setColor(c);
+	}
+	inline void set_cursor_ui_pos(sf::Vector2f uiPos) {
+		cursorUI.setPosition(uiPos);
+	}
+	inline void draw_cursor_ui() {
+		queue_ui_draw(&cursorUI);
+	}
+
 	inline bool has_velocity() {
 		return std::abs(velocity.x) > 0.1f && std::abs(velocity.y) > 0.1f;
 	}
 
-	inline sf::Vector2f norm_to_pixels(sf::Vector2f relative) {
-		float x = uiView.getSize().x * relative.x;
-		float y = uiView.getSize().y * relative.y;
-		return { x,y };
+	inline sf::Vector2f norm_to_pixels(sf::Vector2f norm) {
+		return  uiView.getSize() * norm;
 	}
 	inline sf::Vector2f get_norm_sprite_scale(const sf::Sprite& sprite, sf::Vector2f normScale) {
 		// Get the sprite's original pixel dimensions
@@ -124,6 +148,24 @@ public:
 		float scaleY = targetPixelSize.y / bounds.size.y;
 
 		return { scaleX, scaleY };
+	}
+	inline unsigned int get_norm_font_size(sf::Text& text, float normHeight) {
+		float targetPixelHeight = normHeight * uiView.getSize().y;
+
+		// Start with an estimate
+		unsigned int fontSize = static_cast<unsigned int>(targetPixelHeight);
+		text.setCharacterSize(fontSize);
+
+		// Measure actual height
+		float actualHeight = text.getLocalBounds().size.y;
+
+		// Adjust if needed
+		if (actualHeight > 0) {
+			fontSize = static_cast<unsigned int>((targetPixelHeight / actualHeight) * fontSize);
+			text.setCharacterSize(fontSize);
+		}
+
+		return fontSize;
 	}
 	inline void set_sprite_params(sf::Vector2f normPos, sf::Vector2f scale,
 		const std::string& path, sf::Texture& texture, sf::Sprite& sprite) {

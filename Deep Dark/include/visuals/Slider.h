@@ -10,20 +10,34 @@ class Slider : public Button {
 
 	bool holding = false;
 	std::vector<std::pair<Button*, sf::Vector2f>> anchoredButtons = {};
+	std::vector<std::pair<sf::Sprite*, sf::Vector2f>> anchoredSprites = {};
+	std::vector<std::pair<sf::Text*, sf::Vector2f>> anchoredTexts = {};
 
 	bool lockedX = false;
 	std::pair<float, float> axisBounds; // area where the slider can be dragged
 public:
 	Slider() = default;
-	void setup(bool lock, std::pair<float, float> bounds,
-		std::vector<Button*> pBtns){
+	void setup(bool lock, std::pair<float, float> bounds){
 		lockedX = lock;
 		axisBounds = bounds;
 		onClick = [this](bool m1) { if (m1) holding = !holding; };
-		
+	}
+	inline void set_anchored_btns(std::vector<Button*> pBtns) {
 		for (auto& pBtn : pBtns) {
 			sf::Vector2f offset = pBtn->get_pos() - pos;
 			anchoredButtons.emplace_back(pBtn, offset);
+		}
+	}
+	inline void set_anchored_sprites(std::vector<sf::Sprite*> pSprites) {
+		for (auto& pSprite : pSprites) {
+			sf::Vector2f offset = pSprite->getPosition() - pos;
+			anchoredSprites.emplace_back(pSprite, offset);
+		}
+	}
+	inline void set_anchored_sprites(std::vector<sf::Text*> pTexts) {
+		for (auto& pText : pTexts) {
+			sf::Vector2f offset = pText->getPosition() - pos;
+			anchoredTexts.emplace_back(pText, offset);
 		}
 	}
 
@@ -37,7 +51,7 @@ public:
 		set_pos(newPos);
 
 		velocity *= std::pow(SLIDER_FRICTION, dt * FIXED_FRAMERATE);
-		update_btns();
+		update_anchors();
 	}
 	inline void follow_mouse(sf::Vector2i mPos) {
 		sf::Vector2f oldPos = pos;
@@ -49,16 +63,24 @@ public:
 		sf::Vector2f instantVelocity = (pos - oldPos) * (float)FIXED_FRAMERATE;
 		velocity = (velocity * 0.8f) + (instantVelocity * 0.3f) * SLIDER_VELOCITY_BOOST;
 
-		update_btns();
+		update_anchors();
 	}
 	
-	inline void update_btns() {
+	inline void update_anchors() {
 		for (auto& [btn, offset] : anchoredButtons) 
 			btn->set_pos(pos + offset);
+		for (auto& [sprite, offset] : anchoredSprites)
+			sprite->setPosition(pos + offset);
+		for (auto& [text, offset] : anchoredTexts)
+			text->setPosition(pos + offset);
 	}
 	inline void reset_offsets() {
 		for (auto& [pBtn, offset] : anchoredButtons) 
 			offset = pBtn->get_pos() - pos;
+		for (auto& [sprite, offset] : anchoredSprites)
+			offset = sprite->getPosition() - pos;
+		for (auto& [text, offset] : anchoredTexts)
+			offset = text->getPosition() - pos;
 	}
 	inline bool has_velocity() {
 		return std::abs(velocity.x) > 0.1f || std::abs(velocity.y) > 0.1f;

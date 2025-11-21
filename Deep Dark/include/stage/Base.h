@@ -11,18 +11,19 @@ class Base
 private:
 	sf::Sprite sprite = sf::Sprite(defBaseTexture);
 	int team = 0;
-	int maxHp = 0;
-	int hp = 0;
+	int maxHp = 1;
+	int hp = 1;
 
 	float cooldown = 0;
 	float cannonTimer = 0;
 	float sightRange = 0; // only for enemy bases
 
 public:
+	bool tookDmgThisFrame = false; // this variable doesnt matter to player base
+
 	std::unique_ptr<BaseCannon> cannon;
 	Animation* cannonAnimation = nullptr;
 	sf::Vector2f pos = {0.f, 0.f};
-
 
 	Base() = default;
 	Base(const nlohmann::json& stageFile, int team);
@@ -48,6 +49,10 @@ public:
 		return defaultTex;
 	}
 	inline void draw(sf::RenderWindow& window) { window.draw(sprite); }
+	inline float get_hp_percentage() {
+		if (hp <= 0 || maxHp <= 0) return 0.f;
+		else return (float)hp / maxHp;
+	}
 	inline bool on_cooldown() const { return cooldown > 0.f; }
 };
 

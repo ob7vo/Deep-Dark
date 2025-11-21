@@ -10,7 +10,7 @@ Base::Base(const json& stageFile, int team) : team(team), sprite(get_default_tex
 	std::string baseString = team == 1 ? "player_base" : "enemy_base";
 	cannonAnimation = nullptr;
 
-	hp = stageFile[baseString]["hp"];
+	hp = maxHp = stageFile[baseString]["hp"];
 	pos = { stageFile[baseString]["x_position"], BASE_Y_POS };
 	sprite.setPosition(pos);
 	sprite.setOrigin({ 2.5f, 2.5f });
@@ -50,11 +50,12 @@ void Base::create_cannon(std::string path, float magnification) {
 	}
 	//Animation* ani = cannon->get_cannon_animation_ptr();
 	Animation* ani = BaseCannon::ga_ptr();
-	sprite.setTexture(ani->texture);
-	sprite.setTextureRect(ani->frames[0].rect);
+	ani->reset(sprite);
 	cannon->pos = pos;
 }
 void Base::take_damage(int dmg) {
+	tookDmgThisFrame = team == -1; // this variable doesnt matter to player base
+
 	hp -= dmg;
 }
 bool Base::try_fire_cannon() {

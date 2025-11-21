@@ -13,6 +13,7 @@ protected:
 	bool readyToEndState = false;
 	bool transitioning = false;
 	bool clicked = false;
+
 public:
 	GameState(Camera& cam) : cam(cam) {};
 	~GameState() = default;

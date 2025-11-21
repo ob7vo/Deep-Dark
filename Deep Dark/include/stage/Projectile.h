@@ -23,6 +23,7 @@ class Projectile {
 	sf::Vector2f pos = { 0.f, 0.f };
 
 	float hitCountTime = 0.f;
+	float maxLifespan = 999.f;
 	int hitsLeft = 0;
 	std::vector<std::pair<int, float>> hitUnits = {};
 	ProjectileStats* stats = nullptr;
@@ -42,6 +43,7 @@ public:
 		(*aniArr)[0].reset(aniTime, frame, sprite);
 		sprite.scale({ 0.2f,0.2f });
 		hitsLeft = stats->hits;
+		maxLifespan = stats->maxLifespan;
 	}
 	~Projectile() = default;
 	Projectile(Projectile&&) = default;
@@ -62,6 +64,10 @@ public:
 	inline float y_pos() { return pos.y; }
 	inline void update_hit_times(float deltaTime) {
 		for (auto& pair : hitUnits) pair.second -= deltaTime;
+	}
+	inline void enter_destroyed_state() {
+		aniState = DESTROYED_STATE;
+		(*aniArr)[aniState].reset(aniTime, frame, sprite);
 	}
 	inline bool can_hit_again(int id) {
 		return std::find_if(hitUnits.begin(), hitUnits.end(),

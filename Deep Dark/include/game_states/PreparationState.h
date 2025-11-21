@@ -2,14 +2,16 @@
 #include "GameState.h"
 #include "StageSelect.h"
 #include "ArmoryMenu.h"
+#include "WorkshopMenu.h"
 
 class PreparationState : public GameState {
 	StageSelect stageSelect;
 	ArmoryMenu armoryMenu;
+	WorkshopMenu workshopMenu;
 
 	MenuBase* menu;
 	MenuType curMenuType = MenuType::STAGE_SELECT;
-	MenuType prevMenuType = MenuType::ARMORY_EQUIP;
+	MenuType prevMenuType = MenuType::MAIN_MENU;
 public:
 	PreparationState(Camera& cam);
 	~PreparationState() = default;
@@ -21,19 +23,13 @@ public:
 	void on_exit() override;
 	void start_stage(int stage);
 
-	inline MenuBase* get_menu() {
-		cam.reset();
+	MenuBase* get_menu();
+	inline void switch_menu(MenuType newMenu) {
+		prevMenuType = curMenuType;
+		curMenuType = newMenu;
 
-		switch (curMenuType) {
-		case MenuType::STAGE_SELECT: 
-			cam.change_lock(false);
-			return &stageSelect;
-		case MenuType::ARMORY_EQUIP: 
-			cam.change_lock(true);
-			return &armoryMenu;
-		}
-
-		return nullptr;
+		menu = get_menu();
+		if (menu) menu->reset_positions();
 	}
 };
 

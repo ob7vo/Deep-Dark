@@ -3,12 +3,13 @@
 #include "Animation.h"
 #include "UnitData.h"
 #include "Camera.h"
+#include "ArmorySlot.h"
 #include <fstream>
 
 const sf::Vector2f FIRST_SLOT_POS = { 0.278f, 0.84375f };
 const sf::Vector2f SLOT_INCREMENT = { 0.089f, 0.0625f };
 
-struct Slot {
+struct LoadoutSlot {
 	bool empty = true;
 	bool autoDeploy = false;
 	float cooldown = 0.f;
@@ -23,14 +24,14 @@ struct Slot {
 	UnitStats unitStats = {};
 	UnitAniMap aniMap = {};
 	
-	Slot() = default;
-	Slot(sf::Texture& tex) : empty(true), slotSprite(tex) { set_bounds(); }
-	Slot(const nlohmann::json& file, sf::Texture& tex, int core)
+	LoadoutSlot() = default;
+	LoadoutSlot(sf::Texture& tex) : empty(true), slotSprite(tex) { set_bounds(); }
+	LoadoutSlot(const nlohmann::json& file, sf::Texture& tex, int core)
 		: cooldown(0.f), slotSprite(tex), empty(false),
 		unitStats(UnitStats::player(file, core)) {
-		Animation::create_unit_animation_array(file, aniMap);
+		Animation::setup_unit_animation_map(file, aniMap);
 		set_bounds();
-		spawnTimer = unitStats.timer;
+		spawnTimer = unitStats.rechargeTime;
 	}
 	inline void set_bounds() {
 		sf::FloatRect bounds = slotSprite.getGlobalBounds();
@@ -75,7 +76,7 @@ struct Slot {
 	inline bool can_afford_unit(int parts) { return unitStats.parts <= parts; }
 };
 struct Loadout{
-	std::array<Slot, 10> slots;
+	std::array<LoadoutSlot, 10> slots;
 	int filledSlots = 0;
 
 	sf::Texture defaultSlotTexture;
@@ -95,7 +96,7 @@ struct Loadout{
 		for (int i = 0; i < 2; i++) {
 			for (int j = 0; j < 5; j++) {
 				int ind = i * 5 + j;
-				Slot& slot = slots[ind];
+				LoadoutSlot& slot = slots[ind];
 				slot.slotSprite.setPosition(pos);
 				slot.slotSprite.setScale({ 2.5f,2.5f });
 				slot.set_bounds();
@@ -106,30 +107,28 @@ struct Loadout{
 		}
 	}
 
-	void create_loadout(std::vector<std::pair<int, int>> units, std::vector<int> cores) {
+	void create_loadout(std::array<ArmorySlot, 10> armorySlots) {
 		slotTextures = {};
-		if (cores.size() != units.size()) {
-			std::cerr << "equipped cores vector is not of matching size" << std::endl;
-			cores.reserve(10);
-			for (size_t i = cores.size(); i < units.size(); i++)
-				cores.push_back(-1);
-		}
-		
-		filledSlots = std::min((int)units.size(),10);
 
-		for (int i = 0; i < filledSlots; i++) {
-			auto [id, gear] = units[i];
-			set_slot(id, gear, cores[i], i);
+
+		for (int i = 0; i < 10; i++) {
+			ArmorySlot& slot = armorySlots[i];
+			if (slot.id == -1) {
+				filledSlots = i;
+				break;
+			}
+
+			set_slot(slot.id, slot.gear, slot.core, i);
 		}
 		for (int j = filledSlots; j < 10; j++)
-			slots[j] = Slot(defaultSlotTexture);
+			slots[j] = LoadoutSlot(defaultSlotTexture);
 	}
 
 	inline void set_slot(int id, int gear, int coreInd, int slot) {
 		const nlohmann::json unitJson = UnitData::get_unit_json(id, gear);
 
 		slotTextures.emplace_back(UnitData::get_slot_texture(id, gear));
-		slots[slot] = Slot(unitJson, slotTextures.back(), coreInd);
+		slots[slot] = LoadoutSlot(unitJson, slotTextures.back(), coreInd);
 	}
 	inline void draw_slots(Camera& cam, int currentParts) {
 		for (int i = 0; i < 10; i++) 

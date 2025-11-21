@@ -14,31 +14,43 @@ const int p_team = 1;
 const float FLOOR = 900;
 const float INACTIVE_SPAWNER = 10000.f;
 
-const float HITBOX_TIMER = 0.75f;
+const float HITBOX_TIMER = 0.5f;
 const float HITBOX_HEIGHT = 60.f;
 const sf::Color HITBOX_COLOR(235, 24, 9, 128);
 
 class Unit;
 struct Stage;
 
+struct SummonData {
+	int count = 0;
+	const UnitStats stats;
+	UnitAniMap ani;
+
+	SummonData(const nlohmann::json& file, float mag) :
+		stats(UnitStats::enemy(file, mag)) {
+	}
+}; 
 struct MoveRequest {
 	int unitId;
 	int currentLane;
 	int newLane;
 	int team;
-	float pos;
+	float axisPos;
 	RequestType type;
 
-	MoveRequest(int id, int curLane, int newLane, int team, float fallTo, RequestType type) :
+	MoveRequest(int id, int curLane, int newLane, 
+		int team, float axisPos, RequestType type) :
 		unitId(id), currentLane(curLane), newLane(newLane), 
-		team(team), pos(fallTo), type(type) {}
-	MoveRequest(Unit& unit, int newLane, float fallTo, RequestType type);
+		team(team), axisPos(axisPos), type(type) {}
+	MoveRequest(Unit& unit, int newLane, float axisPos, RequestType type);
 
+	void move_unit_by_request(Unit& unit, Stage& stage);
 	inline bool fall_request() const { return type == RequestType::FALL; }
 	inline bool teleport_request() const { return type == RequestType::TELEPORT; }
 	inline bool squash_request() const { return type == RequestType::SQUASH; }
 	inline bool jump_request() const { return type == RequestType::JUMP; }
 	inline bool	launch_request() const { return type == RequestType::LAUNCH; }
+	
 };
 struct EnemySpawner {
 	UnitStats enemyStats;
@@ -47,9 +59,10 @@ struct EnemySpawner {
 	float nextSpawnTime = 10000.f;
 	float percentThreshold = 101.f;
 	std::pair<float, float> spawnDelays;
+	///<summary>First is the EXACT time an enemy will spawn, Second is the lane </summary>
 	std::vector<std::pair<float, int>> forcedSpawnTimes;
 
-	int currentSpawnIndex = 0;
+	int currentSpawnIndex = -1;
 	int totalSpawns = 0;
 	bool infinite = false;
 
@@ -91,7 +104,7 @@ struct Stage
 	void create_summon(Unit& unit);
 	SummonData* try_get_summon_data(int summonId, float magnification);
 	void try_revive_unit(UnitSpawner* spawner);
-	void update_enemy_base_percentage(int percentage);
+	void break_spawner_thresholds(float timeSinceStart = 0.f);
 
 	Surge* create_surge(Unit& unit, const Augment& surge);
 	void create_surge(BaseCannon* pCannon, const Augment& surge);

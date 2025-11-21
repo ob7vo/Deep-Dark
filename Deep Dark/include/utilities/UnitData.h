@@ -1,6 +1,6 @@
 #pragma once
 #include "UnitEnums.h"
-#include "Animation.h"
+#include "SFML/Graphics/Texture.hpp"
 #include <iostream>
 #include <fstream>
 #include <memory>
@@ -9,10 +9,21 @@ const int TEAM_PLAYER = 1;
 const int TEAM_ENEMY = -1;
 const float GUARANTEED_CHANCE = 100.0f;
 
+
 namespace UnitData {
+	const int TOTAL_PLAYER_UNITS = 3;
+	const int TOTAL_ENEMY_UNITS = 4;
+	const int TOTAL_UNITS = TOTAL_PLAYER_UNITS + TOTAL_ENEMY_UNITS;
+
+	const int NULL_ID = -1;
+
 	std::string get_unit_folder_path(int id, int gear = 0);
 	nlohmann::json get_unit_json(int id, int gear = 0);
 	sf::Texture get_slot_texture(int id, int gear);
+
+	std::string get_unit_folder_path(std::pair<int,int> unit);
+	nlohmann::json get_unit_json(std::pair<int, int> unit);
+	sf::Texture get_slot_texture(std::pair<int, int> unit);
 };
 
 struct Hit {
@@ -28,7 +39,7 @@ struct Hit {
 struct UnitStats {
 	// * = wont be change by core
 	int unitId = 0; // *
-	float timer = 0.f;
+	float rechargeTime = 0.f;
 
 	int team = 0; // *
 	int parts = 0;
@@ -86,7 +97,7 @@ struct UnitStats {
 	void setup(const nlohmann::json& file) {
 		std::pair<int, int> baseRange = { 0,0 };
 
-		timer = file.value("recharge_timer", 0.f);
+		rechargeTime = file.value("recharge_timer", 0.f);
 		unitId = file["unit_id"];
 		team = file["team"];
 		if (team == TEAM_PLAYER) parts = file["parts_cost"];
@@ -144,7 +155,7 @@ struct UnitStats {
 		}
 	}
 	static UnitStats enemy(const nlohmann::json& file, float magnification);
-	static UnitStats player(const nlohmann::json& file, int core);
+	static UnitStats player(const nlohmann::json& file, int core = -1);
 
 	static UnitStats create_cannon(const nlohmann::json& baseFile, float magnification) {
 		UnitStats stats;
@@ -173,6 +184,9 @@ struct UnitStats {
 	inline bool has_augment(AugmentType aug) const { return quickAugMask & aug; }
 	inline bool surge_blocker() const { return quickAugMask & AugmentType::SURGE_BLOCKER; }
 	inline bool targeted_by_unit(int enemyTargetTypes) const { return (enemyTargetTypes & unitTypes); }
+
+	inline bool is_player() const { return team == 1; }
+
 	inline Augment get_augment(AugmentType aug) const {
 		for (auto& augment : augments)
 			if (augment.augType == aug) return augment;
@@ -185,12 +199,4 @@ struct UnitStats {
 		p = json.value("parts", p);
 		return p;
 	}
-};
-
-struct SummonData {
-	int count = 0;
-	const UnitStats stats;
-	UnitAniMap ani;
-	SummonData(const nlohmann::json& file, float mag) :
-	stats(UnitStats::enemy(file,mag)){}
 };

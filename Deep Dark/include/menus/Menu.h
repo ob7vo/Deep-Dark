@@ -5,11 +5,11 @@
 const sf::Font baseFont("fonts/KOMIKAX_.ttf");
 
 enum class MenuType {
-	START,
+	MAIN_MENU,
 	HOME_BASE,
 	STAGE_SELECT,
 	ARMORY_EQUIP,
-	AUGMENT,
+	WORKSHOP_MENU,
 	STAGE_PAUSE
 };
 
@@ -24,7 +24,8 @@ struct MenuBase
 	virtual ~MenuBase() = default;
 
 	virtual void draw() = 0;
-	virtual bool on_mouse_press(bool isM1) = 0;
+	/// <summary>Return value prevents camera drag when buttons are clicked</summary>
+	virtual bool on_mouse_press(bool isM1) = 0; 
 	virtual bool on_mouse_release(bool isM1) = 0;
 	virtual void check_mouse_hover() = 0;
 	virtual void reset_positions() = 0;
@@ -40,6 +41,7 @@ struct Menu : public MenuBase
 	~Menu() = default;
 
 	virtual void draw() = 0;
+	/// <summary>Return value prevents camera drag when buttons are clicked</summary>
 	virtual bool on_mouse_press(bool isM1) override {
 		return buttonManager.on_mouse_press(cam.getMouseScreenPos(), isM1);
 	}

@@ -4,11 +4,8 @@
 #include <iostream>
 #include "json.hpp"
 
-const int TOTAL_UNITS = 2;
-
 const std::string SAVE_FOLDER_PATH = "saves/";
 struct SaveSystem{
-
 	static const int VERSION = 1;
 
 	static SaveSystem s_instance;

@@ -4,6 +4,7 @@
 #include <iostream>
 
 struct UnitRecord {
+	int laneCount = 0;
 	std::vector<int> deaths = {};
 	int totalDeaths = 0;
 	std::vector<int> unitsSpawned = {};
@@ -16,11 +17,19 @@ struct UnitRecord {
 	int deathsByCannons = 0;
 
 	UnitRecord() = default;
-	UnitRecord(int laneCount) {
+	UnitRecord(int lanes) : laneCount(lanes) {
 		deaths.reserve(laneCount);
 		unitsSpawned.reserve(laneCount);
 		deaths.assign(laneCount, 0);
 		unitsSpawned.assign(laneCount, 0);
+	}
+	void set_new_lane_count(int lanes) {
+		if (lanes <= this->laneCount) return;
+		//If new lanes is less than old LaneCount, do nothing
+
+		laneCount = lanes;
+		deaths.resize(lanes, 0);
+		unitsSpawned.resize(lanes, 0);
 	}
 
 	inline void add_death(int lane, DeathCause causeOfDeath) {
@@ -53,7 +62,10 @@ struct StageRecord
 	StageRecord() = default;
 	StageRecord(int lanes) : 
 		enemyRecorder(lanes), playerRecorder(lanes) {}
-
+	void set_new_lane_count(int laneCount) {
+		playerRecorder.set_new_lane_count(laneCount);
+		enemyRecorder.set_new_lane_count(laneCount);
+	}
 	inline void add_death(int team, int lane, DeathCause causeOfDeath) { 
 		get_unit_record(team).add_death(lane, causeOfDeath);
 	}

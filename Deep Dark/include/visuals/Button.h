@@ -39,7 +39,7 @@ public:
 
 		cam.set_dark_overlay(darkOverlay, left, top, width, height);
 	}
-	inline void set_world_params(sf::Vector2f pos, sf::Vector2f scale,
+	inline void setup_world(sf::Vector2f pos, sf::Vector2f scale,
 		const std::string& path, Camera& cam) {
 		cam.set_sprite_params({1.f,1.f}, scale, path, idleTexture, sprite);
 		sprite.setPosition(pos);

@@ -29,23 +29,35 @@ struct AnimationFrame {
 };
 struct Animation {
 	float time = 0.0f;
-	int currentFrame = 0;
 	bool loops = true;
 	sf::Texture texture;
+	sf::Vector2f origin;
+
+	int currentFrame = 0;
 	std::vector<AnimationFrame> frames;
 	int frameCount = 0;
 
 	Animation() = default;
 	Animation(std::string spritePath, int frames, float framerate, 
-		sf::Vector2i cellSizes, ani_event_map events, bool loops = true);
+		sf::Vector2i cellSizes, sf::Vector2f origin, ani_event_map events, bool loops = true);
 
 	int update(float deltaTime, sf::Sprite& sprite);
 	int update(float& time, int& curFrame, float deltaTime, sf::Sprite& sprite);
+	
+	/// <summary>
+	/// Starts the animation. Sets the current frame and time to 0, 
+	/// then sets the Sprite's Texture, Rect, and Origin
+	/// </summmary>
 	void reset(sf::Sprite& sprite);
+	/// <summary>
+	/// Starts the animation. Sets the current frame and time to 0, 
+	/// then sets the Sprite's Texture, Rect, and Origin
+	/// </summmary>
 	void reset(float& tiem, int& curFrame, sf::Sprite& sprite);
 
 	inline int get_events() { return frames[currentFrame].eventsMask; }
-	static void create_unit_animation_array(const nlohmann::json& unitFile, UnitAniMap& aniMap);
+	static void setup_unit_animation_map(const nlohmann::json& unitFile, UnitAniMap& aniMap);
 	static Animation create_unit_animation(const nlohmann::json& file, std::string ani, std::string path, bool loops);
 	static bool check_for_event(AnimationEvent desiredEvent, int events);
+
 };

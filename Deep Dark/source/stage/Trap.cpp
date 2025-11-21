@@ -19,7 +19,6 @@ Trap::Trap(Lane& lane, const nlohmann::json& trap) :  lane(lane){
 
 	animating = false;
 	ani = get_trap_animation(trapType);
-	sprite.setTexture(ani.texture);
 	ani.reset(sprite);
 	sprite.setPosition(pos);
 }
@@ -126,6 +125,7 @@ Animation Trap::get_trap_animation(TrapType type) {
 	// starts off as LAUNCH_PAD
 	std::string spritePath = "sprites/traps/launch_pad.png";
 	sf::Vector2i cellSize = { 96,32 };
+	sf::Vector2f origin = { 48, 32 };
 	int frames = 16;
 	float rate = 0.2f;
 
@@ -136,6 +136,7 @@ Animation Trap::get_trap_animation(TrapType type) {
 	case TrapType::TRAP_DOOR: {
 		spritePath = "sprites/traps/trap_door.png";
 		cellSize.x = 144;
+		origin.x = 72;
 		frames = 24;
 		rate = .3f;
 		events.emplace_back(5, TRIGGER);
@@ -145,11 +146,12 @@ Animation Trap::get_trap_animation(TrapType type) {
 	default: {
 		spritePath = "sprites/traps/flat_dmg.png";
 		cellSize.x = 32;
+		origin.x = 16;
 		frames = 25;
 		rate = .15f;
 		events.emplace_back(13, TRIGGER);
 	}
 	}
 
-	return Animation(spritePath, frames, rate, cellSize, events, false);
+	return Animation(spritePath, frames, rate, cellSize, origin, events, false);
 }

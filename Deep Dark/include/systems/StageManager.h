@@ -41,6 +41,8 @@ struct StageManager
 
 	void unload_stage();
 	void create_stage(const nlohmann::json& stageJson);
+	void create_challenges(const nlohmann::json& stageJson);
+	void set_texts();
 
 	void update_game_ticks(float deltaTime);
 	void process_move_requests();

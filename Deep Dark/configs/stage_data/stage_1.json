@@ -54,20 +54,20 @@
   "enemy_spawns": [
     {
       "unit_id": 102,
-      "total_spawns": 8,
+      "total_spawns": 5,
       "magnification": 1.5,
 
       "first_spawn_time": 1.0,
-      "spawn_delays": [ 33.67, 35.21 ],
-      "lane_indexes": [ 0, 2, 2, 1, 0, 1, 1, 0 ]
+      "spawn_delays": [ 3.67, 5.21 ],
+      "lane_indexes": [ 0, 2, 2, 1, 0]
     },
     {
       "unit_id": 101,
       "total_spawns": 6,
       "magnification": 1.5,
 
-      "first_spawn_time": 55.5,
-      "spawn_delays": [ 92.29, 93.56 ],
+      "first_spawn_time": 1.5,
+      "spawn_delays": [ 2.29, 3.56 ],
       "lane_indexes": [ 2, 2, 1, 2, 0, 1 ]
     }
   ],

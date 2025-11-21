@@ -20,15 +20,16 @@ ProjectileConfig::ProjectileConfig(int id, float mag) {
 }
 int Projectile::update_hits_and_animation(float deltaTime) {
 	hitCountTime += deltaTime;
-	if (hitCountTime >= 1.f) {
+	maxLifespan -= deltaTime;
+
+	while (hitCountTime >= 1.f) {
 		hitCountTime -= 1.f;
 		hitsLeft--;
 		//std::cout << "hit count Time ticked. HITSLEFT = " << hitsLeft << std::endl;
 	}
-	if (aniState == ACTIVE_STATE && hitsLeft <= 0) {
-		aniState = DESTROYED_STATE;
-		(*aniArr)[aniState].reset(aniTime, frame, sprite);
-	}
+
+	if (aniState == ACTIVE_STATE && (hitsLeft <= 0 || maxLifespan <= 0))
+		enter_destroyed_state();
 	
 	return (*aniArr)[aniState].update(aniTime, frame, deltaTime, sprite);
 }
@@ -65,7 +66,7 @@ void Projectile::attack_units(Lane& lane) {
 
 		hitsLeft -= 1 + unit.has_augment(CHIP);
 		if (hitsLeft <= 0) {
-			aniState = DESTROYED_STATE;
+			enter_destroyed_state();
 			return;
 		}
 	}

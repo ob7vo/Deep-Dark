@@ -20,14 +20,30 @@ namespace UnitData {
         }
     }
     sf::Texture get_slot_texture(int id, int gear) {
-        const std::string path = get_unit_folder_path(id, gear) + "slot.png";
+        const std::string path = id >= 0 ? get_unit_folder_path(id, gear) + "slot.png" :
+            "sprites/defaults/empty_slot.png";
+
         sf::Texture slotTex;
 
-        if (!slotTex.loadFromFile(path))
-            std::cerr << "wrong slot texture path\n";
+        if (!slotTex.loadFromFile(path)) {
+            std::cerr << "wrong slot texture path: [" << path << 
+                "], loading default instead" << std::endl;
+            (void)slotTex.loadFromFile("sprites/defaults/empty_slot.png");
+        }
 
         return slotTex;
     }
+
+    std::string get_unit_folder_path(std::pair<int, int> unit) {
+        return get_unit_folder_path(unit.first, unit.second);
+    }
+    nlohmann::json get_unit_json(std::pair<int, int> unit) {
+        return get_unit_json(unit.first, unit.second);
+    }
+    sf::Texture get_slot_texture(std::pair<int, int> unit) {
+        return get_slot_texture(unit.first, unit.second);
+    }
+
 };
 
 static void modifyInt(int& tar, char op, float value) {

@@ -1,6 +1,7 @@
 #pragma once
 #include "GameState.h"
 #include "StageManager.h"
+#include "ArmorySlot.h"
 
 struct ArmoryMenu;
 
@@ -24,13 +25,12 @@ public:
 
 struct StageEnterData : public OnStateEnterData {
 	const nlohmann::json stageJson;
-	std::vector<std::pair<int,int>> loadoutSlots;
-	std::vector<int> equippedCores;
+	std::array<ArmorySlot, 10> slots;
 
 	StageEnterData(const nlohmann::json& stageJson, ArmoryMenu& armory);
-	StageEnterData(const nlohmann::json& stageJson, std::vector<std::pair<int,int>> units,
-		std::vector<int> cores) : stageJson(stageJson), loadoutSlots(units),
-		equippedCores(cores), OnStateEnterData(GameState::Type::STAGE) {}
+	StageEnterData(const nlohmann::json& stageJson, std::array<ArmorySlot, 10> slots) : 
+		stageJson(stageJson), slots(slots),
+		OnStateEnterData(GameState::Type::STAGE) {}
 
 	~StageEnterData() = default;
 };

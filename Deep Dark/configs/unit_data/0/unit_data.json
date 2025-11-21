@@ -2,6 +2,7 @@
   "unit_id": 0,
   "gear": 1,
   "name": "soldier",
+  "description": "soldier guy from the bronx",
   "team": 1,
   "parts_cost": 5,
   "recharge_timer": 0.5,
@@ -20,30 +21,36 @@
   "animations": {
     "move": {
       "cell_size": [ 96, 84 ],
+      "origin": [70, 84],
       "frames": 8,
       "fps": 8
     },
     "idle": {
       "cell_size": [ 96, 84 ],
+      "origin": [70, 84],
       "frames": 7,
       "fps": 10
     },
     "knockback": {
       "cell_size": [ 96, 84 ],
+      "origin": [70, 84],
       "frames": 4
     },
     "attack": {
       "cell_size": [ 96, 84 ],
+      "origin": [70, 84],
       "attack_frames": [ 4 ],
       "frames": 6,
       "fps": 12
     },
     "falling": {
       "cell_size": [ 96, 84 ],
+      "origin": [70, 84],
       "frames": 5
     },
     "jump": {
       "cell_size": [ 96, 84 ],
+      "origin": [70, 84],
       "frames": 5,
       "fps": 3
     }

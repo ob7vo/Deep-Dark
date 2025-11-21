@@ -24,11 +24,13 @@ void StageManager::create_stage(const json& stageJson)
 	bagCap = baseBagCap;
 	bagUpgradeCost = baseBagUpgradeCost;
 
-	ui.partsCountText.setString(std::format("$0/{}", bagCap));
-	ui.bagUpgradeCostText.setString(std::format("${}", bagUpgradeCost));
-
+	create_challenges(stageJson);
+	set_texts();
+}
+void StageManager::create_challenges(const json& stageJson) {
 	size_t challengeCount = stageJson["challenges"].size();
 	challenges.reserve(challengeCount);
+
 	for (auto& ch : stageJson["challenges"]) {
 		std::string desc = ch.value("description", "");
 		bool startState = ch.value("starting_state", false);
@@ -47,14 +49,14 @@ void StageManager::create_stage(const json& stageJson)
 		chal.cleared = startState;
 		chal.pTarget = chal.get_target_ptr(*this);
 	}
-
+}
+void StageManager::set_texts() {
+	ui.partsCountText.setString(std::format("$0/{}", bagCap));
+	ui.bagUpgradeCostText.setString(std::format("${}", bagUpgradeCost));
 	ui.clearedChallengesText.setString(
 		std::format("Challenges Cleared: 0/{}", challenges.size()));
 	ui.clearedChallengesText.setCharacterSize(16);
 	ui.clearedChallengesText.setFillColor(sf::Color::Yellow);
-
-	bagCap = baseBagCap;
-	bagUpgradeCost = baseBagUpgradeCost;
 }
 void StageManager::unload_stage() {
 	challenges.clear();
@@ -111,7 +113,7 @@ void StageManager::read_button_inputs(Key key) {
 }
 bool StageManager::read_spawn_inputs(Key key) {
 	for (int i = 0; i < loadout.filledSlots; i++) {
-		Slot& slot = loadout.slots[i];
+		LoadoutSlot& slot = loadout.slots[i];
 
 		if ((key == numberKeys[i] || slot.autoDeploy) && slot.cooldown <= 0) {
 			selectedLane %= stage.laneCount;
@@ -218,15 +220,16 @@ void StageManager::spawn_enemies(float deltaTime) {
 			data.forcedSpawnTimes.erase(data.forcedSpawnTimes.begin());
 		}
 
-		if (data.currentSpawnIndex >= data.totalSpawns) continue;
+		int curIndex = data.currentSpawnIndex;
+		if (curIndex >= data.totalSpawns || curIndex < 0) continue;
 
 		if (timeSinceStart > data.nextSpawnTime) {
 			data.nextSpawnTime += random_float(data.spawnDelays.first, data.spawnDelays.second);
-			int laneIndex = data.laneSpawnIndexes[data.currentSpawnIndex];
+
+			int laneIndex = data.laneSpawnIndexes[curIndex];
 			stage.create_unit(laneIndex, &data.enemyStats, &data.aniArr);
 
-			data.currentSpawnIndex++;
-			if (data.currentSpawnIndex >= data.totalSpawns && data.infinite)
+			if (++data.currentSpawnIndex >= data.totalSpawns && data.infinite)
 				data.currentSpawnIndex = 0;
 		}
 	}
@@ -252,15 +255,7 @@ void StageManager::process_move_requests() {
 		Unit& movedUnit = newVec.emplace_back(std::move(*unit));
 		sourceVec.erase(unit);
 
-		movedUnit.currentLane = request.newLane;
-
-		if (request.fall_request()) movedUnit.fall(request.pos);
-		else if (request.squash_request()) movedUnit.squash(request.pos);
-		else if (request.jump_request()) movedUnit.jump(request.pos);
-		else if (request.teleport_request()) {
-			movedUnit.pos = { request.pos, stage.lanes[request.newLane].yPos };
-		}
-		else movedUnit.launch(request.pos);
+		request.move_unit_by_request(movedUnit, stage);
 
 		stage.moveRequests.pop_back();
 	}
@@ -324,14 +319,15 @@ void StageManager::update_ptr(float deltaTime) {
 	}
 }
 void StageManager::update_base(float deltaTime) {
-	stage.playerBase.tick(stage,deltaTime);
+	stage.playerBase.tick(stage, deltaTime);
+
 	stage.enemyBase.tick(stage, deltaTime);
+	if (stage.enemyBase.tookDmgThisFrame)
+		stage.break_spawner_thresholds(timeSinceStart);
 }
 void StageManager::update_hitbox_visualizers(float deltaTime) {
-	int size = (int)stage.hitboxes.size();
-	for (int i = 0; i < size; i++) {
-		float& timer = stage.hitboxes[i].second;
-		timer -= deltaTime;
+	for (size_t i = stage.hitboxes.size(); i--;) {
+		float& timer = stage.hitboxes[i].second -= deltaTime;
 		if (timer <= 0) {
 			stage.hitboxes[i] = std::move(stage.hitboxes.back());
 			stage.hitboxes.pop_back();
@@ -344,10 +340,9 @@ void StageManager::draw(sf::RenderWindow& window) {
 		lane.draw(window);
 		if (lane.trap) window.draw(lane.trap->sprite);
 		for (auto& unit : lane.enemyUnits)
-			window.draw(unit.get_sprite());
+			unit.draw(window);
 		for (auto& unit : lane.playerUnits)
-			window.draw(unit.get_sprite());
-			
+			unit.draw(window);		
 	}
 	for (auto& proj : stage.projectiles)
 		window.draw(proj.get_sprite());
@@ -356,7 +351,7 @@ void StageManager::draw(sf::RenderWindow& window) {
 	//stage.playerBase.draw(window);
 
 	for (auto it = stage.surges.begin(); it != stage.surges.end();) {
-		window.draw((*it)->sprite);
+		(*it)->draw(window);
 		++it;
 	}
 	for (auto it = stage.actionObjects.begin(); it != stage.actionObjects.end();) {
