@@ -139,10 +139,13 @@ public:
 	inline sf::Vector2f norm_to_pixels(sf::Vector2f norm) {
 		return  uiView.getSize() * norm;
 	}
+	inline sf::Vector2f norm_to_pixels_size(sf::Vector2f norm) {
+   	 	return norm * std::min(windowSize.x, windowSize.y); // both use same dimension!
+    }
 	inline sf::Vector2f get_norm_sprite_scale(const sf::Sprite& sprite, sf::Vector2f normScale) {
 		// Get the sprite's original pixel dimensions
 		sf::FloatRect bounds = sprite.getLocalBounds();
-		sf::Vector2f targetPixelSize = norm_to_pixels(normScale);
+		sf::Vector2f targetPixelSize = norm_to_pixels_size(normScale);
 
 		float scaleX = targetPixelSize.x / bounds.size.x;
 		float scaleY = targetPixelSize.y / bounds.size.y;
