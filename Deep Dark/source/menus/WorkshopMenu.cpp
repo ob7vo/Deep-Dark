@@ -7,7 +7,6 @@ using namespace UI::Workshop;
 
 WorkshopMenu::WorkshopMenu(Camera& cam) : Menu(cam), statIcons(make_statIcons()),
 statTexts(make_statTexts()) {
-
 	unsigned int fontSize = cam.get_norm_font_size(unitNameText, UNIT_TEXT_SIZE);
 	unitNameText.setCharacterSize(fontSize);
 	unitDescText.setCharacterSize(fontSize);
@@ -18,12 +17,15 @@ statTexts(make_statTexts()) {
 		statIcons[i].setOrigin((sf::Vector2f)statIcons[i].getTexture().getSize() * 0.5f);
 	}
 	 
-	const std::string path = uiPath + "pause.png";
-	pause_btn().set_ui_params(UNIT_PAUSE_BTN_POS, UNIT_PAUSE_BTN_SIZE, path, cam);
+	pause_btn().set_ui_params(UNIT_PAUSE_BTN_POS, UNIT_PAUSE_BTN_SIZE, uiPath + "pause.png", cam);
 	pause_btn().onClick = [this](bool isM1) {if (isM1) paused = !paused; };
+	return_btn().set_ui_params(RETURN_BTN_POS, RETURN_BTN_SIZE, uiPath + "return.png", cam);
+	switchGearBtn().set_ui_params(UNIT_SWITCH_GEAR_BTN_POS, UNIT_SWITCH_GEAR_BTN_SIZE, workshopPath + "switch_gear.png", cam);
+	switchGearBtn().onClick = [this](bool isM1) {if (isM1) switch_unit_gear(); };
+	animationSpeedBtn().set_ui_params(UNIT_SPEED_BTN_POS, UNIT_SPEED_BTN_SIZE, workshopPath + "speed_up.png", cam);
+	animationSpeedBtn().onClick = [this](bool isM1) {if (isM1) unitAnimSpeedIndex = (unitAnimSpeedIndex + 1) % 5; };
 
-	const std::string path2 = uiPath + "return.png";
-	return_btn().set_ui_params(RETURN_BTN_POS, RETURN_BTN_SIZE, path2, cam);
+	const std::string path3 = uiPath + "return.png";
 
 	animation_btn(0).set_ui_params({}, UNIT_ANIMATION_BTN_SIZE, workshopPath + "move_anim_btn.png", cam);
 	animation_btn(1).set_ui_params({}, UNIT_ANIMATION_BTN_SIZE, workshopPath + "attack_anim_btn.png", cam);
@@ -35,6 +37,7 @@ statTexts(make_statTexts()) {
 			if (!isM1) return;
 			currentAnimation = static_cast<UnitAnimationState>(i);
 			unitAnimations[currentAnimation].reset(unitSprite);
+			unitHitboxes.clear();
 			};
 	}
 }
@@ -43,15 +46,8 @@ void WorkshopMenu::setup_workshop_unit(int id, int gear) {
 
 	unitStats = UnitStats::player(unitJson);
 	Animation::setup_unit_animation_map(unitJson, unitAnimations);
-	for (auto& anim : unitAnimations) {
-		anim.second.loops = true;
-		/*
-		UnitAnimationState state = anim.first;
-		if
-		animation_btn(state).onClick = [state, this](bool isM1) {
-			if (isM1) unitAnimations[state].reset(unitSprite);
-			};
-			*/
+	for (auto& [state, anim] : unitAnimations) {
+		anim.loops = true;
 	}
 
 	unitAnimations[UnitAnimationState::MOVE].reset(unitSprite);
@@ -104,16 +100,17 @@ void WorkshopMenu::draw() {
 	}
 
 	buttonManager.draw(cam);
-	cam.queue_ui_draw(&unitSprite);
+	cam.queue_world_draw(&unitSprite);
 	cam.queue_ui_draw(&unitNameText);
 	cam.queue_ui_draw(&unitDescText);
+
 	draw_unit_hurtbox();
+	draw_unit_hitboxs();
 }
 void WorkshopMenu::draw_unit_hurtbox() {
 	sf::Vector2f size = cam.norm_to_pixels(UNIT_ANIMATION_BTN_SIZE);
-	sf::RectangleShape hurtbox(size);  // 352 bytes on stack
-	sf::Vector2f origin = size;
-	if (!unitStats.is_player()) origin.x = 0;
+	sf::RectangleShape hurtbox(size);
+	sf::Vector2f origin = { (!unitStats.is_player() ? 0.f : size.x) , size.y };
 
 	hurtbox.setPosition(unitSprite.getPosition());
 	hurtbox.setFillColor(sf::Color(3, 252, 198, 128));
@@ -121,14 +118,45 @@ void WorkshopMenu::draw_unit_hurtbox() {
 
 	cam.queue_temp_ui_draw(hurtbox);
 }
-void WorkshopMenu::draw_unit_hitbox() {
-
+void WorkshopMenu::draw_unit_hitboxs() {
+	for (auto& hitbox : unitHitboxes)
+		cam.queue_world_draw(&hitbox);
 }
+void WorkshopMenu::create_hitbox_visualizer() {
+	int hitIndex = static_cast<int>(unitHitboxes.size());
+	const std::pair<float, float> range = unitStats.get_hit_stats(hitIndex).attackRange;
+	sf::Vector2f unitPos = unitSprite.getPosition();
+
+	float width = range.second - range.first;
+	float height = UNIT_HITBOX_HEIGHTS[hitIndex];
+	sf::RectangleShape shape({ width, height});
+
+	float originX = unitStats.team == 1 ? 0 : width;
+	float posX = unitPos.x + (range.first * unitStats.team);
+
+	shape.setOrigin({ originX, height });
+	shape.setFillColor(UNIT_HITBOX_COLORS[hitIndex]);
+	shape.setPosition({ posX, unitPos.y });
+
+	unitHitboxes.push_back(shape);
+}
+
 
 void WorkshopMenu::update(float dt) {
 	if (paused) return;
 		
-	unitAnimations[currentAnimation].update(dt, unitSprite);
+	update_unit_animation(dt);
+}
+void WorkshopMenu::update_unit_animation(float deltaTime) {
+	if (paused) return;
+
+	float dt = deltaTime * UNIT_ANIMATION_SPEEDS[unitAnimSpeedIndex];
+	int events = unitAnimations[currentAnimation].update(dt, unitSprite);
+	
+	if (events & FINAL_FRAME || unitAnimations[currentAnimation].currentFrame == 0)
+		unitHitboxes.clear();
+	else if (events & ATTACK) 
+		create_hitbox_visualizer();
 }
 
 void WorkshopMenu::check_mouse_hover() {
@@ -139,4 +167,9 @@ bool WorkshopMenu::on_mouse_press(bool isM1) {
 }
 bool WorkshopMenu::on_mouse_release(bool isM1) {
 	return true;
+}
+
+void WorkshopMenu::switch_unit_gear() {
+	unitGear = (unitGear + 1) % 3;
+	setup_workshop_unit(unitId, unitGear + 1);
 }

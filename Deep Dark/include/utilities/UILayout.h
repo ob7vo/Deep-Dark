@@ -99,7 +99,14 @@ namespace UI {
 
 		// Unit Animation
 		constexpr sf::Vector2f UNIT_POS = { 0.5f, 0.45f };
-		constexpr sf::Vector2f UNIT_HURT_BOX_SIZE = { 0.015, 0.035 };
+		constexpr sf::Vector2f UNIT_HURT_BOX_SIZE = { 0.05f, 0.03f };
+		constexpr std::array<float, 4> UNIT_HITBOX_HEIGHTS = {30.f, 45.f, 60.f, 75.f};
+		constexpr std::array<sf::Color, 4> UNIT_HITBOX_COLORS = {
+			sf::Color(240, 48, 38, 128), // red
+			sf::Color(232, 137, 35, 128), // orange
+			sf::Color(247, 227, 47, 128), // yellow
+			sf::Color(240, 48, 38, 128),
+		};
 
 		constexpr sf::Vector2f UNIT_NAME_TEXT_POS = { 0.5f,0.1f };
 		constexpr sf::Vector2f UNIT_DESC_TEXT_POS = { 0.5f, 0.15f };
@@ -107,6 +114,10 @@ namespace UI {
 
 		constexpr sf::Vector2f UNIT_PAUSE_BTN_POS = { 0.35f, 0.3f };
 		constexpr sf::Vector2f UNIT_PAUSE_BTN_SIZE = { 0.05f, 0.05f };
+		constexpr sf::Vector2f UNIT_SWITCH_GEAR_BTN_POS = { 0.35f, 0.4f };
+		constexpr sf::Vector2f UNIT_SWITCH_GEAR_BTN_SIZE = { 0.05f, 0.05f };
+		constexpr sf::Vector2f UNIT_SPEED_BTN_POS = { 0.35f, 0.5f };
+		constexpr sf::Vector2f UNIT_SPEED_BTN_SIZE = { 0.05f, 0.05f };
 
 		constexpr sf::Vector2f UNIT_ANIMATION_BTN_POS = { 0.65f, 0.25f };
 		constexpr sf::Vector2f UNIT_ANIMATION_BTN_INCREMENT = { 0.f, 0.075f };

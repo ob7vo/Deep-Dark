@@ -215,36 +215,36 @@ Surge* Stage::create_surge(Unit& unit, const Augment& surge) {
 		pos.x += ran_num(min, max) * unit.stats->team;
 	}
 
-	create_surge(unit.stats, lane, level, pos, surge.augType);
+	Surge* pSurge = create_surge(unit.stats, lane, level, pos, surge.augType);
+	pSurge->hitIndex = unit.hitIndex;
 	return surges.back().get();
 }
 // player bases
 void Stage::create_surge(BaseCannon* pCannon, const Augment& surge) {
-	create_surge(&pCannon->cannonStats, selectedLane, surge.surgeLevel, pCannon->pos, surge.augType);
-	surges.back()->createdByCannon = true;
+	Surge* pSurge = create_surge(&pCannon->cannonStats, selectedLane, surge.surgeLevel, pCannon->pos, surge.augType);
+	if (pSurge) pSurge->set_as_cannon_creation();
 }
 // enemy bases
 void Stage::create_surge(BaseCannon* eCannon, const Augment& surge, int lane, float distance) {
 	sf::Vector2f pos = eCannon->pos;
 	pos.x -= distance;
-	create_surge(&eCannon->cannonStats, lane, surge.surgeLevel, pos, surge.augType);
-	surges.back()->createdByCannon = true;
+
+	Surge* pSurge = create_surge(&eCannon->cannonStats, lane, surge.surgeLevel, pos, surge.augType);
+	if (pSurge) pSurge->set_as_cannon_creation();
 }
-void Stage::create_surge(const UnitStats* stats, int lane, int level, sf::Vector2f pos, AugmentType aug) {
+Surge* Stage::create_surge(const UnitStats* stats, int lane, int level, sf::Vector2f pos, AugmentType aug) {
 	switch (aug) {
 	case AugmentType::SHOCK_WAVE:
-		surges.emplace_back(std::make_unique<ShockWave>(stats, lane, level, pos, *this));
-		break;
+		return surges.emplace_back(std::make_unique<ShockWave>(stats, lane, level, pos, *this)).get();
 	case AugmentType::FIRE_WALL:
-		surges.emplace_back(std::make_unique<FireWall>(stats, lane, level, pos));
-		break;
+		return surges.emplace_back(std::make_unique<FireWall>(stats, lane, level, pos)).get();
 	case AugmentType::ORBITAL_STRIKE:
-		surges.emplace_back(std::make_unique<OrbitalStrike>(stats, lane, pos));
-		break;
+		return surges.emplace_back(std::make_unique<OrbitalStrike>(stats, lane, pos)).get();
 	default:
 		std::cout << "no surge was created. invalid augment type" << std::endl;
-		break;
+		return nullptr;
 	}
+	return nullptr;
 }
 
 void Stage::create_projectile(Unit& unit, const Augment& aug) {

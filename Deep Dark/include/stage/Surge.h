@@ -38,7 +38,7 @@ struct Surge
 
 	AugmentType surgeType;
 	const UnitStats* stats;
-	int hitIndex;
+	int hitIndex = -1; // to catch mistakes. this SHOULD be set
 
 	float aniTime = 0.0f;
 	int currentFrame = 0;
@@ -54,6 +54,7 @@ struct Surge
 
 	void attack_units(Lane& enemyUnits);
 	void on_kill(Unit& enemyUnit);
+	int calculate_damage_and_effects(Unit& unit);
 	bool try_terminate_unit(Unit& enemyUnit, int dmg = 0);
 	virtual void tick(float deltaTime, Stage& stage) = 0;
 	virtual int update_animation(float deltaTime) = 0;
@@ -66,13 +67,22 @@ struct Surge
 		window.draw(sprite);
 		window.draw(hitbox);
 	}
+	/// <summary> Sets the sur'ges htiIndex to 0 and sets it as createdByCannon </summary>
+	inline void set_as_cannon_creation() { createdByCannon = true; hitIndex = 0; }
+
 	inline bool already_hit_unit(int id) { 
 		return std::find(hitUnits.begin(), hitUnits.end(), id) != hitUnits.end(); 
 	}
 	inline bool immune_to_surge_type(size_t unitImmunities) const { return surgeType & unitImmunities; }
 	inline bool targeted_by_unit(int enemyTargetTypes) const { return stats->targeted_by_unit(enemyTargetTypes); }
 	inline bool in_range(float x) {
-		return x >= pos.x - halfWidth && x <= pos.x + halfWidth;
+		bool inRange = x >= pos.x - halfWidth && x <= pos.x + halfWidth;
+
+//		if (inRange) {
+	//		std::cout << "UnitXPos: " << x << ". Hitbox range: [" << pos.x - halfWidth
+		//		<< ", " << pos.x + halfWidth << "]" << std::endl;
+		//}
+		return inRange;
 	}
 	inline int get_dmg() { return stats->get_hit_stats(hitIndex).dmg; }
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "json.hpp"
+#include <json.hpp>
 #include "Animation.h"
 #include "UnitData.h"
 #include "Camera.h"
@@ -25,9 +25,9 @@ struct LoadoutSlot {
 	UnitAniMap aniMap = {};
 	
 	LoadoutSlot() = default;
-	LoadoutSlot(sf::Texture& tex) : empty(true), slotSprite(tex) { set_bounds(); }
+	explicit LoadoutSlot(sf::Texture& tex) : slotSprite(tex) { set_bounds(); }
 	LoadoutSlot(const nlohmann::json& file, sf::Texture& tex, int core)
-		: cooldown(0.f), slotSprite(tex), empty(false),
+		: slotSprite(tex), empty(false),
 		unitStats(UnitStats::player(file, core)) {
 		Animation::setup_unit_animation_map(file, aniMap);
 		set_bounds();
@@ -41,8 +41,7 @@ struct LoadoutSlot {
 		width = bounds.size.x;
 	}
 
-	inline void draw_cooldown_bar(Camera& cam, float percentage) {
-		//std::cout << "drawing bar with percentage: " << percentage << std::endl;
+	inline void draw_cooldown_bar(Camera& cam, float percentage) const {
 		sf::VertexArray darkOverlay(sf::PrimitiveType::TriangleStrip, 4);
 		float darkHeight = height * (1.0f - percentage);  // Fill from bottom
 
@@ -73,7 +72,7 @@ struct LoadoutSlot {
 
 		draw_cooldown_bar(cam, percentage);
 	}
-	inline bool can_afford_unit(int parts) { return unitStats.parts <= parts; }
+	inline bool can_afford_unit(int parts) const { return unitStats.parts <= parts; }
 };
 struct Loadout{
 	std::array<LoadoutSlot, 10> slots;
@@ -82,7 +81,7 @@ struct Loadout{
 	sf::Texture defaultSlotTexture;
 	std::vector<sf::Texture> slotTextures = {};
 	
-	Loadout(Camera& cam) { 
+	explicit Loadout(Camera& cam) { 
 		slotTextures.reserve(10);
 		set_slot_positions(cam); 
 		if (!defaultSlotTexture.loadFromFile("sprites/defaults/empty_slot.png"))

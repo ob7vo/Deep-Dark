@@ -21,7 +21,7 @@ private:
 	UnitAnimationState animationState = UnitAnimationState::MOVE;
 
 	float aniTime = 0.f;
-	int currentFrame = 0, lastAttackFrame = 0;
+	int currentFrame = 0;
 	UnitAniMap* aniMap; // Owned by Enemy Spawners and Loadout slots
 	sf::Sprite sprite;
 
@@ -186,9 +186,6 @@ public:
 	inline void draw(sf::RenderWindow& window) {
 		window.draw(sprite);
 		window.draw(marker);
-	}
-	inline void reset_attack_index() {
-		hitIndex = 0; lastAttackFrame = -1;
 	}
 	inline sf::Sprite& get_sprite() { return sprite; }
 	inline UnitAnimationState get_state() { return animationState; }

@@ -79,7 +79,7 @@ void ArmoryMenu::update(float dt) {
 void ArmoryMenu::draw() {
 	for (int i = 0; i < TOTAL_PLAYER_UNITS; i++) {
 		sf::FloatRect rect = unitSelectionBtn(i).sprite.getGlobalBounds();
-		cam.queue_draw(&unitSelectionBtn(i).sprite, rect);
+		cam.queue_world_draw(&unitSelectionBtn(i).sprite, rect);
 	}
 	cam.queue_ui_draw(&slider().sprite);
 	buttonManager.draw(cam, TOTAL_PLAYER_UNITS);

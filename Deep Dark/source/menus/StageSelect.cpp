@@ -28,7 +28,7 @@ void StageSelect::draw() {
 	int end = STAGES;
 	for (int i = 0; i < end; i++) {
 		sf::FloatRect rect = stageBtn(i).sprite.getGlobalBounds();
-		cam.queue_draw(&stageBtn(i).sprite, rect);
+		cam.queue_world_draw(&stageBtn(i).sprite, rect);
 	}
 
 	buttonManager.draw(cam, end);

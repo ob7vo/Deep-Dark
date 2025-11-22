@@ -18,12 +18,15 @@ const sf::Color redTransperent(255, 0, 0, 128);
 class Camera
 {
 	sf::RenderWindow& window;
+	sf::Vector2u windowSize;
+	float worldHeight = 100.f;
+
 	sf::VertexArray darkScreenOverlay = sf::VertexArray(sf::PrimitiveType::TriangleStrip, 4);
 	sf::Vector2f mousePos = { 0.f, 0.f };
 	sf::Vector2i mouseScreenPos = { 0,0 };
 
 	Bounds limits;
-	bool locked = false;
+	bool locked = true;
 
 	/// <summary>Dragging UI or tooltips</summary>
 	sf::Sprite cursorUI = sf::Sprite(defTexture);
@@ -39,16 +42,17 @@ public:
 
 	std::vector<sf::Drawable*> uiDrawQueue;
 	std::vector<std::unique_ptr<sf::Drawable>> tempUIDrawQueue; // for UI created on the Stack
-	std::vector<sf::Drawable*> cullingDrawQueue; // for world objects
+	std::vector<sf::Drawable*> worldDrawQueue; // for world objects
 
 	sf::Vector2f dragOrigin{ 0.f,0.f };
 	sf::Vector2f velocity{ 0.f,0.f };
 	bool dragging = false;
 
-	Camera(sf::RenderWindow& window);
-	void set_dark_overlay(sf::VertexArray& overlay, float left, float top, float width, float height, float percentage = 0.f);
+	explicit Camera(sf::RenderWindow& window);
+	void set_dark_overlay(sf::VertexArray& overlay, float left, float top, float width, float height, float percentage = 0.f) const;
 	void update(float deltaTime);
 	void draw_all_ui();
+	void update_projection();
 
 	void handle_events(sf::Event event);
 	void on_mouse_press(sf::Event::MouseButtonPressed click);
@@ -60,7 +64,7 @@ public:
 	void move(sf::Keyboard::Key key);
 	void click_and_drag();
 
-	sf::Vector2f get_pos_within_bounds(sf::Vector2f targetPos);
+	sf::Vector2f get_pos_within_bounds(sf::Vector2f targetPos) const;
 	void update_pos(sf::Vector2f pos);
 
 	inline void reset() {
@@ -70,8 +74,9 @@ public:
 		dragging = false;
 	}
 
-	inline void queue_draw(sf::Drawable* draw, sf::FloatRect rect) {
-		if (within_camera(rect)) cullingDrawQueue.emplace_back(draw);
+	/// <summary> Will cull Drawable if a Rect in passed in for its position + size </summary>
+	inline void queue_world_draw(sf::Drawable* draw, sf::FloatRect rect = {}) {
+		if (rect.size.x == 0 || within_camera(rect)) worldDrawQueue.emplace_back(draw);
 	}
 	inline void queue_ui_draw(sf::Drawable* draw) { uiDrawQueue.emplace_back(draw); }
 	template<typename T>
@@ -82,11 +87,11 @@ public:
 	inline void clear_queues() {
 		uiDrawQueue.clear();
 		tempUIDrawQueue.clear();
-		cullingDrawQueue.clear();
+		worldDrawQueue.clear();
 	}
 
 	inline void set_bounds(sf::FloatRect newBounds) { limits.set_bounds(newBounds); }
-	inline Bounds get_bounds() { return limits; }
+	inline Bounds get_bounds() const { return limits; }
 	inline bool within_camera(sf::FloatRect rect) {
 		sf::Vector2f center = worldView.getCenter();
 		sf::Vector2f size = worldView.getSize();
@@ -122,7 +127,7 @@ public:
 		cursorUI.setOrigin(origin);
 
 		sf::Color c = cursorUI.getColor();
-		c.a = (int)(255 * opacity);
+		c.a = (uint8_t)(255 * opacity);
 		cursorUI.setColor(c);
 	}
 	inline void set_cursor_ui_pos(sf::Vector2f uiPos) {
@@ -132,57 +137,26 @@ public:
 		queue_ui_draw(&cursorUI);
 	}
 
-	inline bool has_velocity() {
+	inline bool has_velocity() const {
 		return std::abs(velocity.x) > 0.1f && std::abs(velocity.y) > 0.1f;
 	}
 
-	inline sf::Vector2f norm_to_pixels(sf::Vector2f norm) {
+	inline sf::Vector2f norm_to_pixels(sf::Vector2f norm) const {
 		return  uiView.getSize() * norm;
 	}
-	inline sf::Vector2f norm_to_pixels_size(sf::Vector2f norm) {
-   	 	return norm * std::min(windowSize.x, windowSize.y); // both use same dimension!
+	inline sf::Vector2f norm_to_pixels_size(sf::Vector2f norm) const {
+   	 	return norm * (float)std::min(windowSize.x, windowSize.y); // both use same dimension!
     }
-	inline sf::Vector2f get_norm_sprite_scale(const sf::Sprite& sprite, sf::Vector2f normScale) {
-		// Get the sprite's original pixel dimensions
-		sf::FloatRect bounds = sprite.getLocalBounds();
-		sf::Vector2f targetPixelSize = norm_to_pixels_size(normScale);
 
-		float scaleX = targetPixelSize.x / bounds.size.x;
-		float scaleY = targetPixelSize.y / bounds.size.y;
+	sf::Vector2f get_norm_sprite_scale(const sf::Sprite& sprite, sf::Vector2f normScale) const;
+	unsigned int get_norm_font_size(sf::Text& text, float normHeight) const;
+	void set_sprite_params(sf::Vector2f normPos, sf::Vector2f scale,
+		const std::string& path, sf::Texture& texture, sf::Sprite& sprite);
 
-		return { scaleX, scaleY };
+	inline void draw_grey_screen(float opacity = 0.5f) { 
+		for (int i = 0; i < 4; i++) darkScreenOverlay[i].color.a = (uint8_t)(255 * opacity);
+		queue_ui_draw(&darkScreenOverlay); 
 	}
-	inline unsigned int get_norm_font_size(sf::Text& text, float normHeight) {
-		float targetPixelHeight = normHeight * uiView.getSize().y;
-
-		// Start with an estimate
-		unsigned int fontSize = static_cast<unsigned int>(targetPixelHeight);
-		text.setCharacterSize(fontSize);
-
-		// Measure actual height
-		float actualHeight = text.getLocalBounds().size.y;
-
-		// Adjust if needed
-		if (actualHeight > 0) {
-			fontSize = static_cast<unsigned int>((targetPixelHeight / actualHeight) * fontSize);
-			text.setCharacterSize(fontSize);
-		}
-
-		return fontSize;
-	}
-	inline void set_sprite_params(sf::Vector2f normPos, sf::Vector2f scale,
-		const std::string& path, sf::Texture& texture, sf::Sprite& sprite) {
-		sf::Vector2f _pos = norm_to_pixels(normPos);
-//		std::cout << "pos: (" << pos.x << ", " << pos.y << ")" << std::endl;
-		if (!texture.loadFromFile(path)) std::cout << "wrong path for btn texture" << std::endl;
-		sprite = sf::Sprite(texture);
-
-		scale = get_norm_sprite_scale(sprite, scale);
-		sprite.setScale(scale);
-		sprite.setPosition(_pos);
-		sprite.setOrigin(sprite.getLocalBounds().size * 0.5f);
-	}
-	inline void draw_grey_screen(float transperency) { queue_ui_draw(&darkScreenOverlay); }
 
 	inline void close_window() { window.close(); }
 	inline sf::RenderWindow& get_window() const { return window; }

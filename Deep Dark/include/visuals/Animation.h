@@ -1,18 +1,18 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "TextureManager.h"
-#include "json.hpp"
+#include <json.hpp>
 #include "UnitEnums.h"
 
 struct AnimationState;
 
 const enum AnimationEvent {
-	EMPTY_EVENT = 1 << 0,
-	FIRST_FRAME = 1 << 1,
-	FINAL_FRAME = 1 << 2,
-	ATTACK = 1 << 3,
-	TRIGGER = 1 << 4,
-	TRIGGER_2 = 1 << 5
+	EMPTY_EVENT = 0,
+	FIRST_FRAME = 1 << 0,
+	FINAL_FRAME = 1 << 1,
+	ATTACK = 1 << 2,
+	TRIGGER = 1 << 3,
+	TRIGGER_2 = 1 << 4
 };
 
 struct Animation;
