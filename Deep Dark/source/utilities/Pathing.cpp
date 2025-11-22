@@ -8,13 +8,15 @@ PathingType Pathing::string_to_type(std::string& str) {
 	case 'c': return PathingType::CIRCULAR;
 	case 'p': return PathingType::PROJECTILE;
 	case 'w': return PathingType::WAYPOINTS;
+	default: 
+		std::cout << "cannot convert str: [" << str << "] to a PathingType" << std::endl;
+		return PathingType::CIRCULAR;
 	}
 
-	std::cout << "cannot convert str: [" << str << "] to a PathingType" << std::endl;
 	return PathingType::CIRCULAR;
 }
 sf::Vector2f CirclePathing::move(float deltaTime) {
-	double angleRad = angleDeg * (M_PI * 0.01f);
+	float angleRad = angleDeg * (M_PI * 0.01f);
 
 	pos.x = center.x + radius * cos(angleRad);
 	pos.y = center.y + radius * sin(angleRad);
@@ -35,7 +37,7 @@ sf::Vector2f WaypointPathing::move(float dt) {
 	t = easeFuncArr[(int)easeType](t);
 
 	sf::Vector2f wp = waypoints[curWp];
-	pos = start + (wp - start) * timeElapsed;
+	pos = start + (wp - start) * t;
 
 	sf::Vector2f delta = wp - pos;
 	float distSq = delta.x * delta.x + delta.y * delta.y;

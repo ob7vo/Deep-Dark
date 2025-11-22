@@ -20,6 +20,7 @@ Surge::Surge(const UnitStats* stats, int curLane, sf::Vector2f pos, AugmentType 
 	hitUnits.reserve(12);
 	sprite.setPosition(pos);
 	hitbox.setPosition(pos);
+	hitbox.setFillColor(sf::Color(240, 48, 38, 100));
 }
 ShockWave::ShockWave(const UnitStats* stats, int curLane, int level, sf::Vector2f pos, Stage& stage) :
 	Surge(stats, curLane, pos, SHOCK_WAVE), id(stage.nextUnitID++) {
@@ -106,7 +107,7 @@ void Surge::attack_units(Lane& lanes) {
 	std::vector<Unit>& enemyUnits = lanes.get_targets(stats->team);
 
 	for (auto it = enemyUnits.begin(); it != enemyUnits.end(); ++it) {
-		if (valid_target((*it))) continue;
+		if (!valid_target((*it))) continue;
 
 		if (immune_to_surge_type(it->stats->immunities)) {
 			if (it->stats->surge_blocker()) {
@@ -117,10 +118,38 @@ void Surge::attack_units(Lane& lanes) {
 			else continue;
 		}
 
+		hitUnits.push_back(it->id);
 		if (it->take_damage(*this)) on_kill(*it);
-			hitUnits.push_back(it->id);
 	}
 }
+int Surge::calculate_damage_and_effects(Unit& unit) {
+	int dmg = get_dmg();
+	dmg = unit.corroded() ? (int)(dmg * 2.f) : dmg;
+
+	// If the surge targets the unit's trait, run its damage-augments
+	if (unit.targeted_by_unit(stats->targetTypes))
+		dmg = unit.apply_effects(stats->augments, hitIndex, dmg);
+
+	// If the unit targets the surge's trait, run its defense-augments
+	if (targeted_by_unit(unit.stats->targetTypes))
+		dmg = (int)(dmg * unit.calculate_damage_reduction(unit.stats->augments));
+
+	// if the unit has a sheild and it did not break, then return.
+	if (unit.has_shield_up() && !unit.damage_shield(dmg, stats)) return 0;
+
+	// These effects are based around the Unit's current HP, 
+	// so they are run after all calculations
+	if (unit.targeted_by_unit(stats->targetTypes)) {
+		if (unit.trigger_augment(stats, VOID, hitIndex))
+			dmg += (int)(unit.stats->maxHp * stats->get_augment(VOID).value);
+		if (try_terminate_unit(unit, dmg))
+			dmg += unit.stats->maxHp;
+	}
+
+	return dmg;
+}
+
+
 void ShockWave::tick(float deltaTime, Stage& stage) {
 	auto events = update_animation(deltaTime);
 	attack_units(stage.get_lane(currentLane));

@@ -1,6 +1,7 @@
 #include "UnitData.h"
 #include <algorithm>
 
+
 namespace UnitData {
     std::string get_unit_folder_path(int id, int gear) {
         return gear <= 1 ? std::format("configs/unit_data/{}/", id) :
@@ -8,7 +9,6 @@ namespace UnitData {
     }
     nlohmann::json get_unit_json(int id, int gear) {
         const std::string path = get_unit_folder_path(id, gear) + "unit_data.json";
-        //std::cout << path << std::endl;
         std::ifstream file(path);
 
         try {
@@ -48,9 +48,10 @@ namespace UnitData {
 
 static void modifyInt(int& tar, char op, float value) {
     switch (op) {
-    case '=': tar = (int)value; break;
-    case '+': tar += (int)value; break;
-    case '*': tar = (int)(tar * value); break;
+    case '=': tar = static_cast<int>(value); break;
+    case '+': tar += static_cast<int>(value); break;
+    case '*': tar = static_cast<int>((float)tar * value); break;
+    default: tar = static_cast<int>(value); break;
     }
 }
 static void modifyFloat(float& target, char op, float value) {
@@ -58,6 +59,7 @@ static void modifyFloat(float& target, char op, float value) {
     case '=': target = value; break;
     case '+': target += value; break;
     case '*': target *= value; break;
+    default: target = value; break;
     }
 }
 static void modifyBitmask(int& target, char op, int value) {
@@ -67,6 +69,7 @@ static void modifyBitmask(int& target, char op, int value) {
     case '&': target &= value; break;
     case '^': target ^= value; break;
     case '~': target &= ~value; break;
+    default: target = value; break;
     }
 }
 static void modifyBitmask(size_t& target, char op, size_t value) {
@@ -76,6 +79,7 @@ static void modifyBitmask(size_t& target, char op, size_t value) {
     case '&': target &= value; break;
     case '^': target ^= value; break;
     case '~': target &= ~value; break;
+    default: target = value; break;
     }
 }
 
@@ -88,9 +92,9 @@ UnitStats UnitStats::enemy(const nlohmann::json& file, float magnification) {
     UnitStats stats; 
 
     stats.setup(file);
-    stats.maxHp = (int)(stats.maxHp * magnification);
+    stats.maxHp = static_cast<int>(magnification * (float)stats.maxHp);
     for (int i = 0; i < stats.totalHits; i++)
-        stats.hits[i].dmg = (int)(stats.hits[i].dmg * magnification);
+        stats.hits[i].dmg = static_cast<int>(magnification * (float)stats.hits[i].dmg);
 
     return stats;
 }
@@ -118,7 +122,7 @@ UnitStats::statModifiers = {
         modifyFloat(s.speed, op, std::stof(val));
     }},
     {"knockbacks", [](UnitStats& s, char op, const std::string& val) {
-        modifyInt(s.knockbacks, op, std::stoi(val));
+        modifyInt(s.knockbacks, op, std::stof(val));
     }},
     {"attackTime", [](UnitStats& s, char op, const std::string& val) {
         modifyFloat(s.attackTime, op, std::stof(val));
@@ -127,7 +131,7 @@ UnitStats::statModifiers = {
         modifyFloat(s.sightRange, op, std::stof(val));
     }},
     {"singleTarget", [](UnitStats& s, char op, const std::string& val) {
-        s.singleTarget = (val == "true" || val == "1");
+        s.singleTarget = (val == "true" || val == "1" || op == '+');
     }},
     {"unitTypes", [](UnitStats& s, char op, const std::string& val) {
         int bits = UnitStats::convert_string_to_type(val);
@@ -147,7 +151,7 @@ UnitStats::statModifiers = {
     }},
 };
 
-void UnitStats::apply_core_modifier(const std::string coreStr, int gear) {
+void UnitStats::apply_core_modifier(const std::string& coreStr, int gear) {
     size_t firstUnderscore = coreStr.find('_');
     size_t lastUnderscore = coreStr.rfind('_');
 
@@ -164,6 +168,9 @@ void UnitStats::apply_core_modifier(const std::string coreStr, int gear) {
         switch (op) {
         case '-': removeAugment(augType); break;
         case '+': addCoreAugment(UnitData::get_unit_json(unitId, gear), value); break;
+        default:
+            std::cout << "no operation found in this core: " << op << std::endl;
+            removeAugment(augType);
         }
     }
     else { 
@@ -180,7 +187,7 @@ void UnitStats::removeAugment(AugmentType augType) {
         }));
 }
 
-void UnitStats::addCoreAugment(const nlohmann::json& file, std::string augStr) {
+void UnitStats::addCoreAugment(const nlohmann::json& file, const std::string& augStr) {
     if (!file.contains("core_augments")) {
         std::cout << "Unit [" << file["name"] << 
             "] does not have Core augment of type[" << augStr << "]" << std::endl;
@@ -208,8 +215,9 @@ void UnitStats::modifyDmg(int hitIndex, char op, float value) {
 
     int& dmg = hits[hitIndex].dmg;
     switch (op) {
-    case '=': dmg = (int)value; break;
-    case '+': dmg += (int)value; break;
+    case '=': dmg = static_cast<int>(value); break;
+    case '+': dmg += static_cast<int>(value); break;
     case '*': dmg = (int)(dmg * value); break;
+    default: dmg = static_cast<int>(value); break;
     }
 }

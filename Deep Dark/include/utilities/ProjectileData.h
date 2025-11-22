@@ -1,6 +1,6 @@
 #pragma once
 #include "UnitEnums.h"
-#include "json.hpp"
+#include <json.hpp>
 #include <fstream>
 
 namespace ProjData {

@@ -1,5 +1,3 @@
-//#include "imgui/imgui.h"
-//#include "imgui/imgui-SFML.h"
 #include "game_saves/SaveSystem.h"
 #include "StageManager.h"
 #include "StateManager.h"
@@ -12,33 +10,32 @@ using json = nlohmann::json;
 
 const float MAX_DELTA_TIME = 0.033f;
 const unsigned int FRAMERATE_LIMIT = 60;
-const int ASPECT_WIDTH = 400;
-const int ASPECT_HEIGHT = 800;
-sf::Vector2f MOUSE_POS{ 0.f,0.f };
-sf::Color WINDOW_COLOR(54, 2, 11);
+const int ASPECT_WIDTH = 1728;
+const int ASPECT_HEIGHT = 972;
+const sf::Color WINDOW_COLOR(54, 2, 11);
 
-sf::Text fpsText(baseFont);
-float timeSinceLastFPSUpdate = 0.0f;
+
 const float FPSTimer = 0.5f;
 
 void set_mouse_position(sf::RenderWindow& window, Camera& cam) {
     sf::Vector2i mouseScreenPos = sf::Mouse::getPosition(window);
-    MOUSE_POS = window.mapPixelToCoords(mouseScreenPos);
+    sf::Vector2f MOUSE_POS = window.mapPixelToCoords(mouseScreenPos);
     cam.set_mouse_pos(MOUSE_POS, mouseScreenPos);
 }
-void set_fps_text(float deltaTime) {
-    timeSinceLastFPSUpdate += deltaTime;
-    if (timeSinceLastFPSUpdate < FPSTimer) return;
+void set_fps_text(float deltaTime, float& time, sf::Text& fpsText) {
+    time += deltaTime;
+    if (time < FPSTimer) return;
 
-    timeSinceLastFPSUpdate = 0.0f;
+    time = 0.0f;
     float fps = 1 / deltaTime;
 
-    std::stringstream ss;
-    ss << "FPS: " << std::fixed << std::setprecision(1) << fps;
-    fpsText.setString(ss.str());
+    fpsText.setString(std::format("FPS: {}", fps));
 }
 int main()
 {
+    sf::Text fpsText(baseFont);
+    float timeSinceLastFPSUpdate = 0.0f;
+
     std::cout << "SFML Version: "
         << SFML_VERSION_MAJOR << "."
         << SFML_VERSION_MINOR << "."
@@ -48,8 +45,6 @@ int main()
     sf::RenderWindow window(sf::VideoMode({ ASPECT_WIDTH, ASPECT_HEIGHT }), "SFML works!",
         sf::Style::Titlebar | sf::Style::Close);
  
-    //window.setFramerateLimit(FRAMERATE_LIMIT);
-
     TextureManager::initialize();
     Surge::init_animations();
     BaseCannon::init_animations();
@@ -63,7 +58,6 @@ int main()
     Camera cam(window);
     StateManager stateManager(cam);
 
-    // pair <id, gear>
     /**/
     std::array<ArmorySlot, 10> slots = ArmorySlot::default_armory_loadout();
     std::ifstream stageFile("configs/stage_data/stage_1.json");
@@ -74,47 +68,37 @@ int main()
     //*/
 
     PrepEnterData prepData(MenuType::ARMORY_EQUIP, MenuType::STAGE_SELECT);
-   // OnStateEnterData enterData(GameState::Type::MAIN_MENU);
+    OnStateEnterData enterData(GameState::Type::MAIN_MENU);
     stateManager.switch_state(&prepData);
 
-    sf::RectangleShape shape({ 30.f,30.f });
-    shape.setPosition({ 200.f, 400.f });
     while (window.isOpen())
     {
         set_mouse_position(window, cam);
         float deltaTime = clock.restart().asSeconds();
-       // deltaTime = std::min(deltaTime, MAX_DELTA_TIME);
+        deltaTime = std::min(deltaTime, MAX_DELTA_TIME);
 
         while (const std::optional event = window.pollEvent()){
             stateManager.handle_events(*event);
 
             if (event->is<sf::Event::Closed>())
                 window.close();
-            else if (auto key = event->getIf<sf::Event::KeyPressed>())
-                if (key->code == sf::Keyboard::Key::E)
-                    shape.move({ 50.f,0 });
         }
 
-        set_fps_text(deltaTime);
+        set_fps_text(deltaTime, timeSinceLastFPSUpdate, fpsText);
 
         window.clear(WINDOW_COLOR);
 
         cam.queue_ui_draw(&fpsText);
         stateManager.update(deltaTime);
         stateManager.render();
-        window.draw(shape);
 
         window.display();
 
-        if (auto enterData = stateManager.gameState->get_next_state()) 
-            stateManager.switch_state(enterData);
+        if (auto newEnterData = stateManager.gameState->get_next_state()) 
+            stateManager.switch_state(newEnterData);
     }
 }
 
-/*
-   std::cout << "{(" << _rect.position.x << ", " << _rect.position.y << ")"
-        << ", (" << _rect.size.x << ", " << _rect.size.y << ")}" << std::endl;
-*/
  // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
 // Debug program: F5 or Debug > Start Debugging menu
 
@@ -125,16 +109,3 @@ int main()
 //   4. Use the Error List window to view errors
 //   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
 //   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
-
-  //  "cannon_json_path": "configs/base_data/enemy_bases/orbital_base.json",
-  //  "cannon_json_path": "configs/base_data/player_bases/p_wave_base.json",
-   /*   "forced_spawn_times": [
-        [ 1.5, 1 ],
-        [ 3.3, 0 ]
-      ]*/
-      /*"forced_spawn_times": [
-            [ 3.5, 1 ],
-            [ 4.0, 2 ],
-            [ 5.0, 2 ],
-            [ 7.3, 1 ]
-          ]*/

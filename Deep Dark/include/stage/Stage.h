@@ -109,7 +109,7 @@ struct Stage
 	Surge* create_surge(Unit& unit, const Augment& surge);
 	void create_surge(BaseCannon* pCannon, const Augment& surge);
 	void create_surge(BaseCannon* eCannon, const Augment& surge, int lane, float distance);
-	void create_surge(const UnitStats* stats, int curLane, int level, sf::Vector2f pos, AugmentType aug);
+	Surge* create_surge(const UnitStats* stats, int curLane, int level, sf::Vector2f pos, AugmentType aug);
 	void create_projectile(Unit& unit, const Augment& proj);
 	void create_hitbox_visualizers(sf::Vector2f pos, std::pair<float, float> range, int team);
 

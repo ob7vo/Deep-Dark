@@ -87,9 +87,9 @@ struct UnitStats {
 	}
 
 	static const std::unordered_map<std::string, std::function<void(UnitStats&, char, const std::string&)>> statModifiers;
-	void apply_core_modifier(const std::string core, int gear);
+	void apply_core_modifier(const std::string& core, int gear);
 	void removeAugment(AugmentType augType);
-	void addCoreAugment(const nlohmann::json& file, std::string aug);
+	void addCoreAugment(const nlohmann::json& file, const std::string& aug);
 	void modifyDmg(int hitIndex, char op, float value);
 
 	UnitStats() = default;
@@ -161,7 +161,7 @@ struct UnitStats {
 		UnitStats stats;
 		stats.team = baseFile["team"];
 		stats.targetTypes = convert_string_to_type(baseFile["target_type"]);
-		int dmg = static_cast<int>(std::round(baseFile.value("dmg", 1) * magnification));
+		auto dmg = static_cast<int>(std::round(baseFile.value("dmg", 1.f) * magnification));
 		stats.hits.emplace_back(dmg);
 
 		if (baseFile.contains("augment")) {
@@ -193,7 +193,7 @@ struct UnitStats {
 
 		return {};
 	}
-	inline int get_parts_value(const nlohmann::json& json) {
+	inline int get_parts_value(const nlohmann::json& json) const {
 		int p = json.value("parts_dropped", 0);
 		p = json.value("parts_cost", p);
 		p = json.value("parts", p);

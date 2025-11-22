@@ -1,5 +1,5 @@
 #pragma once
-#include "json.hpp"
+#include <json.hpp>
 #include <bit>
 
 const enum AugmentType : size_t {
@@ -91,11 +91,7 @@ struct Augment {
 	inline bool is_status_effect() const { return augType <= 64 && augType > 0; }
 	inline bool is_damage_modifier() const { return augType >= 128 && augType <= 512; }
 	inline bool can_hit(int hitIndex) const {
-		bool canHit = activeHits & (1 << hitIndex);
-		//if (canHit) std::cout << "you CAN proc this augment" << std::endl;
-		//else std::cout << "YOU CANNOT PROC THIS AUGMENT BABY" << std::endl;
-
-		return canHit;
+		return activeHits & (1 << hitIndex);
 	}
 
 	static int get_bit_position(AugmentType type) {

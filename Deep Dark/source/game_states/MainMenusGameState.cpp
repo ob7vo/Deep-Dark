@@ -1,6 +1,6 @@
 #include "MainMenusGameState.h"
 #include "PreparationState.h"
-#include "json.hpp"
+#include <json.hpp>
 #include <fstream>
 
 MainMenusState::MainMenusState(Camera& cam) :

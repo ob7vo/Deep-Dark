@@ -1,7 +1,7 @@
 #include "PreparationState.h"
 #include "StageGameState.h"
 #include <fstream>
-#include "json.hpp"
+#include <json.hpp>
 
 PreparationState::PreparationState(Camera& cam) : GameState(cam),
 stageSelect(cam), armoryMenu(cam), workshopMenu(cam){

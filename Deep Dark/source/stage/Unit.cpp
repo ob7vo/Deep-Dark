@@ -94,8 +94,10 @@ void Unit::start_animation(UnitAnimationState newState) {
 	(*aniMap)[newState].reset(aniTime, currentFrame, sprite);
 }
 void Unit::start_idle_or_attack_animation()  {
-	if (attackCooldown <= 0) 
+	if (attackCooldown <= 0) {
+		hitIndex = 0;
 		start_animation(UnitAnimationState::ATTACK);
+	}
 	else start_animation(UnitAnimationState::IDLE);
 }
 int Unit::update_animation(float deltaTime) {
@@ -479,15 +481,20 @@ int Unit::calculate_damage_and_effects(Unit& attackingUnit) {
 	dmg = corroded() ? (int)(dmg * 2.f) : dmg;
 	dmg = attackingUnit.weakened() ? (int)(dmg * .5f) : dmg;
 
+	// If the ATTACKING Unit targets this unit's trait, run its damage-augments
 	if (targeted_by_unit(attackingUnit))
 		dmg = apply_effects(attackingUnit.stats->augments, attackingUnit.hitIndex, dmg);
 
+	// If thi Unit targets the ATTACKING Unit's trait, run this unit's damage-augments
 	if (attackingUnit.targeted_by_unit(*this))
 		dmg = (int)(dmg * calculate_damage_reduction(stats->augments));
 	
+	// return if the unit has a shield and ti did not break
 	// Try break the Shield BEFORE void and Terminate, as they do NOT go through shields
-	if (has_shield_up() && !damage_shield(dmg, attackingUnit.stats)) return 0; // return if shield did not break
+	if (has_shield_up() && !damage_shield(dmg, attackingUnit.stats)) return 0; 
 
+	// These effects are based around the Unit's current HP, 
+	// so they are run after all calculations
 	if (targeted_by_unit(attackingUnit)) {
 		if (trigger_augment(attackingUnit.stats, VOID, attackingUnit.hitIndex))
 			dmg += (int)(stats->maxHp * attackingUnit.stats->get_augment(VOID).value);
@@ -498,6 +505,7 @@ int Unit::calculate_damage_and_effects(Unit& attackingUnit) {
 	return dmg;
 }
 bool Unit::damage_shield(int& dmg, const UnitStats* _stats) {
+	// shield pierce can instantly break shields
 	if (_stats && trigger_augment(_stats, SHIELD_PIERCE, hitIndex)) {
 		shieldHp = 0;
 		return true; 
@@ -526,25 +534,10 @@ bool Unit::take_damage(Surge& surge) {
 	if (has_augment(COUNTER_SURGE) && surge.never_hit_unit(id))
 		counter_surge(surge.surgeType);
 
-	int dmg = surge.get_dmg();
-	dmg = corroded() ? (int)(dmg * 2.f) : dmg;
-
-	if (targeted_by_unit(surge.stats->targetTypes))
-		dmg = apply_effects(surge.stats->augments, surge.hitIndex, dmg);
-	if (surge.targeted_by_unit(stats->targetTypes))
-		dmg = (int)(dmg * calculate_damage_reduction(stats->augments));
-
-	if (has_shield_up() && !damage_shield(dmg, surge.stats)) return false; // return if shield did not BROKEN
-	if (targeted_by_unit(surge.stats->targetTypes)) {
-		if (trigger_augment(surge.stats, VOID, surge.hitIndex))
-			dmg += (int)(stats->maxHp * surge.stats->get_augment(VOID).value);
-		if (surge.try_terminate_unit(*this, dmg))
-			dmg += stats->maxHp;
-	}
-
+	int dmg = surge.calculate_damage_and_effects(*this);
 	int oldHp = hp;
 	hp -= dmg;
-	//std::cout << "ID: " << id << " - hit, by a SURGE, oldHp: " << oldHp << " - dmg taken: " << dmg << " - newHp: " << hp << std::endl;
+	std::cout << "ID: " << id << " - hit, by a SURGE, oldHp: " << oldHp << " - dmg taken: " << dmg << " - newHp: " << hp << std::endl;
 
 	try_knockback(oldHp, surge.hitIndex, surge.stats);
 
@@ -566,55 +559,13 @@ bool Unit::take_damage(int dmg, bool shove) {
 	return hp <= 0 && !try_proc_survive();
 }
 
-/*
-void Unit::attack() {
-	attackCooldown = stats->attackTime;
-
-	auto [minLane, maxLane] = get_lane_reach();
-	auto [minAttackRange, maxAttackRange] = get_attack_range();
-	bool hitEnemy = false;
-
-	for (int i = minLane; i < maxLane; i++) {
-		std::vector<Unit>& enemyUnits = stage->get_lane_targets(i, stats->team);
-		float minDist = abs(pos.x - stage->get_enemy_base(stats->team).pos.x);
-		Unit* singleTargetedUnit = nullptr;
-
-		for (auto it = enemyUnits.begin(); it != enemyUnits.end(); ++it) {
-			if (is_valid_target(*it, minAttackRange, maxAttackRange)) {
-				if (!stats->singleTarget) {
-					hitEnemy = true;
-					if (it->take_damage(*this)) on_kill(*it);
-				}
-				else {
-					float dist = abs(pos.x - it->pos.x);
-					if (dist < minDist) {
-						hitEnemy = true;
-						minDist = dist;
-						singleTargetedUnit = &(*it);;
-					}
-				}
-			}
-		}
-
-		if (singleTargetedUnit && stats->singleTarget) 
-			if (singleTargetedUnit->take_damage(*this)) on_kill(*singleTargetedUnit);
-	}
-
-	try_attack_enemy_base(hitEnemy);
-	try_create_surge(hitEnemy);
-	try_create_projectile();
-
-	hitIndex = (hitIndex + 1) % stats->totalHits;
-}
-*/
-// Attackign Functions
+// Attacking Functions
 void Unit::attack() {
 	attackCooldown = stats->attackTime;
 	stage->create_hitbox_visualizers(pos, get_attack_range(), stats->team);
 
 	bool hitEnemy = process_attack_on_lanes();
 	handle_post_attack_effects(hitEnemy);
-	lastAttackFrame = currentFrame;
 	hitIndex = (hitIndex + 1) % stats->totalHits;
 }
 bool Unit::process_attack_on_lanes() {
@@ -678,8 +629,9 @@ void Unit::try_create_surge(bool hitEnemy) {
 		
 	for (auto& augment : stats->augments) {
 		if (can_make_surge(augment)) {
-			stage->create_surge(*this, augment);
-			if (augment.augType != ORBITAL_STRIKE) continue;
+			Surge* surge = stage->create_surge(*this, augment);
+
+			if (!surge || augment.augType != ORBITAL_STRIKE) continue;
 
 			// Create additional orbital strikes with spacing
 			int additionalStrikes = augment.surgeLevel - 1;
@@ -771,7 +723,7 @@ void Unit::moving_state(float deltaTime) {
 }
 void Unit::attack_state(float deltaTime) {
 	int events = update_animation(deltaTime);
-	if (events & FIRST_FRAME) reset_attack_index();
+
 	if (events & FINAL_FRAME) {
 		attackCooldown = stats->attackTime;
 		if (has_augment(SELF_DESTRUCT)) destroy_unit();
@@ -783,7 +735,7 @@ void Unit::attack_state(float deltaTime) {
 			start_animation(UnitAnimationState::IDLE);
 	}
 	if (events & ATTACK) {
-		if (lastAttackFrame != currentFrame) attack();
+		attack();
 		if (has_augment(SELF_DESTRUCT)) hp = 0;
 	}
 }
@@ -883,3 +835,44 @@ std::pair<int, int> Unit::get_lane_sight_range() const {
 	return { min, max };
 }
 //	std::cout << "ID: " << id << " - hit, by UNIT, oldHp: " << oldHp << " - dmg taken : " << dmg << " - newHp : " << hp << std::endl;
+/*
+void Unit::attack() {
+	attackCooldown = stats->attackTime;
+
+	auto [minLane, maxLane] = get_lane_reach();
+	auto [minAttackRange, maxAttackRange] = get_attack_range();
+	bool hitEnemy = false;
+
+	for (int i = minLane; i < maxLane; i++) {
+		std::vector<Unit>& enemyUnits = stage->get_lane_targets(i, stats->team);
+		float minDist = abs(pos.x - stage->get_enemy_base(stats->team).pos.x);
+		Unit* singleTargetedUnit = nullptr;
+
+		for (auto it = enemyUnits.begin(); it != enemyUnits.end(); ++it) {
+			if (is_valid_target(*it, minAttackRange, maxAttackRange)) {
+				if (!stats->singleTarget) {
+					hitEnemy = true;
+					if (it->take_damage(*this)) on_kill(*it);
+				}
+				else {
+					float dist = abs(pos.x - it->pos.x);
+					if (dist < minDist) {
+						hitEnemy = true;
+						minDist = dist;
+						singleTargetedUnit = &(*it);;
+					}
+				}
+			}
+		}
+
+		if (singleTargetedUnit && stats->singleTarget)
+			if (singleTargetedUnit->take_damage(*this)) on_kill(*singleTargetedUnit);
+	}
+
+	try_attack_enemy_base(hitEnemy);
+	try_create_surge(hitEnemy);
+	try_create_projectile();
+
+	hitIndex = (hitIndex + 1) % stats->totalHits;
+}
+*/
