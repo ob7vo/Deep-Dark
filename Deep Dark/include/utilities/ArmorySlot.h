@@ -9,7 +9,7 @@ struct ArmorySlot {
     sf::Texture texture = {};
 
     int id = -1;
-    int gear = -1;
+    int gear = 0;
     int core = -1;
 
     ArmorySlot() { clear(); }
@@ -18,20 +18,23 @@ struct ArmorySlot {
     inline void set_unit(std::pair<int, int> unit) {
         set_unit(unit.first, unit.second);
     }
+    inline void increase_gear() {
+        gear++;
+    }
 
     inline void set_pos(sf::Vector2f _pos) {
         pos = _pos;
         bounds = bounds = sprite.getGlobalBounds().size * 1.05f;
         sprite.setPosition(_pos);
     }
-    inline void clear() { set_unit(-1, -1, -1); }
+    inline void clear() { set_unit(-1, 0, -1); }
 
-    inline std::pair<int, int> slotted_unit() { return { id, gear }; }
-    inline bool hovered_over(sf::Vector2i mPos) {
-        return mPos.x >= pos.x - bounds.x * 0.5f
-            && mPos.x <= pos.x + bounds.x * 0.5f
-            && mPos.y >= pos.y - bounds.y * 0.5f
-            && mPos.y <= pos.y + bounds.y * 0.5f;
+    inline std::pair<int, unsigned int> slotted_unit() { return { id, gear }; }
+    inline bool hovered_over(sf::Vector2i mPos) const {
+        return static_cast<float>(mPos.x) >= pos.x - bounds.x * 0.5f
+            && static_cast<float>(mPos.x) <= pos.x + bounds.x * 0.5f
+            && static_cast<float>(mPos.y) >= pos.y - bounds.y * 0.5f
+            && static_cast<float>(mPos.y) <= pos.y + bounds.y * 0.5f;
     }
     inline bool empty() const { return id == -1; }
 

@@ -6,23 +6,22 @@ using Key = sf::Keyboard::Key;
 const auto MOUSE_1 = sf::Mouse::Button::Left;
 const auto MOUSE_2 = sf::Mouse::Button::Right;
 const float PAN_MULTIPLIER = 3.f;
+const float SCROLL_SPEED = 5.f;
 
 Camera::Camera(sf::RenderWindow& window) : window(window) {
 	worldView = uiView = window.getDefaultView();
-	windowSize = window.getSize();
 
 	pos = worldView.getCenter();
 	window.setView(worldView);
 
 	sf::Vector2f boundsSize = worldView.getSize() * 2.f;
 	sf::Vector2f topLeft = { -100,-100 };
-	sf::FloatRect bound(topLeft, boundsSize);
-	set_bounds(bound);
-
-	set_dark_overlay(darkScreenOverlay, 0, 0, worldView.getSize().x, worldView.getSize().y);
+	limits.set_bounds({ topLeft, boundsSize });
 }
-void Camera::set_dark_overlay(sf::VertexArray& darkOverlay, float left, float top, float width, float height, float percentage) const {
-	darkOverlay = sf::VertexArray(sf::PrimitiveType::TriangleStrip, 4);
+
+sf::VertexArray Camera::create_dark_overlay(float left, float top, float width, float height, float percentage) const {
+	auto darkOverlay = sf::VertexArray(sf::PrimitiveType::TriangleStrip, 4);
+
 	float darkHeight = height * (1.0f - percentage);
 	
 	darkOverlay[0].position = { left, top + height - darkHeight };
@@ -36,24 +35,23 @@ void Camera::set_dark_overlay(sf::VertexArray& darkOverlay, float left, float to
 
 	darkOverlay[3].position = { left + width, top + height };
 	darkOverlay[3].color = blackTransperent;
+
+	return darkOverlay;
 }
 void Camera::update_projection() {
-	float aspect = (float)windowSize.x / (float)windowSize.y;
+	float aspect = (float)window.getSize().x / (float)window.getSize().y;
 	float worldWidth = worldHeight * aspect;
 	
-	std::cout << "old: " << worldView.getSize().x << ", " << worldView.getSize().y << std::endl;
-	std::cout << "new: " << worldWidth << ", " << worldHeight << std::endl;
 	worldView.setSize({ worldWidth, worldHeight });
 
 	window.setView(worldView);
-	std::cout << "old: " << worldView.getSize().x << ", " << worldView.getSize().y << std::endl;
 }
 
 void Camera::update(float deltaTime) {
 	draw_all_ui();
 
-	if (dragging) click_and_drag();
-	else if (has_velocity())
+	if (cursor.dragging) click_and_drag();
+	else if (cursor.has_velocity())
 		apply_velocity(deltaTime);
 }
 void Camera::draw_all_ui() {
@@ -73,6 +71,11 @@ void Camera::draw_all_ui() {
 		if (draw) window.draw(*draw);
 	worldDrawQueue.clear();
 }
+void Camera::draw_grey_screen(float opacity) {
+	sf::VertexArray darkOverlay = create_dark_overlay(0, 0, worldView.getSize().x, worldView.getSize().y);
+	for (int i = 0; i < 4; i++) darkOverlay[i].color.a = (uint8_t)(255 * opacity);
+	queue_ui_draw(&darkOverlay);
+}
 
 void Camera::handle_events(sf::Event event) {
 	if (locked) return;
@@ -90,15 +93,15 @@ void Camera::handle_events(sf::Event event) {
 }
 void Camera::on_mouse_press(sf::Event::MouseButtonPressed click) {
 	if (click.button == MOUSE_1) {
-		velocity = { 0.f,0.f };
-		dragOrigin = mousePos;
-		dragging = true;
+		cursor.velocity = { 0.f,0.f };
+		cursor.dragOrigin = cursor.worldPos;
+		cursor.dragging = true;
 	}
 }
 void Camera::on_mouse_released(sf::Event::MouseButtonReleased release) {
 	if (release.button == MOUSE_1) {
-		velocity *= PAN_MULTIPLIER;
-		dragging = false;
+		cursor.velocity *= PAN_MULTIPLIER;
+		cursor.dragging = false;
 	}
 }
 
@@ -121,9 +124,9 @@ void Camera::zoom(sf::Event::MouseWheelScrolled scroll) {
 	zoomLevel = std::clamp(zoomLevel, MIN_ZOOM, MAX_ZOOM);
 	float zoomFactor = zoomLevel / oldZoom;
 
-	sf::Vector2f offset = mousePos - pos;
+	sf::Vector2f offset = cursor.worldPos - pos;
 	sf::Vector2f newOffset = offset * zoomFactor;
-	sf::Vector2f newPos = mousePos - newOffset;
+	sf::Vector2f newPos = cursor.worldPos - newOffset;
 
 	sf::Vector2f newSize = (sf::Vector2f)window.getSize() * zoomLevel;
 
@@ -148,30 +151,30 @@ sf::Vector2f Camera::get_pos_within_bounds(sf::Vector2f targetPos) const {
 }
 
 void Camera::apply_velocity(float deltaTime) {
-	sf::Vector2f newPos = pos + (velocity * deltaTime);
+	sf::Vector2f newPos = pos + (cursor.velocity * deltaTime);
 	update_pos(newPos);
 
- 	velocity *= std::pow(FRICTION, deltaTime * FIXED_FRAMERATE);
+ 	cursor.velocity *= std::pow(FRICTION, deltaTime * FIXED_FRAMERATE);
 }
 void Camera::move(Key key) {
-	if ((int)key < 71 || (int)key > 74 || dragging) return;
-	velocity = { 0.f,0.f };
+	if ((int)key < 71 || (int)key > 74 || cursor.dragging) return;
+	cursor.velocity = { 0.f,0.f };
 	sf::Vector2f newPos = pos;
 
-	if (key == Key::Up) newPos.y -= scrollSpeed;
-	else if (key == Key::Down) newPos.y += scrollSpeed;
-	if (key == Key::Right) newPos.x += scrollSpeed;
-	else if (key == Key::Left) newPos.x -= scrollSpeed;
+	if (key == Key::Up) newPos.y -= SCROLL_SPEED;
+	else if (key == Key::Down) newPos.y += SCROLL_SPEED;
+	if (key == Key::Right) newPos.x += SCROLL_SPEED;
+	else if (key == Key::Left) newPos.x -= SCROLL_SPEED;
 
 	update_pos(newPos);
 }
 void Camera::click_and_drag() {
 	// main.cpp will call this while dragging == true
-	sf::Vector2f diff = mousePos - pos;
-	sf::Vector2f newPos = (dragOrigin - diff);
+	sf::Vector2f diff = cursor.worldPos - pos;
+	sf::Vector2f newPos = (cursor.dragOrigin - diff);
 
 	sf::Vector2f instantVelocity = (newPos - pos) * (float)FIXED_FRAMERATE;
-	velocity = (velocity * 0.8f) + (instantVelocity * 0.2f);
+	cursor.velocity = (cursor.velocity * 0.8f) + (instantVelocity * 0.2f);
 
 	update_pos(newPos);
 }
@@ -206,7 +209,7 @@ unsigned int Camera::get_norm_font_size(sf::Text& text, float normHeight) const 
 	return fontSize;
 }
 void Camera::set_sprite_params(sf::Vector2f normPos, sf::Vector2f scale,
-	const std::string& path, sf::Texture& texture, sf::Sprite& sprite) {
+	const std::string& path, sf::Texture& texture, sf::Sprite& sprite) const {
 	sf::Vector2f _pos = norm_to_pixels(normPos);
 
 	if (!texture.loadFromFile(path)) std::cout << "wrong path for btn texture" << std::endl;
@@ -216,4 +219,17 @@ void Camera::set_sprite_params(sf::Vector2f normPos, sf::Vector2f scale,
 	sprite.setScale(scale);
 	sprite.setPosition(_pos);
 	sprite.setOrigin(sprite.getLocalBounds().size * 0.5f);
+}
+
+void Camera::set_cursor_ui(sf::Texture& uiTex, sf::Vector2f normOrigin, float opacity, sf::Vector2f normScale) {
+	cursor.UITexture = uiTex;
+	cursor.ui.setTexture(cursor.UITexture, true);
+
+	cursor.ui.setScale(get_norm_sprite_scale(cursor.ui, normScale));
+	sf::Vector2f origin = cursor.ui.getLocalBounds().size * normOrigin;
+	cursor.ui.setOrigin(origin);
+
+	sf::Color c = cursor.ui.getColor();
+	c.a = (uint8_t)(255 * opacity);
+	cursor.ui.setColor(c);
 }

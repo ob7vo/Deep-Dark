@@ -2,6 +2,7 @@
 #include "Animation.h"
 #include "UnitEnums.h"
 #include "UnitData.h"
+#include "TextureManager.h"
 #include <iostream>
 #include <memory>
 
@@ -29,7 +30,7 @@ struct UnitTween;
 
 struct Surge
 {
-	bool readyForRemoval = 0;
+	bool readyForRemoval = false;
 	bool createdByCannon = false;
 
 	float halfWidth = 10.f;
@@ -43,7 +44,7 @@ struct Surge
 	float aniTime = 0.0f;
 	int currentFrame = 0;
 	SurgeAnimationStates animationState;
-	sf::Sprite sprite;
+	sf::Sprite sprite = sf::Sprite(defTex);
 	sf::RectangleShape hitbox = sf::RectangleShape({32.f,32.f});
 
 	std::vector<int> hitUnits;
@@ -53,38 +54,33 @@ struct Surge
 	sf::Texture& get_base_texture(AugmentType surgeType);
 
 	void attack_units(Lane& enemyUnits);
-	void on_kill(Unit& enemyUnit);
-	int calculate_damage_and_effects(Unit& unit);
-	bool try_terminate_unit(Unit& enemyUnit, int dmg = 0);
+	void on_kill(Unit& enemyUnit) const;
+	int calculate_damage_and_effects(Unit& unit) const;
+	bool try_terminate_unit(Unit& enemyUnit, int dmg = 0) const;
 	virtual void tick(float deltaTime, Stage& stage) = 0;
-	virtual int update_animation(float deltaTime) = 0;
-	virtual void start_animation(SurgeAnimationStates newState) {};
+	
 	virtual bool never_hit_unit(int id) { return !already_hit_unit(id); }
 	
-	bool valid_target(Unit& unit);
+	bool valid_target(Unit& unit) const;
 
-	inline void draw(sf::RenderWindow& window) {
+	virtual int update_animation(float deltaTime) = 0;
+	virtual void start_animation(SurgeAnimationStates newState) {};
+	inline void draw(sf::RenderWindow& window) const{
 		window.draw(sprite);
 		window.draw(hitbox);
 	}
 	/// <summary> Sets the sur'ges htiIndex to 0 and sets it as createdByCannon </summary>
 	inline void set_as_cannon_creation() { createdByCannon = true; hitIndex = 0; }
 
-	inline bool already_hit_unit(int id) { 
+	inline bool already_hit_unit(int id) const { 
 		return std::find(hitUnits.begin(), hitUnits.end(), id) != hitUnits.end(); 
 	}
 	inline bool immune_to_surge_type(size_t unitImmunities) const { return surgeType & unitImmunities; }
 	inline bool targeted_by_unit(int enemyTargetTypes) const { return stats->targeted_by_unit(enemyTargetTypes); }
-	inline bool in_range(float x) {
-		bool inRange = x >= pos.x - halfWidth && x <= pos.x + halfWidth;
-
-//		if (inRange) {
-	//		std::cout << "UnitXPos: " << x << ". Hitbox range: [" << pos.x - halfWidth
-		//		<< ", " << pos.x + halfWidth << "]" << std::endl;
-		//}
-		return inRange;
+	inline bool in_range(float x) const {
+		return x >= pos.x - halfWidth && x <= pos.x + halfWidth;
 	}
-	inline int get_dmg() { return stats->get_hit_stats(hitIndex).dmg; }
+	inline int get_dmg() const { return stats->get_hit_stats(hitIndex).dmg; }
 
 	static void init_animations();
 };

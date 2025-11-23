@@ -1,5 +1,5 @@
 #pragma once
-#include <SFML\Graphics.hpp>
+#include <SFML/Graphics.hpp>
 #include <functional>
 #include "Camera.h"
 #include <iostream>
@@ -12,14 +12,13 @@ protected:
 
 	sf::Texture idleTexture = defTexture;
 	sf::Texture hoverTexture = defTexture;
-
 public:
-	std::function<void(bool)> onClick = NULL;
+	std::function<void(bool)> onClick = nullptr;
 	sf::Sprite sprite = sf::Sprite(defTexture);
 	sf::VertexArray darkOverlay = sf::VertexArray(sf::PrimitiveType::TriangleStrip, 4);
 
 	bool ui = true;
-	bool hovering = 0;
+	bool hovering = false;
 
 	Button() = default;
 
@@ -37,13 +36,13 @@ public:
 		float height = _bounds.size.y;
 		float width = _bounds.size.x;
 
-		cam.set_dark_overlay(darkOverlay, left, top, width, height);
+		darkOverlay = cam.create_dark_overlay(left, top, width, height);
 	}
-	inline void setup_world(sf::Vector2f pos, sf::Vector2f scale,
+	inline void setup_world(sf::Vector2f _pos, sf::Vector2f scale,
 		const std::string& path, Camera& cam) {
 		cam.set_sprite_params({1.f,1.f}, scale, path, idleTexture, sprite);
-		sprite.setPosition(pos);
-		this->pos = pos;
+		sprite.setPosition(_pos);
+		pos = _pos;
 		bounds = sprite.getGlobalBounds().size * 1.05f;
 
 		sf::FloatRect _bounds = sprite.getGlobalBounds();
@@ -52,7 +51,7 @@ public:
 		float height = _bounds.size.y;
 		float width = _bounds.size.x;
 
-		cam.set_dark_overlay(darkOverlay, left, top, width, height);
+		darkOverlay = cam.create_dark_overlay(left, top, width, height);
 		ui = false;
 	}
 

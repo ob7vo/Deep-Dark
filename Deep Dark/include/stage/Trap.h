@@ -38,14 +38,16 @@ struct Trap
 	Trap(Lane& lane, const nlohmann::json& json);
 	virtual ~Trap() = default;
 
-	bool enemy_in_trigger_range();
+	bool enemy_in_trigger_range() const;
 	void tick(float deltaTime, StageRecord& rec);
 	void trigger(StageRecord& rec);
 	void trigger_launch_pad();
 	void trigger_trap_door();
-	void trigger_attack();
-	bool valid_attack_target(Unit& unit);
-	bool in_trigger_range(Unit& unit);
+
+	void trigger_attack() const;
+	void attack_lane(std::vector<Unit>& units) const;
+	bool valid_attack_target(Unit& unit) const;
+	bool in_trigger_range(Unit& unit) const;
 
 	static Animation get_trap_animation(TrapType type);
 };

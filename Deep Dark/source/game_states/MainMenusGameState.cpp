@@ -5,6 +5,7 @@
 
 MainMenusState::MainMenusState(Camera& cam) :
 startMenu(cam), GameState(cam){
+	startMenu.reset_positions();
 	startMenu.startBtn().onClick = [this](bool m1) { if (m1)start_game(); };
 }
 void MainMenusState::update(float deltaTime) {

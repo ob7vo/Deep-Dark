@@ -37,12 +37,12 @@ struct UnitTween {
         }
         else updateValue();
     }
-    float getEasedTX() {
+    float getEasedTX() const {
         float t = elapsedTime / duration;
         return easingFuncX < EasingType::COUNT ? 
             easeFuncArr[static_cast<int>(easingFuncX)](t) : t;
     }
-    float getEasedTY() {
+    float getEasedTY() const {
         float t = elapsedTime / duration;
         return easeFuncArr[static_cast<int>(easingFuncY)](t);
     }
@@ -69,7 +69,7 @@ struct BaseTween
     std::function<float(float)> easingFunc;
     std::function<void()> onComplete;
 
-    BaseTween(float dur) :
+    explicit BaseTween(float dur) :
         duration(dur), elapsedTime(0.0f), isComplete(false) {}
     BaseTween() = default;
     virtual ~BaseTween() = default; // { printf("finished tween\n"); }
@@ -98,8 +98,8 @@ private:
     std::shared_ptr<BaseTween> tween;
 public:
     ChainableTween() = default;
-    ChainableTween(std::shared_ptr<BaseTween> t) : tween(t) {}
-    ~ChainableTween() = default; // { printf("done chaining\n"); }
+    explicit ChainableTween(std::shared_ptr<BaseTween> t) : tween(t) {}
+    ~ChainableTween() = default; 
 
     ChainableTween& setEase(std::function<float(float)> ease) {
         if (tween) tween->easingFunc = ease;
@@ -193,7 +193,7 @@ public:
             return;
         }
         std::cout << "canceling tween of address: " << target << std::endl;
-        void* key = static_cast<void*>(target);
+        auto key = static_cast<void*>(target);
         activeTweens[key]->cancel(); 
         activeTweens.erase(key);
     }

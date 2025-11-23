@@ -46,7 +46,7 @@ struct StageManager
 
 	void update_game_ticks(float deltaTime);
 	void process_move_requests();
-	void spawn_enemies(float deltaTime);
+	void spawn_enemies();
 	void increment_parts_and_notify(float deltaTime);
 
 	void update_unit(float deltaTime);

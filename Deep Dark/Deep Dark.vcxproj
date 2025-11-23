@@ -109,7 +109,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)\include\game_states\;$(ProjectDir)\include\visuals\;$(ProjectDir)\include\systems\;$(ProjectDir)\include\enums\;$(ProjectDir)\include\stage\;$(ProjectDir)include\menus\;$(ProjectDir)\include\utilities\;$(ProjectDir)\game_saves\;C:\Users\amaec\source\SFML-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include\game_states\;$(ProjectDir)\include\visuals\;$(ProjectDir)\include\systems\;$(ProjectDir)\include\enums\;$(ProjectDir)\include\stage\;$(ProjectDir)include\menus\;$(ProjectDir)\include\utilities\;$(ProjectDir)\include\unit\;$(ProjectDir)\game_saves\;C:\Users\amaec\source\SFML-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -154,16 +154,20 @@
     <ClCompile Include="source\stage\Stage.cpp" />
     <ClCompile Include="source\stage\Surge.cpp" />
     <ClCompile Include="source\stage\Trap.cpp" />
-    <ClCompile Include="source\stage\Unit.cpp" />
+    <ClCompile Include="source\unit\Unit.cpp" />
     <ClCompile Include="source\systems\Camera.cpp" />
     <ClCompile Include="source\systems\Observer.cpp" />
     <ClCompile Include="source\systems\StageManager.cpp" />
     <ClCompile Include="source\systems\StateManager.cpp" />
     <ClCompile Include="source\systems\TextureManager.cpp" />
+    <ClCompile Include="source\unit\UnitAnimation.cpp" />
+    <ClCompile Include="source\unit\UnitCombat.cpp" />
+    <ClCompile Include="source\unit\UnitMovement.cpp" />
     <ClCompile Include="source\utilities\Augment.cpp" />
     <ClCompile Include="source\utilities\Pathing.cpp" />
     <ClCompile Include="source\utilities\ProjectileData.cpp" />
-    <ClCompile Include="source\utilities\UnitData.cpp" />
+    <ClCompile Include="source\unit\UnitData.cpp" />
+    <ClCompile Include="source\unit\UnitStatus.cpp" />
     <ClCompile Include="source\visuals\Animation.cpp" />
     <ClCompile Include="source\visuals\Button.cpp" />
   </ItemGroup>
@@ -180,13 +184,16 @@
     <ClInclude Include="include\menus\StartMenu.h" />
     <ClInclude Include="include\enums\ChallengeTypes.h" />
     <ClInclude Include="include\enums\json.hpp" />
-    <ClInclude Include="include\enums\UnitEnums.h" />
+    <ClInclude Include="include\unit\UnitAnimation.h" />
+    <ClInclude Include="include\unit\UnitCombat.h" />
+    <ClInclude Include="include\unit\UnitEnums.h" />
     <ClInclude Include="include\menus\WorkshopMenu.h" />
     <ClInclude Include="include\stage\ActionObject.h" />
     <ClInclude Include="include\stage\Base.h" />
     <ClInclude Include="include\stage\BaseCannon.h" />
     <ClInclude Include="include\stage\Lane.h" />
     <ClInclude Include="include\stage\Projectile.h" />
+    <ClInclude Include="include\unit\UnitMovement.h" />
     <ClInclude Include="include\utilities\ArmorySlot.h" />
     <ClInclude Include="include\utilities\Augment.h" />
     <ClInclude Include="include\utilities\Pathing.h" />
@@ -196,8 +203,8 @@
     <ClInclude Include="include\stage\Surge.h" />
     <ClInclude Include="include\stage\Teleporter.h" />
     <ClInclude Include="include\stage\Trap.h" />
-    <ClInclude Include="include\stage\Unit.h" />
-    <ClInclude Include="include\utilities\UnitData.h" />
+    <ClInclude Include="include\unit\Unit.h" />
+    <ClInclude Include="include\unit\UnitData.h" />
     <ClInclude Include="include\systems\ButtonManager.h" />
     <ClInclude Include="include\systems\Camera.h" />
     <ClInclude Include="include\systems\Loadout.h" />
@@ -210,8 +217,11 @@
     <ClInclude Include="include\utilities\Bounds.h" />
     <ClInclude Include="include\utilities\Easing.hpp" />
     <ClInclude Include="include\utilities\UILayout.h" />
+    <ClInclude Include="include\unit\UnitStatus.h" />
+    <ClInclude Include="include\utilities\Utils.h" />
     <ClInclude Include="include\visuals\Animation.h" />
     <ClInclude Include="include\visuals\Button.h" />
+    <ClInclude Include="include\visuals\MouseCursor.h" />
     <ClInclude Include="include\visuals\Slider.h" />
   </ItemGroup>
   <ItemGroup>

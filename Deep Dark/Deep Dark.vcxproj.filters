@@ -60,7 +60,7 @@
     <ClCompile Include="source\stage\Trap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\stage\Unit.cpp">
+    <ClCompile Include="source\unit\Unit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\systems\Camera.cpp">
@@ -75,7 +75,7 @@
     <ClCompile Include="source\systems\StateManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\utilities\UnitData.cpp">
+    <ClCompile Include="source\unit\UnitData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\visuals\Animation.cpp">
@@ -100,6 +100,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\menus\WorkshopMenu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\unit\UnitStatus.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\unit\UnitMovement.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\unit\UnitAnimation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\unit\UnitCombat.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -182,10 +194,10 @@
     <ClInclude Include="include\stage\Trap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\stage\Unit.h">
+    <ClInclude Include="include\unit\Unit.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\enums\UnitEnums.h">
+    <ClInclude Include="include\unit\UnitEnums.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\enums\ChallengeTypes.h">
@@ -221,7 +233,7 @@
     <ClInclude Include="include\utilities\ProjectileData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\utilities\UnitData.h">
+    <ClInclude Include="include\unit\UnitData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\utilities\Augment.h">
@@ -237,6 +249,24 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\menus\WorkshopMenu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\visuals\MouseCursor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\unit\UnitStatus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\utilities\Utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\unit\UnitMovement.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\unit\UnitAnimation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\unit\UnitCombat.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

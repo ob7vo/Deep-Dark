@@ -8,7 +8,7 @@ using namespace UI::ArmoryMenu;
 using namespace UnitData;
 
 ArmoryMenu::ArmoryMenu(Camera& cam) : Menu(cam) {
-	//slots = ArmorySlot::default_armory_loadout();
+	slots = ArmorySlot::default_armory_loadout();
 
 	std::vector<Button*> btns = {};
 	for (int i = 0; i < 3; i++) {
@@ -17,6 +17,7 @@ ArmoryMenu::ArmoryMenu(Camera& cam) : Menu(cam) {
 		btns.push_back(&btn);
 
 		btn.set_ui_params(UI::ZERO, SLIDER_SLOT_SCLAE, path, cam);
+		unitSelectionForms[i] = 1;
 	}
 	
 	const std::string path2 = "sprites/ui/slider.png";
@@ -34,11 +35,12 @@ ArmoryMenu::ArmoryMenu(Camera& cam) : Menu(cam) {
 	}
 
 	std::string texPath3 = "sprites/ui/return.png";
-	returnBtn().set_ui_params(RETURN_BTN_POS, RETURN_BTN_SIZE, texPath3, cam);
-	reset_positions();
+	returnBtn().set_ui_params(RETURN_BTN_POS, RETURN_BTN_SIZE, texPath3, cam);	
 }
 void ArmoryMenu::set_up_buttons() {
-	auto& check = "configs/unit_data/0/gear_2/";
+	/*
+	* Will add the set ups later
+	*/
 }
 void ArmoryMenu::reset_positions() {
 	sf::Vector2f pos = cam.norm_to_pixels(FIRST_SLOT_POS);
@@ -73,9 +75,8 @@ void ArmoryMenu::update(float dt) {
 	check_mouse_hover();
 
 	slider().update(cam.getMouseScreenPos(), dt);
-	if (dragging_unit())
-		cam.set_cursor_ui_pos((sf::Vector2f)cam.getMouseScreenPos());
 }
+
 void ArmoryMenu::draw() {
 	for (int i = 0; i < TOTAL_PLAYER_UNITS; i++) {
 		sf::FloatRect rect = unitSelectionBtn(i).sprite.getGlobalBounds();
@@ -87,8 +88,9 @@ void ArmoryMenu::draw() {
 	for (int i = 0; i < ARMORY_SLOTS; i++)
 		cam.queue_ui_draw(&slots[i].sprite);
 
-	if (dragging_unit()) cam.draw_cursor_ui();
+	if (dragging_unit()) cam.queue_ui_draw(&cam.cursor.ui);
 }
+
 bool ArmoryMenu::on_mouse_press(bool isM1) {
 	if (dragging_unit()) return false;
 
@@ -127,7 +129,7 @@ bool ArmoryMenu::on_mouse_release(bool isM1) {
 	return true;
 }
 void ArmoryMenu::check_mouse_hover() {
-	auto& mPos = cam.getMouseScreenPos();
+	sf::Vector2i mPos = cam.getMouseScreenPos();
 
 	slider().check_mouse_hover(mPos);
 	buttonManager.check_mouse_hover(mPos);
@@ -151,7 +153,6 @@ void ArmoryMenu::drag_unit(int id) {
 	sf::Texture tex = get_slot_texture(curHeldUnit);
 
 	cam.set_cursor_ui(tex, DRAG_SLOT_ORIGIN, DRAG_SLOT_OPACITY, SLOT_SCALE);
-	cam.set_cursor_ui_pos((sf::Vector2f)cam.getMouseScreenPos());
 }
 void ArmoryMenu::shift_empty_slots() {
 	filledUnitSlots = 0;

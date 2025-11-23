@@ -1,7 +1,8 @@
 #pragma once
-#include "SFML\Graphics.hpp"
+#include "SFML/Graphics.hpp"
 #include "Bounds.h"
 #include "TextureManager.h"
+#include "MouseCursor.h"
 #include <iostream>
 
 const float MIN_ZOOM = 0.6f;
@@ -17,42 +18,33 @@ const sf::Color redTransperent(255, 0, 0, 128);
 
 class Camera
 {
+private:
 	sf::RenderWindow& window;
-	sf::Vector2u windowSize;
 	float worldHeight = 100.f;
-
-	sf::VertexArray darkScreenOverlay = sf::VertexArray(sf::PrimitiveType::TriangleStrip, 4);
-	sf::Vector2f mousePos = { 0.f, 0.f };
-	sf::Vector2i mouseScreenPos = { 0,0 };
 
 	Bounds limits;
 	bool locked = true;
 
-	/// <summary>Dragging UI or tooltips</summary>
-	sf::Sprite cursorUI = sf::Sprite(defTexture);
-	sf::Texture cursorUITexture;
-public:
-	float zoomLevel = 1;
+	std::vector<sf::Drawable*> uiDrawQueue;
+	std::vector<std::unique_ptr<sf::Drawable>> tempUIDrawQueue; // for UI created on the Stack
+	std::vector<sf::Drawable*> worldDrawQueue;
 
-	float scrollSpeed = 4.f;
 	sf::Vector2f pos = { 0.f,0.f };
-
 	sf::View worldView;
 	sf::View uiView;
 
-	std::vector<sf::Drawable*> uiDrawQueue;
-	std::vector<std::unique_ptr<sf::Drawable>> tempUIDrawQueue; // for UI created on the Stack
-	std::vector<sf::Drawable*> worldDrawQueue; // for world objects
-
-	sf::Vector2f dragOrigin{ 0.f,0.f };
-	sf::Vector2f velocity{ 0.f,0.f };
-	bool dragging = false;
+public:
+	float zoomLevel = 1;
+	MouseCursor cursor;
 
 	explicit Camera(sf::RenderWindow& window);
-	void set_dark_overlay(sf::VertexArray& overlay, float left, float top, float width, float height, float percentage = 0.f) const;
+	sf::VertexArray create_dark_overlay(float left, float top, float width, float height, float percentage = 0.f) const;
+
 	void update(float deltaTime);
-	void draw_all_ui();
 	void update_projection();
+
+	void draw_all_ui();
+	void draw_grey_screen(float opacity = 0.5f);
 
 	void handle_events(sf::Event event);
 	void on_mouse_press(sf::Event::MouseButtonPressed click);
@@ -71,7 +63,7 @@ public:
 		worldView = window.getDefaultView();
 		uiView = worldView;
 		pos = worldView.getCenter();
-		dragging = false;
+		cursor.dragging = false;
 	}
 
 	/// <summary> Will cull Drawable if a Rect in passed in for its position + size </summary>
@@ -90,9 +82,7 @@ public:
 		worldDrawQueue.clear();
 	}
 
-	inline void set_bounds(sf::FloatRect newBounds) { limits.set_bounds(newBounds); }
-	inline Bounds get_bounds() const { return limits; }
-	inline bool within_camera(sf::FloatRect rect) {
+	inline bool within_camera(sf::FloatRect rect) const {
 		sf::Vector2f center = worldView.getCenter();
 		sf::Vector2f size = worldView.getSize();
 
@@ -107,59 +97,29 @@ public:
 	inline void change_lock(bool lock) {
 		if (lock) {
 			locked = true;
-			dragging = false;
-			velocity = { 0.f, 0.f };
+			cursor.dragging = false;
+			cursor.velocity = { 0.f, 0.f };
 		}
 		else
 			locked = false;
 	}
-	inline void swap_camera_lock() { change_lock(!locked); }
 
-	inline void set_mouse_pos(sf::Vector2f mPos, sf::Vector2i mS_Pos) { 
-		mousePos = mPos; mouseScreenPos = mS_Pos;
-	}
-	inline void set_cursor_ui(sf::Texture& uiTex, sf::Vector2f normOrigin, float opacity, sf::Vector2f normScale) {
-		cursorUITexture = uiTex;
-		cursorUI.setTexture(cursorUITexture, true);
-
-		cursorUI.setScale(get_norm_sprite_scale(cursorUI, normScale));
-		sf::Vector2f origin = cursorUI.getLocalBounds().size * normOrigin;
-		cursorUI.setOrigin(origin);
-
-		sf::Color c = cursorUI.getColor();
-		c.a = (uint8_t)(255 * opacity);
-		cursorUI.setColor(c);
-	}
-	inline void set_cursor_ui_pos(sf::Vector2f uiPos) {
-		cursorUI.setPosition(uiPos);
-	}
-	inline void draw_cursor_ui() {
-		queue_ui_draw(&cursorUI);
-	}
-
-	inline bool has_velocity() const {
-		return std::abs(velocity.x) > 0.1f && std::abs(velocity.y) > 0.1f;
-	}
+	void set_cursor_ui(sf::Texture& uiTex, sf::Vector2f normOrigin, float opacity, sf::Vector2f normScale);
 
 	inline sf::Vector2f norm_to_pixels(sf::Vector2f norm) const {
 		return  uiView.getSize() * norm;
 	}
 	inline sf::Vector2f norm_to_pixels_size(sf::Vector2f norm) const {
-   	 	return norm * (float)std::min(windowSize.x, windowSize.y); // both use same dimension!
+   	 	return norm * std::min(uiView.getSize().x, uiView.getSize().y); // both use same dimension!
     }
 
 	sf::Vector2f get_norm_sprite_scale(const sf::Sprite& sprite, sf::Vector2f normScale) const;
 	unsigned int get_norm_font_size(sf::Text& text, float normHeight) const;
 	void set_sprite_params(sf::Vector2f normPos, sf::Vector2f scale,
-		const std::string& path, sf::Texture& texture, sf::Sprite& sprite);
-
-	inline void draw_grey_screen(float opacity = 0.5f) { 
-		for (int i = 0; i < 4; i++) darkScreenOverlay[i].color.a = (uint8_t)(255 * opacity);
-		queue_ui_draw(&darkScreenOverlay); 
-	}
+		const std::string& path, sf::Texture& texture, sf::Sprite& sprite) const;
 
 	inline void close_window() { window.close(); }
 	inline sf::RenderWindow& get_window() const { return window; }
-	inline sf::Vector2f& getMouseWorldPos() { return mousePos; }
-	inline sf::Vector2i& getMouseScreenPos() { return mouseScreenPos; }
+	inline sf::Vector2f& getMouseWorldPos() { return cursor.worldPos; }
+	inline sf::Vector2i& getMouseScreenPos() { return cursor.screenPos; }
 };

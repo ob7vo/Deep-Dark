@@ -90,7 +90,7 @@ void Base::tick(Stage& stage, float deltaTime) {
 
 	for (auto& lane : stage.lanes)
 		for (auto& unit : lane.playerUnits)
-			if (enemy_in_range(unit.pos.x)) {
+			if (enemy_in_range(unit.get_pos().x)) {
 				try_fire_cannon();
 				return;
 			};

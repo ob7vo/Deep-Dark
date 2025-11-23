@@ -22,16 +22,18 @@ Trap::Trap(Lane& lane, const nlohmann::json& trap) :  lane(lane){
 	ani.reset(sprite);
 	sprite.setPosition(pos);
 }
-bool Trap::in_trigger_range(Unit& unit) {
-	return unit.pos.x >= triggerRange.first && unit.pos.x <= triggerRange.second;
-	unit.pos.y <= pos.y + TRAP_HEIGHT && unit.pos.y >= pos.y - TRAP_HEIGHT
-		&& !unit.nano_type();
+bool Trap::in_trigger_range(Unit& unit) const {
+	float x = unit.get_pos().x; 
+	float y = unit.get_pos().y;
+	return x >= triggerRange.first && x <= triggerRange.second &&
+	y <= pos.y + TRAP_HEIGHT && y >= pos.y - TRAP_HEIGHT
+		&& !(unit.stats->unitTypes & NANO);
 }
-bool Trap::valid_attack_target(Unit& unit) {
-	return unit.pos.x >= attackRange.first && unit.pos.x <= attackRange.second &&
-		!unit.invincible() && !unit.pending_death();
+bool Trap::valid_attack_target(Unit& unit) const {
+	return unit.get_pos().x >= attackRange.first && unit.get_pos().x <= attackRange.second &&
+		!unit.anim.invincible();
 }
-bool Trap::enemy_in_trigger_range() {
+bool Trap::enemy_in_trigger_range() const{
 	for (auto& unit : lane.enemyUnits)
 		if (in_trigger_range(unit))
 			return true;
@@ -78,10 +80,10 @@ void Trap::trigger(StageRecord& rec) {
 void Trap::trigger_launch_pad() {
 	for (auto& unit : lane.enemyUnits)
 		if (valid_attack_target(unit))
-			unit.push_launch_request();
+			unit.movement.push_launch_request(unit);
 	for (auto& unit : lane.playerUnits)
 		if (valid_attack_target(unit))
-			unit.push_launch_request();
+			unit.movement.push_launch_request(unit);
 }
 void Trap::trigger_trap_door() {
 	if (!triggered) {
@@ -94,30 +96,23 @@ void Trap::trigger_trap_door() {
 	}
 	triggered = !triggered;
 }
-void Trap::trigger_attack() {
+void Trap::trigger_attack() const {
 	std::cout << "trigger_attack" << std::endl;
-	for (auto& unit : lane.enemyUnits)
-		if (valid_attack_target(unit)) {
-			if (dmgValue > 0.f) {
-				int dmg = trapType == TrapType::PERCENT_DMG ?
-					(int)(unit.stats->maxHp * dmgValue) : (int)dmgValue;
-				if (unit.take_damage(dmg))
-					unit.causeOfDeath = DeathCause::TRAP;
-			}
-			if (unit.can_proc_status(aug))	
-				unit.add_status_effect(aug);
+	attack_lane(lane.enemyUnits);
+	attack_lane(lane.playerUnits);
+}
+void Trap::attack_lane(std::vector<Unit>& units) const {
+	for (auto& unit : units) {
+		if (!valid_attack_target(unit)) continue;
+		if (dmgValue > 0.f) {
+			int dmg = trapType == TrapType::PERCENT_DMG ?
+				(int)((float)unit.stats->maxHp * dmgValue) : (int)dmgValue;
+			if (unit.status.take_damage(unit, dmg))
+				unit.causeOfDeath = DeathCause::TRAP;
 		}
-	for (auto& unit : lane.playerUnits)
-		if (valid_attack_target(unit)) {
-			if (dmgValue > 0.f) {
-				int dmg = trapType == TrapType::PERCENT_DMG ?
-					(int)(unit.stats->maxHp * dmgValue) : (int)dmgValue;
-				if (unit.take_damage(dmg))
-					unit.causeOfDeath = DeathCause::TRAP;
-			}
-			if (unit.can_proc_status(aug))	
-				unit.add_status_effect(aug);
-		}
+		if (unit.status.can_proc_status(unit, aug))
+			unit.status.add_status_effect(aug);
+	}
 }
 
 Animation Trap::get_trap_animation(TrapType type) {

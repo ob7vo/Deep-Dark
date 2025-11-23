@@ -6,6 +6,7 @@ const float SLIDER_FRICTION = 0.9f;
 const float SLIDER_VELOCITY_BOOST = 1.3f;
 
 class Slider : public Button {
+private:
 	sf::Vector2f velocity = { 0.f,0.f };
 
 	bool holding = false;
@@ -66,7 +67,7 @@ public:
 		update_anchors();
 	}
 	
-	inline void update_anchors() {
+	inline void update_anchors() const {
 		for (auto& [btn, offset] : anchoredButtons) 
 			btn->set_pos(pos + offset);
 		for (auto& [sprite, offset] : anchoredSprites)
@@ -82,9 +83,9 @@ public:
 		for (auto& [text, offset] : anchoredTexts)
 			offset = text->getPosition() - pos;
 	}
-	inline bool has_velocity() {
+	inline bool has_velocity() const {
 		return std::abs(velocity.x) > 0.1f || std::abs(velocity.y) > 0.1f;
 	}
-	inline bool being_held() { return holding; }
+	inline bool being_held() const { return holding; }
 	inline void set_mouse_hold(bool h) { holding = h; }
 };
