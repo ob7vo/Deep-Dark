@@ -6,8 +6,6 @@ lane(config.lane) {
 }
 UnitSpawner::UnitSpawner(const UnitStats* stats, UnitAniMap* aniMap, ActionObjConfig& config) :
 	ActionObject(config), stats(stats), aniMap(aniMap) {
-	//std::cout << "created unit spawner, pos(" << pos.x << " , " << pos.y
-		//<< ")" << std::endl;
 	create_animation();
 }
 SurgeSpawner::SurgeSpawner(const UnitStats* stats, const Augment surge, ActionObjConfig& config) :
@@ -25,13 +23,13 @@ void UnitSpawner::action() {
 	if (stats->has_augment(CLONE)) stage.try_revive_unit(this);
 	else {
 		Unit* unit = stage.create_unit(lane, stats, aniMap);
-		unit->pos.x = sprite.getPosition().x;
+		unit->movement.pos.x = sprite.getPosition().x;
 	}
 }
 void SurgeSpawner::action() {
 	sf::Vector2f surgePos = sprite.getPosition();
 	if (surge.augType != AugmentType::SHOCK_WAVE)
-		surgePos.x += surge.value * stats->team;
+		surgePos.x += surge.value * static_cast<float>(stats->team);
 
 	stage.create_surge(stats, lane, surge.surgeLevel, surgePos, surge.augType);
 }

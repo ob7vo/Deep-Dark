@@ -32,7 +32,7 @@ struct Hit {
 	std::pair<float, float> attackRange = { 0.f,0.f };
 
 	Hit() = default;
-	Hit(int dmg, std::pair<int, int> laneReach = {}, std::pair<float, float> attackRange = {}) :
+	explicit Hit(int dmg, std::pair<int, int> laneReach = {}, std::pair<float, float> attackRange = {}) :
 		dmg(dmg), laneReach(laneReach), attackRange(attackRange) { }
 };
 
@@ -187,6 +187,7 @@ struct UnitStats {
 
 	inline bool is_player() const { return team == 1; }
 
+	bool try_proc_augment(AugmentType target, int hits = 0) const;
 	inline Augment get_augment(AugmentType aug) const {
 		for (auto& augment : augments)
 			if (augment.augType == aug) return augment;

@@ -7,15 +7,8 @@ static std::array<Animation, 2> shockWaveAni;
 static std::array<Animation, 3> fireWallAni;
 static Animation orbitalStrikeAni;
 
-sf::Texture& Surge::get_base_texture(AugmentType surgeType) {
-	static sf::Texture texture;
-	(void)texture.loadFromFile("sprites/defaults/defaultTexture.png");
-	return texture;
-}
-
 Surge::Surge(const UnitStats* stats, int curLane, sf::Vector2f pos, AugmentType surgeType) :
-	stats(stats), currentLane(curLane), pos(pos), surgeType(surgeType),
-	sprite(get_base_texture(surgeType)) 
+	stats(stats), currentLane(curLane), pos(pos), surgeType(surgeType) 
 {
 	hitUnits.reserve(12);
 	sprite.setPosition(pos);
@@ -85,29 +78,30 @@ int OrbitalStrike::update_animation(float deltaTime) {
 }
 
 //Check
-bool Surge::valid_target(Unit& unit) {
-	return !already_hit_unit(unit.id) && !unit.invincible() && !unit.pending_death()
-		&& in_range(unit.pos.x);
+bool Surge::valid_target(Unit& unit) const {
+	return !already_hit_unit(unit.id) && !unit.anim.invincible()
+		&& in_range(unit.get_pos().x);
 }
 
 // Attacking
-bool Surge::try_terminate_unit(Unit& enemyUnit, int dmg) {
+bool Surge::try_terminate_unit(Unit& enemyUnit, int dmg) const{
 	if (!stats->has_augment(TERMINATE)) return false;
 	float threshold = stats->get_augment(TERMINATE).value;
-	float curHpPercent = (float)(enemyUnit.hp - dmg) / enemyUnit.stats->maxHp;
+	float curHpPercent = (float)(enemyUnit.status.hp - dmg) / (float)enemyUnit.stats->maxHp;
 
 	return curHpPercent <= threshold;
 }
-void Surge::on_kill(Unit& unit) {
-	if (unit.trigger_augment(stats, AugmentType::PLUNDER)) unit.statuses |= PLUNDER;
-	if (stats->has_augment(CODE_BREAKER)) unit.statuses |= CODE_BREAKER;
+void Surge::on_kill(Unit& unit) const {
+	if (unit.stats->try_proc_augment(PLUNDER)) unit.status.statusFlags |= PLUNDER;
+	if (stats->has_augment(CODE_BREAKER)) unit.status.statusFlags |= CODE_BREAKER;
+
 	unit.causeOfDeath = createdByCannon ? DeathCause::CANNON : DeathCause::SURGE;
 };
 void Surge::attack_units(Lane& lanes) {
 	std::vector<Unit>& enemyUnits = lanes.get_targets(stats->team);
 
 	for (auto it = enemyUnits.begin(); it != enemyUnits.end(); ++it) {
-		if (!valid_target((*it))) continue;
+		if (!valid_target(*it)) continue;
 
 		if (immune_to_surge_type(it->stats->immunities)) {
 			if (it->stats->surge_blocker()) {
@@ -119,29 +113,29 @@ void Surge::attack_units(Lane& lanes) {
 		}
 
 		hitUnits.push_back(it->id);
-		if (it->take_damage(*this)) on_kill(*it);
+		if (it->status.take_damage(*it, *this)) on_kill(*it);
 	}
 }
-int Surge::calculate_damage_and_effects(Unit& unit) {
+int Surge::calculate_damage_and_effects(Unit& unit) const {
 	int dmg = get_dmg();
-	dmg = unit.corroded() ? (int)(dmg * 2.f) : dmg;
+	dmg = unit.status.corroded() ? (int)(dmg * 2.f) : dmg;
 
 	// If the surge targets the unit's trait, run its damage-augments
 	if (unit.targeted_by_unit(stats->targetTypes))
-		dmg = unit.apply_effects(stats->augments, hitIndex, dmg);
+		dmg = unit.status.apply_effects(unit, stats->augments, hitIndex, dmg);
 
 	// If the unit targets the surge's trait, run its defense-augments
 	if (targeted_by_unit(unit.stats->targetTypes))
-		dmg = (int)(dmg * unit.calculate_damage_reduction(unit.stats->augments));
+		dmg = (int)(dmg * unit.status.calculate_damage_reduction(unit.stats->augments));
 
 	// if the unit has a sheild and it did not break, then return.
-	if (unit.has_shield_up() && !unit.damage_shield(dmg, stats)) return 0;
+	if (unit.status.has_shield_up() && !unit.status.damage_shield(dmg, stats)) return 0;
 
 	// These effects are based around the Unit's current HP, 
 	// so they are run after all calculations
 	if (unit.targeted_by_unit(stats->targetTypes)) {
-		if (unit.trigger_augment(stats, VOID, hitIndex))
-			dmg += (int)(unit.stats->maxHp * stats->get_augment(VOID).value);
+		if (stats->try_proc_augment(VOID, hitIndex))
+			dmg += (int)((float)unit.stats->maxHp * stats->get_augment(VOID).value);
 		if (try_terminate_unit(unit, dmg))
 			dmg += unit.stats->maxHp;
 	}
@@ -166,6 +160,9 @@ void ShockWave::tick(float deltaTime, Stage& stage) {
 	case SurgeAnimationStates::ENDING:
 		if (Animation::check_for_event(AnimationEvent::FINAL_FRAME, events))
 			readyForRemoval = true;
+	default:
+		std::cout << "shouldnt be hera" << std::endl;
+		break;
 	}
 }
 void FireWall::tick(float deltaTime, Stage& stage) {
@@ -210,8 +207,6 @@ bool FireWall::never_hit_unit(int id) {
 }
 void Surge::init_animations() {
 	std::vector<std::pair<int, AnimationEvent>> events;
-	//Animation::Animation(std::string spritePath, int frameCount, float fps, int textureSizes[2], 
-	//	int cellSizes[2], std::vector<std::pair<int, AnimationEvent>> events, bool loops)
 
 	// SHOCK WAVE
 	std::string spritePath = "sprites/surges/wave_active.png";

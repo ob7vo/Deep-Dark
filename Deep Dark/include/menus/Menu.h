@@ -10,7 +10,6 @@ enum class MenuType {
 	STAGE_SELECT,
 	ARMORY_EQUIP,
 	WORKSHOP_MENU,
-	STAGE_PAUSE
 };
 
 struct MenuBase

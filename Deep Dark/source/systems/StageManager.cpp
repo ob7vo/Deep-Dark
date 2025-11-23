@@ -80,9 +80,9 @@ void StageManager::unload_stage() {
 void StageManager::upgrade_bag() {
 	currentBagLevel++;
 
-	partsPerSecond = (int)std::round(partsPerSecond * 1.1f);
-	bagCap += (int)std::round(baseBagCap * 0.5f);
-	bagUpgradeCost += (int)std::round(baseBagUpgradeCost * 0.25f);
+	partsPerSecond = (int)std::round((float)partsPerSecond * 1.1f);
+	bagCap += (int)std::round((float)baseBagCap * 0.5f);
+	bagUpgradeCost += (int)std::round((float)baseBagUpgradeCost * 0.25f);
 
 	ui.bagUpgradeCostText.setString(std::format("${}", bagUpgradeCost));
 	ui.partsCountText.setString(std::format("#{}/{}", parts, bagCap));
@@ -147,7 +147,7 @@ void StageManager::handle_events(sf::Event event) {
 
 // Action Objects
 void StageManager::try_spawn_death_surge(Unit& unit) {
-	if (!unit.trigger_augment(unit.stats, DEATH_SURGE)) return;
+	if (!unit.stats->try_proc_augment(DEATH_SURGE)) return;
 	const Augment& augment = unit.stats->get_augment(DEATH_SURGE);
 
 	AugmentType surgeType = FIRE_WALL; 
@@ -155,21 +155,14 @@ void StageManager::try_spawn_death_surge(Unit& unit) {
 	else if (unit.stats->quickAugMask & ORBITAL_STRIKE) surgeType = ORBITAL_STRIKE; 
 
 	float distance = augment.value;
-	Augment newSurge = Augment::surge(surgeType, distance, augment.surgeLevel, 0, unit.hitIndex);
+	Augment newSurge = Augment::surge(surgeType, distance, augment.surgeLevel, 0, unit.combat.hitIndex);
 	stage.create_surge(unit, newSurge);
 }
 void StageManager::create_drop_box(int laneInd, const UnitStats* stats, UnitAniMap* aniMap) {
 	if (!stats->has_augment(DROP_BOX)) return;
 	float percentage = stats->get_augment(DROP_BOX).value;
 	Lane& lane = stage.lanes[laneInd];
-	std::pair<float, float> range = { lane.playerXPos, lane.enemyXPos };
-	float spawnPoint = range.first + (range.second - range.first) * percentage;
-
-	/*
-	std::cout << laneInd << ", lane y - pos: " << lane.yPos << ", lane range: ("
-		<< range.first << " , " << range.second << ") percentage: " << percentage <<
-		"spawnPointX: " << spawnPoint << std::endl;
-		*/
+	float spawnPoint = lane.playerXPos + (lane.enemyXPos - lane.playerXPos) * percentage;
 
 	sf::Vector2f spawnPos = { spawnPoint, lane.yPos };
 	ActionObjConfig config(stage, laneInd, spawnPos);
@@ -177,16 +170,16 @@ void StageManager::create_drop_box(int laneInd, const UnitStats* stats, UnitAniM
 		std::make_unique<UnitSpawner>(stats, aniMap, config));
 }
 void StageManager::try_create_cloner(Unit& unit) {
-	if (!unit.has_augment(CLONE) || unit.statuses & CODE_BREAKER) return;
+	if (!unit.has_augment(CLONE) || unit.status.statusFlags & CODE_BREAKER) return;
 
-	ActionObjConfig config(stage, unit.currentLane, unit.pos);
+	ActionObjConfig config(stage, unit.get_lane(), unit.get_pos());
 	stage.actionObjects.emplace_back(
-		std::make_unique<UnitSpawner>(unit.stats, unit.get_ani_map(), config));
+		std::make_unique<UnitSpawner>(unit.stats, unit.anim.get_ani_map(), config));
 }
 
 void StageManager::collect_parts(Unit& unit) {
 	int p = unit.stats->parts;
-	if (unit.statuses & PLUNDER) p *= 2;
+	if (unit.status.statusFlags & PLUNDER) p *= 2;
 	gain_parts(p);
 }
 void StageManager::increment_parts_and_notify(float deltaTime) {
@@ -211,7 +204,7 @@ void StageManager::handle_player_unit_death(Unit& unit) {
 	}
 }
 
-void StageManager::spawn_enemies(float deltaTime) {
+void StageManager::spawn_enemies() {
 	for (size_t i = stage.enemySpawners.size(); i--;) {
 		auto& data = stage.enemySpawners[i];
 
@@ -249,7 +242,7 @@ void StageManager::process_move_requests() {
 			continue;
 		}
 
-		unit->cancel_tween();
+		unit->movement.cancel_tween();
 
 		auto& newVec = stage.get_source_vector(request.newLane, unit->stats->team);
 		Unit& movedUnit = newVec.emplace_back(std::move(*unit));
@@ -261,7 +254,6 @@ void StageManager::process_move_requests() {
 	}
 }
 void StageManager::update_unit(float deltaTime) {
-	//std::cout << "new update_unit_ticks() call" << std::endl;
 	for (auto& lane : stage.lanes) {
 		if (lane.trap) lane.trap->tick(deltaTime, stageRecorder);
 		for (auto it = lane.enemyUnits.begin(); it != lane.enemyUnits.end();) {
@@ -277,8 +269,6 @@ void StageManager::update_unit(float deltaTime) {
 		for (auto it = lane.playerUnits.begin(); it != lane.playerUnits.end();) {
 			if (it->dead()) {
 				handle_player_unit_death(*it);
-				//std::cout << "Player Unit #" << it->id << " on Lane " << it->currentLane <<
-				//	"is DEAD, erasing it from the vector" << std::endl;
 				it = lane.playerUnits.erase(it);
 			}
 			else {
@@ -295,7 +285,6 @@ void StageManager::update_projectiles(float deltaTime) {
 			std::cout << "removed projectile" << std::endl;
 		}
 		else {
-		//	std::cout << "ticking projectile" << std::endl;
 			Lane& closestLane = stage.get_closest_lane(it->y_pos());
 			it->tick(closestLane, deltaTime);
 			++it;
@@ -327,8 +316,9 @@ void StageManager::update_base(float deltaTime) {
 }
 void StageManager::update_hitbox_visualizers(float deltaTime) {
 	for (size_t i = stage.hitboxes.size(); i--;) {
-		float& timer = stage.hitboxes[i].second -= deltaTime;
-		if (timer <= 0) {
+		stage.hitboxes[i].second -= deltaTime;
+
+		if (stage.hitboxes[i].second <= 0) {
 			stage.hitboxes[i] = std::move(stage.hitboxes.back());
 			stage.hitboxes.pop_back();
 		}
@@ -340,9 +330,9 @@ void StageManager::draw(sf::RenderWindow& window) {
 		lane.draw(window);
 		if (lane.trap) window.draw(lane.trap->sprite);
 		for (auto& unit : lane.enemyUnits)
-			unit.draw(window);
+			unit.anim.draw(window);
 		for (auto& unit : lane.playerUnits)
-			unit.draw(window);		
+			unit.anim.draw(window);		
 	}
 	for (auto& proj : stage.projectiles)
 		window.draw(proj.get_sprite());
@@ -366,14 +356,14 @@ void StageManager::draw(sf::RenderWindow& window) {
 		sprite.setPosition(pos);
 		window.draw(sprite);
 	}
-	for (auto& hitbox : stage.hitboxes)
-		window.draw(hitbox.first);
+	for (auto& [hitbox, time]:stage.hitboxes)
+		window.draw(hitbox);
 }
 void StageManager::update_game_ticks(float deltaTime) {
 	timeSinceStart += deltaTime;
 	stage.effectSpritePositions.clear();
 
-	spawn_enemies(deltaTime);
+	spawn_enemies();
 
 	update_unit(deltaTime); // This is where the erase is called
 	update_projectiles(deltaTime);

@@ -1,6 +1,16 @@
 #include "UnitData.h"
+#include "Utils.h"
 #include <algorithm>
 
+
+bool UnitStats::try_proc_augment(AugmentType targetAugment, int hit) const{
+    for (auto& augment : augments) {
+        if (augment.augType != targetAugment) continue;
+        return augment.can_hit(hit) && Random::chance(augment.percentage);
+    }
+
+    return false;
+}
 
 namespace UnitData {
     std::string get_unit_folder_path(int id, int gear) {
@@ -217,7 +227,7 @@ void UnitStats::modifyDmg(int hitIndex, char op, float value) {
     switch (op) {
     case '=': dmg = static_cast<int>(value); break;
     case '+': dmg += static_cast<int>(value); break;
-    case '*': dmg = (int)(dmg * value); break;
+    case '*': dmg = (int)(static_cast<float>(dmg) * value); break;
     default: dmg = static_cast<int>(value); break;
     }
 }

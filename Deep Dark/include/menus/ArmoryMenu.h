@@ -19,7 +19,7 @@ struct ArmoryMenu : public Menu<ARMORY_BTNS> {
     bool heldUnitWasSlotted = false;
     std::array<int, UnitData::TOTAL_PLAYER_UNITS> unitSelectionForms;
     
-    ArmoryMenu(Camera& cam);
+    explicit ArmoryMenu(Camera& cam);
     ~ArmoryMenu() = default;
     void set_up_buttons();
 

@@ -5,6 +5,10 @@
 
 PreparationState::PreparationState(Camera& cam) : GameState(cam),
 stageSelect(cam), armoryMenu(cam), workshopMenu(cam){
+	stageSelect.reset_positions();
+	armoryMenu.reset_positions();
+	workshopMenu.reset_positions();
+
 	for (int i = 0; i < STAGES; i++)
 		stageSelect.stageBtn(i).onClick = [this, i](bool m1) { if (m1) start_stage(i); };
 	stageSelect.armoryBtn().onClick = [this](bool m1) { if (m1) switch_menu(MenuType::ARMORY_EQUIP); };
@@ -54,6 +58,7 @@ MenuBase* PreparationState::get_menu() {
 		readyToEndState = true;
 		nextStateEnterData = std::make_unique<OnStateEnterData>(GameState::Type::MAIN_MENU);
 		return menu;
+	case MenuType::HOME_BASE: return menu;
 	}
 
 	std::cout << "Could not get Menu: " << (int)curMenuType << std::endl;
@@ -80,7 +85,7 @@ void PreparationState::start_stage(int stage) {
 	std::cout << "starting stage #" << stage + 1 << std::endl;
 }
 void PreparationState::on_enter(OnStateEnterData* enterData) {
-	if (PrepEnterData* prepData = dynamic_cast<PrepEnterData*>(enterData)) {
+	if (auto prepData = dynamic_cast<PrepEnterData*>(enterData)) {
 		curMenuType = prepData->openningMenuType;
 		prevMenuType = prepData->prevMenuType;
 		menu = get_menu();
@@ -91,4 +96,8 @@ void PreparationState::on_enter(OnStateEnterData* enterData) {
 	}
 }
 void PreparationState::on_exit() {
+	/*
+	* I'm yet to add functionalty to this, but will likely be something like 
+	cleaning up Transitioning and unloading data
+	*/
 }

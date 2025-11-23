@@ -38,10 +38,10 @@ public:
 	bool readyForRemoval = false;
 
 	Projectile() = default;
-	Projectile(ProjectileConfig& config) : stats(&config.stats),
-		aniArr(&config.aniArr){
+	explicit Projectile(ProjectileConfig& config) : stats(&config.stats), aniArr(&config.aniArr){
 		(*aniArr)[0].reset(aniTime, frame, sprite);
 		sprite.scale({ 0.2f,0.2f });
+
 		hitsLeft = stats->hits;
 		maxLifespan = stats->maxLifespan;
 	}
@@ -56,20 +56,19 @@ public:
 	void tick(Lane& lane, float deltaTime);
 	int update_hits_and_animation(float deltaTime);
 	void attack_units(Lane& lane);
-	void detect_lane_collision(Lane& lane);
-	bool within_bounds(sf::Vector2f p, float h = 1, float w = 1);
-	bool valid_target(Unit& enemy);
+	bool within_bounds(sf::Vector2f p, float h = 1, float w = 1) const;
+	bool valid_target(Unit& enemy) const;
 
 	inline sf::Sprite& get_sprite() { return sprite; }
-	inline float y_pos() { return pos.y; }
+	inline float y_pos() const { return pos.y; }
 	inline void update_hit_times(float deltaTime) {
-		for (auto& pair : hitUnits) pair.second -= deltaTime;
+		for (auto& [box, time] : hitUnits) time -= deltaTime;
 	}
 	inline void enter_destroyed_state() {
 		aniState = DESTROYED_STATE;
 		(*aniArr)[aniState].reset(aniTime, frame, sprite);
 	}
-	inline bool can_hit_again(int id) {
+	inline bool can_hit_again(int id) const {
 		return std::find_if(hitUnits.begin(), hitUnits.end(),
 			[&id](const auto& pair) {
 				return pair.first == id && pair.second <= 0.f;

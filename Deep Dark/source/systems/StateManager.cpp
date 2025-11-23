@@ -4,15 +4,15 @@
 #include "PreparationState.h"
 
 StateManager::StateManager(Camera& cam) : cam(cam) {
-	gameStateMap[0] = new MainMenusState(cam);
-	gameStateMap[1] = new PreparationState(cam);
-	gameStateMap[2] = new StageState(cam);
+	gameStateMap[0] = std::make_unique<MainMenusState>(cam);
+    gameStateMap[1] = std::make_unique<PreparationState>(cam);
+    gameStateMap[2] = std::make_unique<StageState>(cam);
 }
 void StateManager::update(float deltaTime) {
 	gameState->update(deltaTime);
 
-	if (cam.dragging) cam.click_and_drag();
-	else if (cam.has_velocity())
+	if (cam.cursor.dragging) cam.click_and_drag();
+	else if (cam.cursor.has_velocity())
 		cam.apply_velocity(deltaTime);
 }
 void StateManager::render() {
@@ -31,7 +31,7 @@ void StateManager::handle_events(sf::Event event) {
 void StateManager::switch_state(OnStateEnterData* newState) {
 	GameState* oldState = gameState;
 
-	gameState = gameStateMap[(int)newState->stateType];
+	gameState = gameStateMap[(int)newState->stateType].get();
 	stateType = newState->stateType;
 	gameState->on_enter(newState);
 

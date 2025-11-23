@@ -4,11 +4,7 @@
 #include <filesystem>
 using json = nlohmann::json;
 
-static Animation surgeCannonAni;
-static Animation shortCircuitCannonAni;
-static Animation orbitalCannonAni;
 static Animation waveCannonAni;
-static Animation slowCannonAni;
 
 const float MAX_FIRE_WALL_DIST = 10000.f;
 const float FIRE_WALL_SPAWN_PADDING = 7.5f;
@@ -41,7 +37,7 @@ void FireWallCannon::fire(Stage& stage) {
 		auto& playerUnits = stage.get_lane_targets(i, -1);
 
 		for (auto it = playerUnits.begin(); it != playerUnits.end();) {
-			float distance = std::abs(pos.x - it->pos.x);
+			float distance = std::abs(pos.x - it->get_pos().x);
 			minDist = std::min(minDist, distance);
 		}
 		
@@ -63,24 +59,20 @@ void AreaCannon::fire(Stage& stage) {
 
 		for (auto it = enemyUnits.begin(); it != enemyUnits.end();) {
 			if (is_valid_target(*it))
-				it->apply_effects(cannonStats.augments, 0);
+				it->status.apply_effects(*it, cannonStats.augments, 0);
 		}
 	}
 }
 bool AreaCannon::is_valid_target(Unit& target) {
-	return !target.invincible() && !target.pending_death() &&
-		within_range(target.pos.x);
+	return !target.anim.invincible() && within_range(target.get_pos().x);
 }
 
 Animation* WaveCannon::get_cannon_animation_ptr() {
-	if (shockWave.augType == AugmentType::NONE)
-		return &waveCannonAni;
-	else
-		return &slowCannonAni;
+	return &waveCannonAni;
 }
-Animation* FireWallCannon::get_cannon_animation_ptr() { return &surgeCannonAni; }
-Animation* OrbitalCannon::get_cannon_animation_ptr() { return &orbitalCannonAni; }
-Animation* AreaCannon::get_cannon_animation_ptr() { return &shortCircuitCannonAni; }
+Animation* FireWallCannon::get_cannon_animation_ptr() { return &waveCannonAni; }
+Animation* OrbitalCannon::get_cannon_animation_ptr() { return &waveCannonAni;}
+Animation* AreaCannon::get_cannon_animation_ptr() { return &waveCannonAni; }
 
 void BaseCannon::init_animations() {
 	std::vector<std::pair<int, AnimationEvent>> events;

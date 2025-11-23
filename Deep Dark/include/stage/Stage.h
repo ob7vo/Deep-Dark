@@ -44,7 +44,7 @@ struct MoveRequest {
 		team(team), axisPos(axisPos), type(type) {}
 	MoveRequest(Unit& unit, int newLane, float axisPos, RequestType type);
 
-	void move_unit_by_request(Unit& unit, Stage& stage);
+	void move_unit_by_request(Unit& unit, Stage& stage) const;
 	inline bool fall_request() const { return type == RequestType::FALL; }
 	inline bool teleport_request() const { return type == RequestType::TELEPORT; }
 	inline bool squash_request() const { return type == RequestType::SQUASH; }
@@ -102,7 +102,7 @@ struct Stage
 
 	Unit* create_unit(int laneIndex, const UnitStats* unitStats, UnitAniMap* aniMap);
 	void create_summon(Unit& unit);
-	SummonData* try_get_summon_data(int summonId, float magnification);
+	bool can_summon(int summonId, float magnification);
 	void try_revive_unit(UnitSpawner* spawner);
 	void break_spawner_thresholds(float timeSinceStart = 0.f);
 
@@ -114,7 +114,7 @@ struct Stage
 	void create_hitbox_visualizers(sf::Vector2f pos, std::pair<float, float> range, int team);
 
 	std::pair<float, int> find_lane_to_fall_on(Unit& unit);
-	int find_lane_to_knock_to(Unit& unit, int incrementer);
+	int find_lane_to_knock_to(Unit& unit, int incrementer) const;
 
 	inline std::vector<Unit>& get_lane_targets(int i, int team) { return lanes[i].get_targets(team); }
 	inline std::vector<Unit>& get_source_vector(int i, int team) { return lanes[i].get_source(team); }

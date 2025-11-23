@@ -35,7 +35,7 @@ struct WorkshopMenu : public Menu<WORKSHOP_BTNS> {
 
 	explicit WorkshopMenu(Camera& cam);
 	~WorkshopMenu() = default;
-	void setup_workshop_unit(int id, int form);
+	void setup_workshop_unit(int id, int gear);
 	void set_stat_texts(const nlohmann::json& unitJson);
 
 	void draw() override;
@@ -67,7 +67,7 @@ struct WorkshopMenu : public Menu<WORKSHOP_BTNS> {
 	inline Button& animation_btn(int i) { return get_button(i + 4); }
 
 	///<summary>Type in the name of the stat and it will return the index</summary>
-	inline int stat_index(const std::string& str) {
+	inline int stat_index(const std::string& str) const {
 		switch (str[0]) {
 		case 'a': return 0; // attack_time
 		case 'c': return 1; // cost

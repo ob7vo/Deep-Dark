@@ -20,7 +20,7 @@ const float FPSTimer = 0.5f;
 void set_mouse_position(sf::RenderWindow& window, Camera& cam) {
     sf::Vector2i mouseScreenPos = sf::Mouse::getPosition(window);
     sf::Vector2f MOUSE_POS = window.mapPixelToCoords(mouseScreenPos);
-    cam.set_mouse_pos(MOUSE_POS, mouseScreenPos);
+    cam.cursor.set_pos(MOUSE_POS, mouseScreenPos);
 }
 void set_fps_text(float deltaTime, float& time, sf::Text& fpsText) {
     time += deltaTime;
@@ -69,7 +69,7 @@ int main()
 
     PrepEnterData prepData(MenuType::ARMORY_EQUIP, MenuType::STAGE_SELECT);
     OnStateEnterData enterData(GameState::Type::MAIN_MENU);
-    stateManager.switch_state(&prepData);
+    stateManager.switch_state(&stageEnterData);
 
     while (window.isOpen())
     {

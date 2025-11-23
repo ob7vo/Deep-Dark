@@ -39,18 +39,14 @@ void Projectile::tick(Lane& lane, float deltaTime) {
 	
 	if (aniState == DESTROYED_STATE) {
 		readyForRemoval = events & AnimationEvent::FINAL_FRAME;
-		//std::cout << "is destroyed, ready to remove? " << readyForRemoval << std::endl;
 		return;
 	}
 
 	pos = pathing->move(deltaTime);
 	sprite.setPosition(pos);
-	//std::cout << "projectile pos: (" << pos.x << ", " << pos.y << ")\n";
 
 	update_hit_times(deltaTime);
 	attack_units(lane);
-	if (pathing->get_type() == PathingType::PROJECTILE)
-		detect_lane_collision(lane);
 }
 void Projectile::attack_units(Lane& lane) {
 	for (auto& unit : lane.get_targets(stats->team)) {
@@ -59,10 +55,10 @@ void Projectile::attack_units(Lane& lane) {
 		hitUnits.push_back(hitTime);
 
 		bool shove = stats->aug.augType & SHOVE;
-		unit.take_damage(stats->dmg, shove);
+		unit.status.take_damage(unit, stats->dmg, shove);
 
-		if (unit.can_proc_status(stats->aug))
-			unit.add_status_effect(stats->aug);
+		if (unit.status.can_proc_status(unit, stats->aug))
+			unit.status.add_status_effect(stats->aug);
 
 		hitsLeft -= 1 + unit.has_augment(CHIP);
 		if (hitsLeft <= 0) {
@@ -71,16 +67,14 @@ void Projectile::attack_units(Lane& lane) {
 		}
 	}
 }
-void Projectile::detect_lane_collision(Lane& lane) {
-//	if (!pathing->moving_down()) return;
-}
-bool Projectile::within_bounds(sf::Vector2f p, float h, float w) {
+
+bool Projectile::within_bounds(sf::Vector2f p, float h, float w) const {
     bool overlapX = pos.x < p.x + w && pos.x + stats->width > p.x;
     bool overlapY = pos.y < p.y + h && pos.y + stats->height > p.y;
 
     return overlapX && overlapY;
 }
-bool Projectile::valid_target(Unit& enemy) {
-	return !enemy.invincible() && !enemy.pending_death() &&
-		within_bounds(enemy.pos) && can_hit_again(enemy.id);
+bool Projectile::valid_target(Unit& enemy) const {
+	return !enemy.anim.invincible() && within_bounds(enemy.get_pos())
+		&& can_hit_again(enemy.id);
 }

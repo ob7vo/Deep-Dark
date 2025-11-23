@@ -44,13 +44,16 @@ statTexts(make_statTexts()) {
 void WorkshopMenu::setup_workshop_unit(int id, int gear) {
 	const nlohmann::json unitJson = UnitData::get_unit_json(id, gear);
 
+	unitHitboxes.clear();
+	unitAnimations.clear();
+
 	unitStats = UnitStats::player(unitJson);
 	Animation::setup_unit_animation_map(unitJson, unitAnimations);
 	for (auto& [state, anim] : unitAnimations) {
 		anim.loops = true;
 	}
 
-	unitAnimations[UnitAnimationState::MOVE].reset(unitSprite);
+	unitAnimations[currentAnimation].reset(unitSprite);
 	set_stat_texts(unitJson);
 }
 void WorkshopMenu::set_stat_texts(const nlohmann::json& unitJson) {
@@ -112,9 +115,9 @@ void WorkshopMenu::draw_unit_hurtbox() {
 	sf::RectangleShape hurtbox(size);
 	sf::Vector2f origin = { (!unitStats.is_player() ? 0.f : size.x) , size.y };
 
+	hurtbox.setOrigin(origin);
 	hurtbox.setPosition(unitSprite.getPosition());
 	hurtbox.setFillColor(sf::Color(3, 252, 198, 128));
-	hurtbox.setOrigin(origin);
 
 	cam.queue_temp_ui_draw(hurtbox);
 }
@@ -123,16 +126,16 @@ void WorkshopMenu::draw_unit_hitboxs() {
 		cam.queue_world_draw(&hitbox);
 }
 void WorkshopMenu::create_hitbox_visualizer() {
-	int hitIndex = static_cast<int>(unitHitboxes.size());
-	const std::pair<float, float> range = unitStats.get_hit_stats(hitIndex).attackRange;
+	auto hitIndex = static_cast<int>(unitHitboxes.size());
+	const auto [minRange, maxRange]  = unitStats.get_hit_stats(hitIndex).attackRange;
 	sf::Vector2f unitPos = unitSprite.getPosition();
 
-	float width = range.second - range.first;
+	float width = maxRange - minRange;
 	float height = UNIT_HITBOX_HEIGHTS[hitIndex];
 	sf::RectangleShape shape({ width, height});
 
 	float originX = unitStats.team == 1 ? 0 : width;
-	float posX = unitPos.x + (range.first * unitStats.team);
+	float posX = unitPos.x + (minRange * static_cast<float>(unitStats.team));
 
 	shape.setOrigin({ originX, height });
 	shape.setFillColor(UNIT_HITBOX_COLORS[hitIndex]);
@@ -141,10 +144,8 @@ void WorkshopMenu::create_hitbox_visualizer() {
 	unitHitboxes.push_back(shape);
 }
 
-
 void WorkshopMenu::update(float dt) {
 	if (paused) return;
-		
 	update_unit_animation(dt);
 }
 void WorkshopMenu::update_unit_animation(float deltaTime) {
@@ -170,6 +171,6 @@ bool WorkshopMenu::on_mouse_release(bool isM1) {
 }
 
 void WorkshopMenu::switch_unit_gear() {
-	unitGear = (unitGear + 1) % 3;
-	setup_workshop_unit(unitId, unitGear + 1);
+	unitGear = std::max((unitGear + 1) % 4, 1);
+	setup_workshop_unit(unitId, unitGear);
 }

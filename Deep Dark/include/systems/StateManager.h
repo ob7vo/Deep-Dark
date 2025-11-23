@@ -7,14 +7,14 @@
 struct StateManager {
 	Camera& cam;
 
-	std::array<GameState*, 3> gameStateMap;
+	std::array<std::unique_ptr<GameState>, 3> gameStateMap;
 	GameState* gameState = nullptr;
 	GameState::Type stateType = GameState::Type::MAIN_MENU;
 	GameState::Type nextStateType = GameState::Type::STAGE;
 
 	bool switchingStates = false;
 
-	StateManager(Camera& cam);
+	explicit StateManager(Camera& cam);
 
 	void update(float deltaTime);
 	void render();
