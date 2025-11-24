@@ -8,7 +8,8 @@ static std::array<Animation, 3> fireWallAni;
 static Animation orbitalStrikeAni;
 
 Surge::Surge(const UnitStats* stats, int curLane, sf::Vector2f pos, AugmentType surgeType) :
-	stats(stats), currentLane(curLane), pos(pos), surgeType(surgeType) 
+	stats(stats), currentLane(curLane), pos(pos), surgeType(surgeType), 
+	animationState(SurgeAnimationStates::ACTIVE)
 {
 	hitUnits.reserve(12);
 	sprite.setPosition(pos);
@@ -22,8 +23,8 @@ ShockWave::ShockWave(const UnitStats* stats, int curLane, int level, sf::Vector2
 	hitbox.setOrigin({ halfWidth, 25.f });
 
 	sf::Vector2f endPos = pos;
-	endPos.x += (SW_BASE_DISTANCE + (SW_DISTANCE_PER_LEVEL * level - 1)) * stats->team;
-	float timeLeft = SW_TWEEN_TIMER + (SW_TWEEN_TIME_PER_LEVEL * level - 1);
+	endPos.x += (SW_BASE_DISTANCE + (SW_DISTANCE_PER_LEVEL * (float)level - 1)) * (float)stats->team;
+	float timeLeft = SW_TWEEN_TIMER + (SW_TWEEN_TIME_PER_LEVEL * (float)level - 1);
 
 	tween = std::make_unique<UnitTween>(pos, endPos, timeLeft, RequestType::NONE);
 	if (tween) tween->easingFuncX = EasingType::LINEAR;
@@ -118,7 +119,7 @@ void Surge::attack_units(Lane& lanes) {
 }
 int Surge::calculate_damage_and_effects(Unit& unit) const {
 	int dmg = get_dmg();
-	dmg = unit.status.corroded() ? (int)(dmg * 2.f) : dmg;
+	dmg = unit.status.corroded() ? dmg * 2 : dmg;
 
 	// If the surge targets the unit's trait, run its damage-augments
 	if (unit.targeted_by_unit(stats->targetTypes))
@@ -126,7 +127,7 @@ int Surge::calculate_damage_and_effects(Unit& unit) const {
 
 	// If the unit targets the surge's trait, run its defense-augments
 	if (targeted_by_unit(unit.stats->targetTypes))
-		dmg = (int)(dmg * unit.status.calculate_damage_reduction(unit.stats->augments));
+		dmg = (int)((float)dmg * unit.status.calculate_damage_reduction(unit.stats->augments));
 
 	// if the unit has a sheild and it did not break, then return.
 	if (unit.status.has_shield_up() && !unit.status.damage_shield(dmg, stats)) return 0;
@@ -149,7 +150,7 @@ void ShockWave::tick(float deltaTime, Stage& stage) {
 	attack_units(stage.get_lane(currentLane));
 
 	switch (animationState) {
-	case SurgeAnimationStates::ACTIVE:
+	case SurgeAnimationStates::ACTIVE: {
 		if (tweening())
 			start_animation(SurgeAnimationStates::ENDING);
 		else {
@@ -157,12 +158,12 @@ void ShockWave::tick(float deltaTime, Stage& stage) {
 			if (tween->isComplete) cancel_tween();
 		}
 		break;
-	case SurgeAnimationStates::ENDING:
+	}
+	case SurgeAnimationStates::ENDING: {
 		if (Animation::check_for_event(AnimationEvent::FINAL_FRAME, events))
 			readyForRemoval = true;
-	default:
-		std::cout << "shouldnt be hera" << std::endl;
-		break;
+	}
+	default: break;
 	}
 }
 void FireWall::tick(float deltaTime, Stage& stage) {

@@ -168,6 +168,18 @@ void ArmoryMenu::shift_empty_slots() {
 		}
 	}
 }
+void ArmoryMenu::update_selection_slot(int id, int gear) {
+	if (id >= 100) return;
+
+	for (int i = 0; i < filledUnitSlots; i++)
+		if (slots[i].id == id) {
+			slots[i].set_unit(id, gear);
+			break;
+		}
+
+	unitSelectionForms[id] = gear;
+	unitSelectionBtn(id).set_texture(UnitData::get_slot_texture(id, gear));
+}
 
 void ArmorySlot::set_unit(int ID, int g, int c) {
 	id = ID; gear = g; core = c;

@@ -21,9 +21,6 @@ struct Lane {
 
 	std::vector<Unit> playerUnits; // Vectors cant have references
 	std::vector<Unit> enemyUnits;
-	std::unique_ptr<Teleporter> enemyTeleporter = nullptr;
-	std::unique_ptr<Teleporter> playerTeleporter = nullptr;
-	std::unique_ptr<Trap> trap = nullptr;
 
 	Lane(const nlohmann::json& laneJson, int index) : laneIndex(index)
 	{
@@ -69,9 +66,6 @@ struct Lane {
 		gapsShapes.back().setPosition({ x, yPos });
 	}
 
-	Teleporter* get_teleporter(int team) {
-		return team == 1 ? playerTeleporter.get() : enemyTeleporter.get();
-	}
 	inline std::vector<Unit>& get_targets(int team) { return team == PLAYER_TEAM ? enemyUnits : playerUnits; }
 	inline std::vector<Unit>& get_source(int team) { return team == ENEMY_TEAM ? enemyUnits : playerUnits; }
 
@@ -101,9 +95,6 @@ struct Lane {
 
 		for (auto& shape : gapsShapes)
 			window.draw(shape);
-
-		if (playerTeleporter) window.draw(playerTeleporter->shape);
-		if (enemyTeleporter) window.draw(enemyTeleporter->shape);
 	}
 	inline size_t get_unit_count(int team) {
 		if (std::abs(team) != 1) return playerUnits.size() + enemyUnits.size();

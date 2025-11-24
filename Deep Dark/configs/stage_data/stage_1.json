@@ -32,7 +32,7 @@
     {
       "lane": 0,
       "connected_lane": 2,
-      "player_team": true,
+      "team": true,
       "x_position": 1000,
       "x_destination": 400
     }

@@ -1,6 +1,7 @@
 #pragma once
-#include "Animation.h"
+#include "StageEntity.h"
 #include "UnitEnums.h"
+
 const float TRAP_HEIGHT = 15.0f;
 enum class TrapType {
 	NONE = -1,
@@ -16,35 +17,31 @@ class Unit;
 struct Stage;
 struct StageRecord;
 
-struct Trap
+struct Trap : public StageEntity
 {
-	Lane& lane;
+private:
 	std::pair<float, float> triggerRange;
 	std::pair<float, float> attackRange;
-	sf::Vector2f pos = { 0.f, 0.f };
 
 	float timeLeft = 0.0f;
 	float checkTimer = 0.0f;
-
-	sf::Sprite sprite = sf::Sprite(defTex);
-	Animation ani;
-	bool animating = false;
 
 	TrapType trapType = TrapType::NONE;
 	bool triggered = false;
 	float dmgValue = 0;
 	Augment aug = {};
+public:
 
-	Trap(Lane& lane, const nlohmann::json& json);
-	virtual ~Trap() = default;
+	Trap(const nlohmann::json& json, sf::Vector2f pos, int lane);
+	~Trap() override = default;
 
-	bool enemy_in_trigger_range() const;
-	void tick(float deltaTime, StageRecord& rec);
-	void trigger(StageRecord& rec);
-	void trigger_launch_pad();
-	void trigger_trap_door();
+	bool enemy_in_trigger_range(Stage& stage) const;
+	void tick(Stage& stage, float deltaTime) override;
+	void action(Stage& stage) override;
+	void trigger_launch_pad(Stage& stage);
+	void trigger_trap_door(Stage& stage);
 
-	void trigger_attack() const;
+	void trigger_attack(Stage& stage) const;
 	void attack_lane(std::vector<Unit>& units) const;
 	bool valid_attack_target(Unit& unit) const;
 	bool in_trigger_range(Unit& unit) const;

@@ -1,5 +1,5 @@
 #pragma once
-#include "SFML/System/Vector2.hpp"
+#include <SFML/System/Vector2.hpp>
 #include <Easing.hpp>
 #include <iostream>
 #include <vector>
@@ -34,7 +34,7 @@ struct CirclePathing : public Pathing {
 
 	CirclePathing(sf::Vector2f cen, float spd, float rad, float angle) : Pathing(cen, spd),
 		center(cen), radius(), angleDeg(angle) {
-		move(0.02f);
+		pos = { cen.x + rad, cen.y + rad };
 	}
 	~CirclePathing() = default;
 

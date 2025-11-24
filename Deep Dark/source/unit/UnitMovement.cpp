@@ -45,13 +45,13 @@ void UnitMovement::create_tween(sf::Vector2f endPos, float time,
 #pragma region Movement
 void UnitMovement::move(Unit& unit, float deltaTime) {
 	float speed = unit.status.slowed() ? 0.1f : unit.stats->speed;
-	pos.x += speed * deltaTime * static_cast<float>(unit.stats->team);
+	pos.x += speed * deltaTime * unit.get_dir();
 }
 void UnitMovement::knockback(Unit& unit, float force) {
 	if (unit.stats->has_augment(LIGHTWEIGHT)) force *= 1.5f;
 	if (unit.stats->has_augment(HEAVYWEIGHT)) force *= 0.7f;
 
-	float newX = pos.x - (KNOCKBACK_FORCE * force * static_cast<float>(unit.stats->team));
+	float newX = pos.x - (KNOCKBACK_FORCE * force * unit.get_dir());
 	auto [minWall, maxWall] = unit.stage->get_walls(currentLane);
 	newX = std::clamp(newX, minWall, maxWall);
 

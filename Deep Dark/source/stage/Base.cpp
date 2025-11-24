@@ -27,9 +27,8 @@ Base::Base(const json& stageFile, int team) : team(team), sprite(get_default_tex
 }
 void Base::create_cannon(std::string path, float magnification) {
 	std::ifstream file(path);
-	//"configs/base_data/player_bases/p_wave_base.json"	std::string
-	//.\configs\base_data\player_bases\p_wave_base.json
 	json baseFile = json::parse(file);
+
 	cannonTimer = baseFile["cannon_timer"];
 	sightRange = baseFile.value("sight_range", 0.0f);
 	int type = baseFile["type"];
@@ -48,7 +47,7 @@ void Base::create_cannon(std::string path, float magnification) {
 		cannon = std::make_unique<AreaCannon>(baseFile, magnification);
 		break;
 	}
-	//Animation* ani = cannon->get_cannon_animation_ptr();
+
 	Animation* ani = BaseCannon::ga_ptr();
 	ani->reset(sprite);
 	cannon->pos = pos;
@@ -67,7 +66,7 @@ bool Base::try_fire_cannon() {
 	else if (on_cooldown()) return false;
 
 	cooldown = cannonTimer;
-	//cannonAnimation = cannon->get_cannon_animation_ptr();
+
 	cannonAnimation = BaseCannon::ga_ptr();
 	cannonAnimation->reset(sprite);
 

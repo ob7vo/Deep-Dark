@@ -69,7 +69,7 @@ int main()
 
     PrepEnterData prepData(MenuType::ARMORY_EQUIP, MenuType::STAGE_SELECT);
     OnStateEnterData enterData(GameState::Type::MAIN_MENU);
-    stateManager.switch_state(&stageEnterData);
+    stateManager.switch_state(&prepData);
 
     while (window.isOpen())
     {

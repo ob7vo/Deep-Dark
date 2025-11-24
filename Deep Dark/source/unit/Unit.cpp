@@ -145,9 +145,7 @@ void Unit::moving_state(float deltaTime) {
 	anim.set_position(movement.pos);
 	movement.move(*this, deltaTime);
 
-	if (can_teleport())
-		movement.teleport(*this);
-	else if (can_fall())
+	if (can_fall())
 		movement.push_fall_request(*this);
 	else if (enemy_is_in_sight_range()) {
 		if (status.can_phase()) anim.start(UnitAnimationState::PHASE);
@@ -191,9 +189,7 @@ void Unit::knockback_state(float deltaTime) {
 	anim.update(deltaTime);
 	anim.set_position(movement.pos);
 
-	if (can_teleport())
-		movement.teleport(*this);
-	else if (can_fall()) 
+	if (can_fall()) 
 		movement.push_fall_request(*this);
 	else if (!movement.tweening()) {
 		if (status.dead()) {

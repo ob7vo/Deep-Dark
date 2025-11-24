@@ -72,7 +72,7 @@ struct BaseTween
     explicit BaseTween(float dur) :
         duration(dur), elapsedTime(0.0f), isComplete(false) {}
     BaseTween() = default;
-    virtual ~BaseTween() = default; // { printf("finished tween\n"); }
+    virtual ~BaseTween() = default; 
     virtual void update(float deltaTime) {
         if (isComplete) return;
 
@@ -101,11 +101,11 @@ public:
     explicit ChainableTween(std::shared_ptr<BaseTween> t) : tween(t) {}
     ~ChainableTween() = default; 
 
-    ChainableTween& setEase(std::function<float(float)> ease) {
+    ChainableTween& setEase(const std::function<float(float)>& ease) {
         if (tween) tween->easingFunc = ease;
         return *this;
     }
-    ChainableTween& setOnComplete(std::function<void()> callback) {
+    ChainableTween& setOnComplete(const std::function<void()>& callback) {
         if (tween) tween->onComplete = callback;
         return *this;
     }
@@ -152,28 +152,27 @@ private:
 public:
     static ChainableTween move(sf::Vector2f* target, const sf::Vector2f& destination, float duration, bool overwrite = false) {
         if (isTweening(target) && !overwrite) return ChainableTween();
-        std::shared_ptr<Vector2Tween> tween = std::make_shared<Vector2Tween>(target, destination, duration);
+        auto tween = std::make_shared<Vector2Tween>(target, destination, duration);
         activeTweens[static_cast<void*>(target)] = tween;
-        //std::cout << "created vector tween" << std::endl;
+
         return ChainableTween(tween);
     }
     static ChainableTween move(float* target, float destination, float duration, bool overwrite = false) {
         if (isTweening(target) && !overwrite) return ChainableTween();
-        std::shared_ptr<FloatTween> tween = std::make_shared<FloatTween>(target, destination, duration);
+        auto tween = std::make_shared<FloatTween>(target, destination, duration);
         activeTweens[static_cast<void*>(target)] = tween;
-       // std::cout << "created float tween" << std::endl;
+
         return ChainableTween(tween);
     }
 
     static inline void updateAll(float deltaTime) {
-        for (auto it = activeTweens.begin(); it != activeTweens.end();) {
-            if (it->second->isComplete)
-                it = activeTweens.erase(it);
-            else {
-                std::cout << "Updating tween at address: " << it->first << std::endl;
-                it->second->update(deltaTime);  
-                ++it;
-            }
+        std::erase_if(activeTweens, [](const auto& pair) {
+            return pair.second->isComplete;
+            });
+
+        // Then update remaining tweens separately
+        for (auto& [address, tween] : activeTweens) {
+            tween->update(deltaTime);
         }
     }
 
@@ -188,11 +187,8 @@ public:
     }
     template<typename T>
     static inline void cancel (T* target) { 
-        if (!isTweening(target)) {
-            //std::cout << "cant cancel non-tweening address: " << target << std::endl;
-            return;
-        }
-        std::cout << "canceling tween of address: " << target << std::endl;
+        if (!isTweening(target)) return;
+        
         auto key = static_cast<void*>(target);
         activeTweens[key]->cancel(); 
         activeTweens.erase(key);

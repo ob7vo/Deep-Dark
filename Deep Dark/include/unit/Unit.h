@@ -85,4 +85,5 @@ public:
 	inline std::pair<float, float> get_attack_range() const 
 	{ return stats->get_hit_stats(combat.hitIndex).attackRange; }
 	inline bool has_augment(AugmentType aug) const { return stats->has_augment(aug); }
+	inline float get_dir() const { return stats->get_dir(); }
 };

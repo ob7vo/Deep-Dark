@@ -1,16 +1,16 @@
 #include "Trap.h"
-#include "Lane.h"
+#include "Stage.h"
 #include "StageRecord.h"
 
 const float PROC_CHANCE = 100.f;
-Trap::Trap(Lane& lane, const nlohmann::json& trap) :  lane(lane){
+Trap::Trap(const nlohmann::json& trap, sf::Vector2f pos, int lane) : StageEntity(pos, lane){
 	int type = trap["trap_type"];
 	trapType = static_cast<TrapType>(type);
 	triggerRange = trap["trigger_range"];
 	attackRange = trap["attack_range"];
-	pos = { trap["x_position"], lane.yPos };
 	checkTimer = trap["check_timer"];
 	dmgValue = trap.value("dmg_value", 0.f);
+
 	if (trap.contains("augment")) {
 		AugmentType augType = Augment::string_to_augment_type(trap["augment"]["augment_type"]);
 		float statusTime = trap["augment"]["status_time"];
@@ -33,16 +33,17 @@ bool Trap::valid_attack_target(Unit& unit) const {
 	return unit.get_pos().x >= attackRange.first && unit.get_pos().x <= attackRange.second &&
 		!unit.anim.invincible();
 }
-bool Trap::enemy_in_trigger_range() const{
-	for (auto& unit : lane.enemyUnits)
+bool Trap::enemy_in_trigger_range(Stage& stage) const{
+	for (auto& unit : stage.get_lane(laneInd).enemyUnits)
 		if (in_trigger_range(unit))
 			return true;
-	for (auto& unit : lane.playerUnits)
+	for (auto& unit : stage.get_lane(laneInd).playerUnits)
 		if (in_trigger_range(unit))
 			return true;
 	return false;
 }
-void Trap::tick( float deltaTime, StageRecord& rec) {
+
+void Trap::tick(Stage& stage, float deltaTime) {
 	if (animating) {
 		int events = ani.update(deltaTime, sprite);
 		if (Animation::check_for_event(AnimationEvent::FINAL_FRAME, events)) {
@@ -51,33 +52,33 @@ void Trap::tick( float deltaTime, StageRecord& rec) {
 			ani.reset(sprite);
 		}
 		if (Animation::check_for_event(AnimationEvent::TRIGGER, events))
-			trigger(rec);
+			action(stage);
 	}
 
 	timeLeft -= deltaTime;
 
-	if (timeLeft < 0 && enemy_in_trigger_range()) {
+	if (timeLeft < 0 && enemy_in_trigger_range(stage)) {
 		animating = true;
 		timeLeft = 999.f;
 		ani.reset(sprite);
 	}
 }
-void Trap::trigger(StageRecord& rec) {
-	rec.add_trap_trigger();
-
+void Trap::action(Stage& stage) {
 	switch (trapType) {
 	case TrapType::LAUNCH_PAD:
-		trigger_launch_pad();
+		trigger_launch_pad(stage);
 		break;
 	case TrapType::TRAP_DOOR:
-		trigger_trap_door();
+		trigger_trap_door(stage);
 		break;
 	default:
-		trigger_attack();
+		trigger_attack(stage);
 		break;
 	}
 }
-void Trap::trigger_launch_pad() {
+void Trap::trigger_launch_pad(Stage& stage) {
+	Lane& lane = stage.get_lane(laneInd);
+
 	for (auto& unit : lane.enemyUnits)
 		if (valid_attack_target(unit))
 			unit.movement.push_launch_request(unit);
@@ -85,7 +86,9 @@ void Trap::trigger_launch_pad() {
 		if (valid_attack_target(unit))
 			unit.movement.push_launch_request(unit);
 }
-void Trap::trigger_trap_door() {
+void Trap::trigger_trap_door(Stage& stage) {
+	Lane& lane = stage.get_lane(laneInd);
+
 	if (!triggered) {
 		lane.gaps.emplace_back(attackRange);
 		lane.add_shape(attackRange);
@@ -96,10 +99,10 @@ void Trap::trigger_trap_door() {
 	}
 	triggered = !triggered;
 }
-void Trap::trigger_attack() const {
-	std::cout << "trigger_attack" << std::endl;
-	attack_lane(lane.enemyUnits);
-	attack_lane(lane.playerUnits);
+
+void Trap::trigger_attack(Stage& stage) const {
+	attack_lane(stage.lanes[laneInd].enemyUnits);
+	attack_lane(stage.lanes[laneInd].playerUnits);
 }
 void Trap::attack_lane(std::vector<Unit>& units) const {
 	for (auto& unit : units) {

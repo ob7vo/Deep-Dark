@@ -42,7 +42,7 @@
     <ClCompile Include="source\menus\StartMenu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\stage\ActionObject.cpp">
+    <ClCompile Include="source\stage\entities\Spawners.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\stage\Base.cpp">
@@ -57,7 +57,7 @@
     <ClCompile Include="source\stage\Surge.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\stage\Trap.cpp">
+    <ClCompile Include="source\stage\entities\Trap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\unit\Unit.cpp">
@@ -114,6 +114,9 @@
     <ClCompile Include="source\unit\UnitCombat.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="source\stage\entities\Teleporter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\game_states\GameState.h">
@@ -167,7 +170,7 @@
     <ClInclude Include="include\systems\TextureManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\stage\ActionObject.h">
+    <ClInclude Include="include\stage\entities\Spawners.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\stage\Base.h">
@@ -188,10 +191,10 @@
     <ClInclude Include="include\stage\Surge.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\stage\Teleporter.h">
+    <ClInclude Include="include\stage\entities\Teleporter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\stage\Trap.h">
+    <ClInclude Include="include\stage\entities\Trap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\unit\Unit.h">
@@ -267,6 +270,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\unit\UnitCombat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\stage\entities\StageEntity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

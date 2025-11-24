@@ -1,5 +1,5 @@
 #pragma once
-#include "SFML/Graphics.hpp"
+#include <SFML/Graphics.hpp>
 #include "Bounds.h"
 #include "TextureManager.h"
 #include "MouseCursor.h"

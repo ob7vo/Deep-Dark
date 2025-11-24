@@ -50,7 +50,7 @@ struct StageManager
 	void increment_parts_and_notify(float deltaTime);
 
 	void update_unit(float deltaTime);
-	void update_ptr(float deltaTime);
+	void update_entities(float deltaTime);
 	void update_base(float deltaTime);
 	void update_projectiles(float deltaTime);
 	void update_hitbox_visualizers(float deltaTime);
