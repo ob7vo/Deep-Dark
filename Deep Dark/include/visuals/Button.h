@@ -10,8 +10,7 @@ protected:
 	sf::Vector2f bounds = { 0.f,0.f };
 	sf::Vector2f pos = { 0.f,0.f };
 
-	sf::Texture idleTexture = defTexture;
-	sf::Texture hoverTexture = defTexture;
+	sf::Texture texture = defTexture;
 public:
 	std::function<void(bool)> onClick = nullptr;
 	sf::Sprite sprite = sf::Sprite(defTexture);
@@ -26,7 +25,7 @@ public:
 	bool is_hovering(sf::Vector2i mPos);
 	inline void set_ui_params(sf::Vector2f normPos, sf::Vector2f scale, 
 		const std::string& path, Camera& cam) {
-		cam.set_sprite_params(normPos, scale, path, idleTexture, sprite);
+		cam.set_sprite_params(normPos, scale, path, texture, sprite);
 		pos = sprite.getPosition();
 		bounds = sprite.getGlobalBounds().size * 1.05f;
 
@@ -40,7 +39,7 @@ public:
 	}
 	inline void setup_world(sf::Vector2f _pos, sf::Vector2f scale,
 		const std::string& path, Camera& cam) {
-		cam.set_sprite_params({1.f,1.f}, scale, path, idleTexture, sprite);
+		cam.set_sprite_params({1.f,1.f}, scale, path, texture, sprite);
 		sprite.setPosition(_pos);
 		pos = _pos;
 		bounds = sprite.getGlobalBounds().size * 1.05f;
@@ -63,6 +62,11 @@ public:
 	inline void set_norm_pos(sf::Vector2f norm, Camera& cam) {
 		sf::Vector2f newPos = cam.norm_to_pixels(norm);
 		set_pos(newPos);
+	}
+
+	inline void set_texture(sf::Texture newTexture) {
+		texture = newTexture;
+		sprite.setTexture(texture, true);
 	}
 };
 

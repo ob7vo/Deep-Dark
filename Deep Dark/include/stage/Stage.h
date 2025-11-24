@@ -5,7 +5,7 @@
 #include "Base.h"
 #include "Surge.h"
 #include "Tween.h"
-#include "ActionObject.h"
+#include "Spawners.h"
 #include "StageRecord.h"
 #include "Projectile.h"
 #include <iostream>
@@ -38,10 +38,6 @@ struct MoveRequest {
 	float axisPos;
 	RequestType type;
 
-	MoveRequest(int id, int curLane, int newLane, 
-		int team, float axisPos, RequestType type) :
-		unitId(id), currentLane(curLane), newLane(newLane), 
-		team(team), axisPos(axisPos), type(type) {}
 	MoveRequest(Unit& unit, int newLane, float axisPos, RequestType type);
 
 	void move_unit_by_request(Unit& unit, Stage& stage) const;
@@ -52,26 +48,7 @@ struct MoveRequest {
 	inline bool	launch_request() const { return type == RequestType::LAUNCH; }
 	
 };
-struct EnemySpawner {
-	UnitStats enemyStats;
-	UnitAniMap aniArr;
 
-	float nextSpawnTime = 10000.f;
-	float percentThreshold = 101.f;
-	std::pair<float, float> spawnDelays;
-	///<summary>First is the EXACT time an enemy will spawn, Second is the lane </summary>
-	std::vector<std::pair<float, int>> forcedSpawnTimes;
-
-	int currentSpawnIndex = -1;
-	int totalSpawns = 0;
-	bool infinite = false;
-
-	std::vector<int> laneSpawnIndexes;
-
-	EnemySpawner(const nlohmann::json& spawnerData, Stage& stage);
-
-	inline bool can_force_spawn(float time) { return forcedSpawnTimes.size() > 0 && time > forcedSpawnTimes[0].first; }
-};
 struct Stage
 {
 	StageRecord* recorder = nullptr;
@@ -87,8 +64,11 @@ struct Stage
 
 	std::vector<std::pair<AugmentType, sf::Vector2f>> effectSpritePositions;
 	std::vector<std::pair<sf::RectangleShape, float>> hitboxes;
+
 	std::vector<std::unique_ptr<Surge>> surges = {};
-	std::vector<std::unique_ptr<ActionObject>> actionObjects = {};
+	std::vector<std::unique_ptr<StageEntity>> entities = {};
+	std::vector<Teleporter> teleporters = {};
+	std::vector<Trap> traps = {};
 
 	std::unordered_map<int, ProjectileConfig> projConfigs = {};
 	std::unique_ptr<SummonData> summonData = nullptr;
@@ -120,14 +100,12 @@ struct Stage
 	inline std::vector<Unit>& get_source_vector(int i, int team) { return lanes[i].get_source(team); }
 	inline Lane& get_lane(int i) { return lanes[i]; }
 	inline Base& get_enemy_base(int team) { return team == p_team ? enemyBase : playerBase; }
-	inline bool can_teleport(sf::Vector2f pos, int laneIndex, int team) {
-		Teleporter* tp = lanes[laneIndex].get_teleporter(team);
-		return tp && tp->check_if_on_teleporter(pos.x, pos.y);
-	}
+
 	inline bool over_gap(int i, float xPos) { return lanes[i].within_gap(xPos); }
 	inline bool out_of_lane(int i, float xPos) { return lanes[i].out_of_lane(xPos); }
 	inline float get_team_wall(int i, int team) { return lanes[i].get_wall(team); }
 	inline std::pair<float, float> get_walls(int i) { return { lanes[i].get_wall(1), lanes[i].get_wall(-1) }; }
+
 	inline void push_move_request(int id, int currentLane, int newLane, int team, float cord, RequestType type) {
 		moveRequests.emplace_back(id, currentLane, newLane, team, cord, type);
 	}

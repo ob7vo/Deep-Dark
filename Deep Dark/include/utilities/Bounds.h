@@ -1,5 +1,6 @@
 #pragma once
-#include "SFML\Graphics\Rect.hpp"
+#include <SFML/Graphics/Rect.hpp>
+
 struct Bounds {
 	sf::FloatRect rect = {};
 	float left = 0;
@@ -8,12 +9,13 @@ struct Bounds {
 	float bottom = 0;
 
 	Bounds() = default;
-	Bounds(sf::FloatRect rect) { set_bounds(rect); }
-	inline void set_bounds(sf::FloatRect rect) {
-		this->rect = rect;
-		left = rect.position.x;
-		top = rect.position.y;
-		right = left + rect.size.x;
-		bottom = top + rect.size.y;
+	explicit Bounds(sf::FloatRect rect) { set_bounds(rect); }
+
+	inline void set_bounds(sf::FloatRect newRect) {
+		rect = newRect;
+		left = newRect.position.x;
+		top = newRect.position.y;
+		right = left + newRect.size.x;
+		bottom = top + newRect.size.y;
 	}
 };

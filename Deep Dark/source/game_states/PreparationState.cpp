@@ -13,7 +13,12 @@ stageSelect(cam), armoryMenu(cam), workshopMenu(cam){
 		stageSelect.stageBtn(i).onClick = [this, i](bool m1) { if (m1) start_stage(i); };
 	stageSelect.armoryBtn().onClick = [this](bool m1) { if (m1) switch_menu(MenuType::ARMORY_EQUIP); };
 	armoryMenu.returnBtn().onClick = [this](bool m1) { if (m1) switch_menu(prevMenuType); };
-	workshopMenu.return_btn().onClick = [this](bool m1) { if (m1) switch_menu(prevMenuType); };
+	workshopMenu.return_btn().onClick = [this](bool m1) { 
+		if (m1) {
+			switch_menu(prevMenuType);
+			armoryMenu.update_selection_slot(workshopMenu.unitId, workshopMenu.unitGear);
+		}
+		};
 
 	for (int i = 0; i < 3; i++) {
 		armoryMenu.unitSelectionBtn(i).onClick = [i, this](bool isM1) {

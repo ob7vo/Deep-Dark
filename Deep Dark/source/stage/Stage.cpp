@@ -1,5 +1,6 @@
 #include "Stage.h"
 #include "Unit.h"
+#include "Utils.h"
 #include <iostream>
 #include <fstream>
 
@@ -9,31 +10,48 @@ const int MAX_PROJECTILES = 10;
 
 using json = nlohmann::json;
 
-EnemySpawner::EnemySpawner(const json& spawnerData, Stage& stage){
-	currentSpawnIndex = -1;
-	totalSpawns = spawnerData["total_spawns"];
-	float magnification = spawnerData["magnification"];
-	float firstSpawnTime = spawnerData["first_spawn_time"];
-	spawnDelays = spawnerData["spawn_delays"].get<std::pair<float,float>>(); // min-max pair.
-	std::vector<int> laneIndexes = spawnerData["lane_indexes"];
-	laneSpawnIndexes = laneIndexes;
-	infinite = spawnerData.contains("infinite");
-	percentThreshold = spawnerData.value("percent_threshold", 101.0f); 
+#pragma region Constructors
+	
+Stage::Stage(const json& stageFile, StageRecord* rec) : recorder(rec),
+	enemyBase(stageFile, -1), playerBase(stageFile, 1)
+{
+	laneCount = stageFile["lane_count"];
+	lanes.reserve(laneCount);
+	surges.reserve(MAX_SURGES);
+	projectiles.reserve(MAX_PROJECTILES);
 
-	if (spawnerData.contains("forced_spawn_times"))
-		for (auto& forcedTime : spawnerData["forced_spawn_times"])
-			forcedSpawnTimes.emplace_back((float)forcedTime[0], (int)forcedTime[1]);
-	nextSpawnTime = firstSpawnTime + INACTIVE_SPAWNER;
+	for (int i = 0; i < laneCount; i++) 
+		lanes.emplace_back(stageFile["lanes"][i], i);
 
-	int id = spawnerData["unit_id"];
-	const json unitFile = UnitData::get_unit_json(id);
-	Animation::setup_unit_animation_map(unitFile, aniArr);
-	enemyStats = UnitStats::enemy(unitFile, magnification);
+	std::sort(lanes.begin(), lanes.end(), [](const Lane& a, const Lane& b) {
+		return a.yPos > b.yPos;
+	});
 
-	for (auto& aug : enemyStats.augments) 
-		if (aug.augType & PROJECTILE) 
-			stage.projConfigs[id] = ProjectileConfig(id, magnification);
+	if (stageFile.contains("teleporters")) {
+		for (auto& tp : stageFile["teleporters"]) {
+			int lane = tp["lane"];
+			sf::Vector2f pos = { tp["x_position"], lanes[lane].yPos };
+
+			teleporters.emplace_back(tp, pos, lane);
+		}
+	}
+	if (stageFile.contains("traps")) {
+		for (auto& trap : stageFile["traps"]) {
+			int lane = trap["lane"];
+			traps.emplace_back(lanes[lane], trap);
+		}
+	}
+	for (auto& spawnData : stageFile["enemy_spawns"]) {
+		enemySpawners.emplace_back(spawnData, *this);
+	}
+
+	break_spawner_thresholds();
 }
+MoveRequest::MoveRequest(Unit& unit, int newLane, float axisPos, RequestType type) :
+unitId(unit.id), team(unit.stats->team), currentLane(unit.get_lane()),
+newLane(newLane), axisPos(axisPos), type(type) {}
+#pragma endregion
+
 void Stage::break_spawner_thresholds(float timeSinceStart) {
 	float percentage = enemyBase.get_hp_percentage();
 	enemyBase.tookDmgThisFrame = false;
@@ -49,56 +67,13 @@ void Stage::break_spawner_thresholds(float timeSinceStart) {
 				<< "] - Current Base Percent: " << percentage << std::endl;
 			continue;
 		}
-	
+
 		spawner.currentSpawnIndex = 0;
 		spawner.nextSpawnTime -= (INACTIVE_SPAWNER - timeSinceStart);
 		std::cout << "Activating spawner. First spawn at: " <<
 			spawner.nextSpawnTime << std::endl;
 	}
 }
-	
-Stage::Stage(const json& stageFile, StageRecord* rec) : recorder(rec),
-	enemyBase(stageFile, -1), playerBase(stageFile, 1)
-{
-	laneCount = stageFile["lane_count"];
-	lanes.reserve(laneCount);
-	surges.reserve(MAX_SURGES);
-	projectiles.reserve(MAX_PROJECTILES);
-
-	for (int i = 0; i < laneCount; i++) 
-		lanes.emplace_back(stageFile["lanes"][i], i);
-	std::sort(lanes.begin(), lanes.end(), [](const Lane& a, const Lane& b) {
-		return a.yPos > b.yPos;
-	});
-
-	if (stageFile.contains("teleporters")) {
-		for (auto& tp : stageFile["teleporters"]) {
-			int lane = tp["lane"];
-			bool isPlayerTeleporter = tp["player_team"];
-			float y = lanes[lane].yPos;
-
-			if (isPlayerTeleporter) 
-				lanes[lane].playerTeleporter = std::make_unique<Teleporter>(tp, y);
-			else 
-				lanes[lane].enemyTeleporter = std::make_unique<Teleporter>(tp, y);
-		}
-	}
-	if (stageFile.contains("traps")) {
-		for (auto& trap : stageFile["traps"]) {
-			int lane = trap["lane"];
-			lanes[lane].trap = std::make_unique<Trap>(lanes[lane], trap);
-		}
-	}
-	for (auto& spawnData : stageFile["enemy_spawns"]) {
-		enemySpawners.emplace_back(spawnData, *this);
-	}
-
-	break_spawner_thresholds();
-}
-MoveRequest::MoveRequest(Unit& unit, int newLane, float axisPos, RequestType type) :
-unitId(unit.id), team(unit.stats->team), currentLane(unit.get_lane()),
-newLane(newLane), axisPos(axisPos), type(type) {}
-
 Lane& Stage::get_closest_lane(float y) {
 	int closest = 0;
 	float minDist = abs(lanes[0].yPos - y);
@@ -112,11 +87,6 @@ Lane& Stage::get_closest_lane(float y) {
 	}
 
 	return lanes[closest];
-}
-float ran_num(float min, float max) {
-	static std::minstd_rand gen(std::random_device{}());
-	std::uniform_real_distribution<float> dis(min, max);
-	return dis(gen);
 }
 
 // creation
@@ -137,7 +107,7 @@ Unit* Stage::create_unit(int laneIndex, const UnitStats* unitStats, UnitAniMap* 
 }
 void Stage::try_revive_unit(UnitSpawner* spawner) {
 	// if they dont have the clone ability, or have be inflicted with code breaker, return
-	Unit* newUnit = create_unit(spawner->lane, spawner->stats, spawner->aniMap);
+	Unit* newUnit = create_unit(spawner->laneInd, spawner->stats, spawner->aniMap);
 	if (newUnit) {
 		int maxHp = spawner->stats->maxHp;
 		auto newHp = (int)((float)maxHp * spawner->stats->get_augment(CLONE).value);
@@ -173,7 +143,7 @@ void Stage::create_summon(Unit& unit) {
 
 	float spawnRange = salvage.value;
 	float xPos = unit.get_pos().x;
-	float newX = ran_num(xPos - spawnRange, xPos + spawnRange);
+	float newX = Random::r_float(xPos - spawnRange, xPos + spawnRange);
 	sf::Vector2f newPos = { newX, unit.get_pos().y};
 
 	Unit* summon = create_unit(unit.get_lane(), &summonData->stats, &summonData->ani);
@@ -193,7 +163,7 @@ Surge* Stage::create_surge(Unit& unit, const Augment& surge) {
 	if (surge.augType != AugmentType::SHOCK_WAVE) {
 		float min = surge.value;
 		float max = std::max(min, surge.value2);
-		pos.x += ran_num(min, max) * static_cast<float>(unit.stats->team);
+		pos.x += Random::r_float(min, max) * static_cast<float>(unit.stats->team);
 	}
 
 	Surge* pSurge = create_surge(unit.stats, lane, level, pos, surge.augType);

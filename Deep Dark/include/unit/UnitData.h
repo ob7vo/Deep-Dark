@@ -1,6 +1,6 @@
 #pragma once
 #include "UnitEnums.h"
-#include "SFML/Graphics/Texture.hpp"
+#include <SFML/Graphics/Texture.hpp>
 #include <iostream>
 #include <fstream>
 #include <memory>
@@ -186,6 +186,7 @@ struct UnitStats {
 	inline bool targeted_by_unit(int enemyTargetTypes) const { return (enemyTargetTypes & unitTypes); }
 
 	inline bool is_player() const { return team == 1; }
+	inline const float get_dir() const { return static_cast<float>(team); }
 
 	bool try_proc_augment(AugmentType target, int hits = 0) const;
 	inline Augment get_augment(AugmentType aug) const {

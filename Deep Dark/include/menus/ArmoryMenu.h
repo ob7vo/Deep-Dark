@@ -33,6 +33,7 @@ struct ArmoryMenu : public Menu<ARMORY_BTNS> {
     void drag_unit_into_slot();
     void drag_unit(int id);
     void shift_empty_slots();
+    void update_selection_slot(int id, int gear);
 
     inline bool dragging_unit() const { return curHeldUnit.first != -1; }
     inline bool unit_is_slotted(int id) const {

@@ -165,16 +165,14 @@ void StageManager::create_drop_box(int laneInd, const UnitStats* stats, UnitAniM
 	float spawnPoint = lane.playerXPos + (lane.enemyXPos - lane.playerXPos) * percentage;
 
 	sf::Vector2f spawnPos = { spawnPoint, lane.yPos };
-	ActionObjConfig config(stage, laneInd, spawnPos);
-	stage.actionObjects.emplace_back(
-		std::make_unique<UnitSpawner>(stats, aniMap, config));
+	stage.entities.emplace_back(
+		std::make_unique<UnitSpawner>(stats, aniMap, spawnPos, laneInd));
 }
 void StageManager::try_create_cloner(Unit& unit) {
 	if (!unit.has_augment(CLONE) || unit.status.statusFlags & CODE_BREAKER) return;
 
-	ActionObjConfig config(stage, unit.get_lane(), unit.get_pos());
-	stage.actionObjects.emplace_back(
-		std::make_unique<UnitSpawner>(unit.stats, unit.anim.get_ani_map(), config));
+	stage.entities.emplace_back(std::make_unique<UnitSpawner>
+		(unit.stats, unit.anim.get_ani_map(), unit.get_pos(), unit.get_lane()));
 }
 
 void StageManager::collect_parts(Unit& unit) {
@@ -253,9 +251,9 @@ void StageManager::process_move_requests() {
 		stage.moveRequests.pop_back();
 	}
 }
+
 void StageManager::update_unit(float deltaTime) {
 	for (auto& lane : stage.lanes) {
-		if (lane.trap) lane.trap->tick(deltaTime, stageRecorder);
 		for (auto it = lane.enemyUnits.begin(); it != lane.enemyUnits.end();) {
 			if (it->dead()) {
 				handle_enemy_unit_death(*it);
@@ -291,21 +289,22 @@ void StageManager::update_projectiles(float deltaTime) {
 		}
 	}
 }
-void StageManager::update_ptr(float deltaTime) {
+void StageManager::update_entities(float dt) {
 	for (auto it = stage.surges.begin(); it != stage.surges.end();) {
 		if ((*it)->readyForRemoval) it = stage.surges.erase(it);
 		else {
-			(*it)->tick(deltaTime, stage);
+			(*it)->tick(dt, stage);
 			++it;
 		}
 	}
-	for (auto it = stage.actionObjects.begin(); it != stage.actionObjects.end();) {
-		if ((*it)->readyForRemoval) it = stage.actionObjects.erase(it);
-		else {
-			(*it)->tick(deltaTime);
-			++it;
-		}
-	}
+	std::erase_if(stage.entities, [this, dt](auto& entity) {
+		entity->tick(stage, dt);
+		return entity->readyForRemoval;
+		});
+	for (auto& tp : stage.teleporters)
+		tp.tick(stage, dt);
+	for (auto& trap : stage.traps)
+		trap.tick(stage, dt);
 }
 void StageManager::update_base(float deltaTime) {
 	stage.playerBase.tick(stage, deltaTime);
@@ -328,7 +327,6 @@ void StageManager::update_hitbox_visualizers(float deltaTime) {
 void StageManager::draw(sf::RenderWindow& window) {
 	for (auto& lane : stage.lanes) {
 		lane.draw(window);
-		if (lane.trap) window.draw(lane.trap->sprite);
 		for (auto& unit : lane.enemyUnits)
 			unit.anim.draw(window);
 		for (auto& unit : lane.playerUnits)
@@ -337,17 +335,19 @@ void StageManager::draw(sf::RenderWindow& window) {
 	for (auto& proj : stage.projectiles)
 		window.draw(proj.get_sprite());
 
-	//stage.enemyBase.draw(window);
-	//stage.playerBase.draw(window);
+	stage.enemyBase.draw(window);
+	stage.playerBase.draw(window);
 
 	for (auto it = stage.surges.begin(); it != stage.surges.end();) {
 		(*it)->draw(window);
 		++it;
 	}
-	for (auto it = stage.actionObjects.begin(); it != stage.actionObjects.end();) {
-		window.draw((*it)->sprite);
-		++it;
-	}
+	for (auto& entity : stage.entities)
+		window.draw(entity->sprite);
+	for (auto& tp : stage.teleporters)
+		window.draw(tp.sprite);
+	for (auto& trap : stage.traps)
+		window.draw(trap.sprite);
 
 	for (auto& [effect, pos] : stage.effectSpritePositions) {
 		int i = Augment::get_bit_position(effect);
@@ -367,7 +367,7 @@ void StageManager::update_game_ticks(float deltaTime) {
 
 	update_unit(deltaTime); // This is where the erase is called
 	update_projectiles(deltaTime);
-	update_ptr(deltaTime);
+	update_entities(deltaTime);
 	update_base(deltaTime);
 	update_hitbox_visualizers(deltaTime);
 

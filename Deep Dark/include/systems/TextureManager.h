@@ -1,5 +1,5 @@
 #pragma once
-#include "SFML\Graphics.hpp"
+#include <SFML/Graphics.hpp>
 
 const sf::Texture defTex("sprites/defaults/defaultTexture.png");
 const std::string effectsPath = "sprites/effects/";
@@ -12,9 +12,8 @@ struct TextureManager {
 	static const sf::Texture dTex;
 	static sf::Texture t_defaultUnitSlot;
 
-	// Status Affects;
+	// Status Affects
 	static std::array<sf::Texture, 8> t_statusIcons;
-
 	static std::array<sf::Texture, 8> workshopIcons;
 
 	static void initialize();
