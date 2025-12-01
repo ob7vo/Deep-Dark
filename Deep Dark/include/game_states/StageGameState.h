@@ -1,16 +1,21 @@
 #pragma once
 #include "GameState.h"
 #include "StageManager.h"
-#include "ArmorySlot.h"
 
 struct ArmoryMenu;
+struct ArmorySlot;
 
 class StageState : public GameState {
+private:
 	StageManager stageManager;
 	Loadout loadout;
 	StageUI stageUI;
 public:
-	StageState(Camera& cam);
+	int stageId = 0;
+	int curStageSet = 0;
+	int stageSetCount = 1;
+
+	explicit StageState(Camera& cam);
 	~StageState() = default;
 
 	void update(float deltaTime) override;
@@ -21,16 +26,17 @@ public:
 	void update_ui(float deltaTime) override;
 
 	void quit_stage();
+	void end_stage_set();
 };
 
 struct StageEnterData : public OnStateEnterData {
-	const nlohmann::json stageJson;
-	std::array<ArmorySlot, 10> slots;
+	std::string stageJsonPath;
+	int stageSet;
+	const std::array<ArmorySlot, 10>& slots;
 
-	StageEnterData(const nlohmann::json& stageJson, ArmoryMenu& armory);
-	StageEnterData(const nlohmann::json& stageJson, std::array<ArmorySlot, 10> slots) : 
-		stageJson(stageJson), slots(slots),
-		OnStateEnterData(GameState::Type::STAGE) {}
+	StageEnterData(const std::string& path, int set, const ArmoryMenu& armory);
+	StageEnterData(const std::string& path, int set, const std::array<ArmorySlot, 10>& slots) :
+		OnStateEnterData(GameState::Type::STAGE), stageJsonPath(path), stageSet(set), slots(slots) {}
 
 	~StageEnterData() = default;
 };

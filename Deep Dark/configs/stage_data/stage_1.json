@@ -1,88 +1,93 @@
 {
   "name": "Entry Point",
-  "lane_count": 3,
-  "enemy_base": {
-    "hp": 5000,
-    "x_position": 1100,
-    "cannon_json_path": "configs/base_data/enemy_bases/orbital_base.json"
-  },
-  "player_base": {
-    "hp": 7500,
-    "x_position": 175
-  },
-  "lanes": [
+  "sets": [
     {
-      "player_spawn_position": 200,
-      "enemy_spawn_position": 800,
-      "y_position": 200.0
-    },
-    {
-      "player_spawn_position": 200,
-      "enemy_spawn_position": 800,
-      "y_position": 400.0,
-      "gaps": [ [ 220.0, 300.0 ] ]
-    },
-    {
-      "player_spawn_position": 200,
-      "enemy_spawn_position": 800,
-      "y_position": 600.0
-    }
-  ],
-  "teleporters": [
-    {
-      "lane": 0,
-      "connected_lane": 2,
-      "team": true,
-      "x_position": 1000,
-      "x_destination": 400
-    }
-  ],
-  "traps": [
-    {
-      "lane": 1,
-      "trap_type": 4,
-      "trigger_range": [ 300, 600 ],
-      "attack_range": [ 300, 800 ],
-      "x_position": 450.0,
-      "check_timer": 6.0,
-      "augment": {
-        "augment_type": "overload",
-        "status_time": 4.5
-      }
-    }
-  ],
-  "enemy_spawns": [
-    {
-      "unit_id": 102,
-      "total_spawns": 5,
-      "magnification": 1.5,
+      "set_name": "Opening Act (Set 1)", 
+      "lane_count": 3,
+      "enemy_base": {
+        "hp": 5000,
+        "x_position": 1100,
+        "cannon_json_path": "configs/base_data/enemy_bases/orbital_base.json"
+      },
+      "player_base": {
+        "hp": 7500,
+        "x_position": 175
+      },
+      "lanes": [
+        {
+          "player_spawn_position": 200,
+          "enemy_spawn_position": 800,
+          "y_position": 200.0
+        },
+        {
+          "player_spawn_position": 200,
+          "enemy_spawn_position": 800,
+          "y_position": 400.0,
+          "gaps": [ [ 220.0, 300.0 ] ]
+        },
+        {
+          "player_spawn_position": 200,
+          "enemy_spawn_position": 800,
+          "y_position": 600.0
+        }
+      ],
+      "teleporters": [
+        {
+          "lane": 0,
+          "connected_lane": 2,
+          "team": 1,
+          "x_position": 300,
+          "x_destination": 400
+        }
+      ],
+      "traps": [
+        {
+          "lane": 1,
+          "trap_type": 4,
+          "trigger_range": [ 300, 600 ],
+          "attack_range": [ 300, 800 ],
+          "x_position": 450.0,
+          "check_timer": 6.0,
+          "augment": {
+            "augment_type": "overload",
+            "status_time": 4.5
+          }
+        }
+      ],
+      "enemy_spawns": [
+        {
+          "unit_id": 102,
+          "total_spawns": 5,
+          "magnification": 1.5,
 
-      "first_spawn_time": 1.0,
-      "spawn_delays": [ 3.67, 5.21 ],
-      "lane_indexes": [ 0, 2, 2, 1, 0]
-    },
-    {
-      "unit_id": 101,
-      "total_spawns": 6,
-      "magnification": 1.5,
+          "first_spawn_time": 1.0,
+          "spawn_delays": [ 3.67, 5.21 ],
+          "lane_indexes": [ 0, 2, 2, 1, 0 ]
+        },
+        {
+          "unit_id": 101,
+          "total_spawns": 6,
+          "magnification": 1.5,
 
-      "first_spawn_time": 1.5,
-      "spawn_delays": [ 2.29, 3.56 ],
-      "lane_indexes": [ 2, 2, 1, 2, 0, 1 ]
-    }
-  ],
-  "challenges": [
-    {
-      "description": "Don't trigger any traps",
-      "challenge_type": "traps_triggered",
-      "comparison": "<",
-      "value": 1
-    },
-    {
-      "challenge_type": "units_spawned",
-      "comparison": ">",
-      "team": 1,
-      "value": 2
+          "first_spawn_time": 1.5,
+          "spawn_delays": [ 2.29, 3.56 ],
+          "lane_indexes": [ 2, 2, 1, 2, 0, 1 ]
+        }
+      ],
+      "challenges": [
+        {
+          "description": "Don't trigger any traps",
+          "challenge_type": "traps_triggered",
+          "comparison": "<",
+          "value": 1
+        },
+        {
+          "challenge_type": "units_spawned",
+          "comparison": ">",
+          "team": 1,
+          "value": 2
+        }
+      ]
     }
   ]
 }

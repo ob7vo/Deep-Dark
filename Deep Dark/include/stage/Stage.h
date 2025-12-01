@@ -3,10 +3,10 @@
 #include "Lane.h"
 #include "UnitData.h"
 #include "Base.h"
-#include "Surge.h"
-#include "Tween.h"
 #include "Spawners.h"
-#include "StageRecord.h"
+#include "Trap.h"
+#include "Teleporter.h"
+#include "Surge.h"
 #include "Projectile.h"
 #include <iostream>
 
@@ -20,6 +20,7 @@ const sf::Color HITBOX_COLOR(235, 24, 9, 128);
 
 class Unit;
 struct Stage;
+struct StageRecord;
 
 struct SummonData {
 	int count = 0;
@@ -30,6 +31,11 @@ struct SummonData {
 		stats(UnitStats::enemy(file, mag)) {
 	}
 }; 
+
+/// <summary>
+/// Needed to move Units between vectors (Lanes), and can ONLY be called
+/// for that purpose, not just any plain old movement.
+/// </summary>
 struct MoveRequest {
 	int unitId;
 	int currentLane;
@@ -60,15 +66,15 @@ struct Stage
 
 	std::vector<EnemySpawner> enemySpawners = {};
 	std::vector<MoveRequest> moveRequests = {};
-	std::vector<Projectile> projectiles = {};
 
 	std::vector<std::pair<AugmentType, sf::Vector2f>> effectSpritePositions;
 	std::vector<std::pair<sf::RectangleShape, float>> hitboxes;
 
-	std::vector<std::unique_ptr<Surge>> surges = {};
-	std::vector<std::unique_ptr<StageEntity>> entities = {};
-	std::vector<Teleporter> teleporters = {};
-	std::vector<Trap> traps = {};
+	std::vector<std::unique_ptr<Surge>> surges = {}; // Temporary
+	std::vector<std::unique_ptr<StageEntity>> entities = {}; // Temporary
+	std::vector<Projectile> projectiles = {}; // Temporary
+	std::vector<Teleporter> teleporters = {}; // Persistant
+	std::vector<Trap> traps = {}; // Persistant
 
 	std::unordered_map<int, ProjectileConfig> projConfigs = {};
 	std::unique_ptr<SummonData> summonData = nullptr;
@@ -77,7 +83,7 @@ struct Stage
 	Base playerBase = {};
 
 	Stage() = default;
-	Stage(const nlohmann::json& stageFile, StageRecord* recorder);
+	Stage(const nlohmann::json& stageFile, int stageSet, StageRecord* recorder);
 	Lane& get_closest_lane(float y);
 
 	Unit* create_unit(int laneIndex, const UnitStats* unitStats, UnitAniMap* aniMap);
@@ -106,9 +112,6 @@ struct Stage
 	inline float get_team_wall(int i, int team) { return lanes[i].get_wall(team); }
 	inline std::pair<float, float> get_walls(int i) { return { lanes[i].get_wall(1), lanes[i].get_wall(-1) }; }
 
-	inline void push_move_request(int id, int currentLane, int newLane, int team, float cord, RequestType type) {
-		moveRequests.emplace_back(id, currentLane, newLane, team, cord, type);
-	}
 	inline bool can_push_move_request(int id) {
 		auto it = std::find_if(moveRequests.begin(), moveRequests.end(),
 			[&](const MoveRequest& req) { return req.unitId == id; });

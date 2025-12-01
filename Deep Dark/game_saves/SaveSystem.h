@@ -2,7 +2,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <json.hpp>
+#include <json_fwd.hpp>
 
 const std::string SAVE_FOLDER_PATH = "saves/";
 struct SaveSystem{

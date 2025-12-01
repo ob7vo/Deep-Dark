@@ -1,6 +1,7 @@
 #pragma once
 #include <cmath>
 #include <array>
+
 const float M_PI = 3.1415927f;
 namespace Easing {
     // Linear (no easing)

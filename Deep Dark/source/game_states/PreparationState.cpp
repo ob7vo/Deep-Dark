@@ -1,7 +1,6 @@
+#include "pch.h"
 #include "PreparationState.h"
 #include "StageGameState.h"
-#include <fstream>
-#include <json.hpp>
 
 PreparationState::PreparationState(Camera& cam) : GameState(cam),
 stageSelect(cam), armoryMenu(cam), workshopMenu(cam){
@@ -10,7 +9,7 @@ stageSelect(cam), armoryMenu(cam), workshopMenu(cam){
 	workshopMenu.reset_positions();
 
 	for (int i = 0; i < STAGES; i++)
-		stageSelect.stageBtn(i).onClick = [this, i](bool m1) { if (m1) start_stage(i); };
+		stageSelect.stageNodeBtn(i).onClick = [this, i](bool m1) { if (m1) start_stage_set(i, 0); };
 	stageSelect.armoryBtn().onClick = [this](bool m1) { if (m1) switch_menu(MenuType::ARMORY_EQUIP); };
 	armoryMenu.returnBtn().onClick = [this](bool m1) { if (m1) switch_menu(prevMenuType); };
 	workshopMenu.return_btn().onClick = [this](bool m1) { 
@@ -22,9 +21,9 @@ stageSelect(cam), armoryMenu(cam), workshopMenu(cam){
 
 	for (int i = 0; i < 3; i++) {
 		armoryMenu.unitSelectionBtn(i).onClick = [i, this](bool isM1) {
-			if (isM1) armoryMenu.drag_unit(i);
+			if (isM1) armoryMenu.start_dragging_unit(i);
 			else {
-				workshopMenu.setup_workshop_unit(i, armoryMenu.unitSelectionForms[i]);
+				workshopMenu.setup_workshop_unit(i, armoryMenu.unitSelectionGears[i]);
 				switch_menu(MenuType::WORKSHOP_MENU);
 			}
 			};
@@ -63,43 +62,50 @@ MenuBase* PreparationState::get_menu() {
 		readyToEndState = true;
 		nextStateEnterData = std::make_unique<OnStateEnterData>(GameState::Type::MAIN_MENU);
 		return menu;
-	case MenuType::HOME_BASE: return menu;
+	default: return menu;
 	}
 
 	std::cout << "Could not get Menu: " << (int)curMenuType << std::endl;
 	return nullptr;
 }
-void PreparationState::start_stage(int stage) {
-	std::string jsonPath = std::format("configs/stage_data/stage_{}.json", stage+1);
-	std::ifstream stageFile(jsonPath);
-
-	if (!stageFile.is_open()) {
+void PreparationState::start_stage_set(int stage, int set) {
+	std::string jsonPath = std::format("configs/stage_data/stage_{}.json", stage + 1);
+	
+	if (std::filesystem::exists(jsonPath)) {
 		std::cerr << "Error: Could not open file: " << jsonPath << std::endl;
 		return;
 	}
-	else if (armoryMenu.filledUnitSlots == 0) {
+	if (armoryMenu.filledUnitSlots == 0) {
 		std::cerr << "Error: loadout is empty. \n";
 		return;
 	}
 
-	nlohmann::json stageJson = nlohmann::json::parse(stageFile);
-	stageFile.close();
-
-	nextStateEnterData = std::make_unique<StageEnterData>(stageJson, armoryMenu);
+	nextStateEnterData = std::make_unique<StageEnterData>(jsonPath, set, armoryMenu);
 	readyToEndState = true;
 	std::cout << "starting stage #" << stage + 1 << std::endl;
 }
 void PreparationState::on_enter(OnStateEnterData* enterData) {
-	if (auto prepData = dynamic_cast<PrepEnterData*>(enterData)) {
-		curMenuType = prepData->openningMenuType;
-		prevMenuType = prepData->prevMenuType;
-		menu = get_menu();
-	}
+	if (auto prepData = dynamic_cast<PrepEnterData*>(enterData))
+		enter_from_transition(prepData);
+	else if (auto setData = dynamic_cast<StageSetEnterData*>(enterData))
+		enter_from_stage_set_completion(setData);
 	else {
 		std::cout << "Enter Data is not Prep Data" << std::endl;
 		return;
 	}
 }
+void PreparationState::enter_from_stage_set_completion(const StageSetEnterData* setEnterData) {
+	curMenuType = prevMenuType = MenuType::ARMORY_EQUIP;
+}
+void PreparationState::enter_from_transition(const PrepEnterData* prepData) {
+	curMenuType = prepData->newMenuType;
+	prevMenuType = prepData->prevMenuType;
+
+	armoryMenu.inStageMode = false;
+
+	menu = get_menu();
+}
+
 void PreparationState::on_exit() {
 	/*
 	* I'm yet to add functionalty to this, but will likely be something like 

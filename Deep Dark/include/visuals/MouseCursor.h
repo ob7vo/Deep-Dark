@@ -1,5 +1,4 @@
 #pragma once
-#include <SFML/Graphics.hpp>
 #include "TextureManager.h"
 
 struct MouseCursor {

@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Pathing.h"
 
 const float HALF_CIRC = 180.f;

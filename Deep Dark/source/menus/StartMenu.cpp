@@ -1,4 +1,6 @@
+#include "pch.h"
 #include "StartMenu.h"
+#include "Camera.h"
 #include "UILayout.h"
 
 using namespace UI::StartMenu;
@@ -10,12 +12,9 @@ StartMenu::StartMenu(Camera& cam) : Menu(cam) {
 	settingsBtn().onClick = [this](bool m1) { if (m1) open_settings(); };
 	quitBtn().onClick = [this](bool m1) { if (m1) quit_game(); };
 
-	std::string texPath1 = "sprites/ui/start_menu/start_btn.png";
-	startBtn().set_ui_params(START_BTN_POS, START_BTN_SIZE, texPath1, cam);
-	std::string texPath2 = "sprites/ui/start_menu/settings_btn.png";
-	settingsBtn().set_ui_params(SETTINGS_BTN_POS, SETTINGS_BTN_SIZE, texPath2, cam);
-	std::string texPath3 = "sprites/ui/start_menu/quit_btn.png";
-	quitBtn().set_ui_params(QUIT_BTN_POS, QUIT_BTN_SIZE, texPath3, cam);
+	startBtn().setup(START_BTN_POS, START_BTN_SIZE, cam, TextureManager::t_startGameBtn);
+	settingsBtn().setup(SETTINGS_BTN_POS, SETTINGS_BTN_SIZE, cam, TextureManager::t_settingsBtn);
+	quitBtn().setup(QUIT_BTN_POS, QUIT_BTN_SIZE, cam, TextureManager::t_quitBtn);
 }
 void StartMenu::reset_positions() {
 	startText.setPosition(cam.norm_to_pixels(START_TEXT_POS));
@@ -44,3 +43,11 @@ void StartMenu::check_mouse_hover() {
 	}
 	buttonManager.check_mouse_hover(cam.getMouseScreenPos());
 }
+
+void StartMenu::quit_game() { cam.close_window(); }
+
+#pragma region Button Indexes
+Button& StartMenu::startBtn() { return buttonManager.buttons[0]; }
+Button& StartMenu::quitBtn() { return buttonManager.buttons[1]; }
+Button& StartMenu::settingsBtn() { return buttonManager.buttons[2]; }
+#pragma endregion

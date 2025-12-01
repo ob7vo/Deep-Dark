@@ -1,7 +1,8 @@
+#include "pch.h"
 #include "Base.h"
 #include "Stage.h"
 #include "Animation.h"
-#include <filesystem>
+
 using json = nlohmann::json;
 
 static Animation waveCannonAni;
@@ -75,8 +76,8 @@ Animation* OrbitalCannon::get_cannon_animation_ptr() { return &waveCannonAni;}
 Animation* AreaCannon::get_cannon_animation_ptr() { return &waveCannonAni; }
 
 void BaseCannon::init_animations() {
-	std::vector<std::pair<int, AnimationEvent>> events;
-	events.emplace_back(15, AnimationEvent::ATTACK);
+	std::vector<int> events(21);
+	events[15] |= AnimationEvent::ATTACK;
 	std::string path = "configs/base_data/base_sprite.png";
 	sf::Vector2i cellSize = { 96,64 };
 	sf::Vector2f origin = { 48,64 };

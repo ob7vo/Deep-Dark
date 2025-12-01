@@ -1,7 +1,21 @@
+#include "pch.h"
 #include "Augment.h"
-#include <iostream>
 
-Augment Augment::from_json(AugmentType augType, nlohmann::json augJson) {
+Augment::Augment(AugmentType aug, float val, float val2, float percentage,
+	int hits, int lvl) :augType(aug), activeHits(hits), value(val), value2(val2),
+	percentage(percentage), surgeLevel(lvl) {
+}
+Augment Augment::status(AugmentType aug, float procTime, float chance, int hits) {
+	return Augment(aug, procTime, empty, chance, hits, empty);
+}
+Augment Augment::surge(AugmentType aug, float dist, int lvl, float chance, int hits) {
+	return Augment(aug, dist, empty, chance, hits, lvl);
+}
+Augment Augment::cannon(AugmentType aug, int lvl) {
+	return Augment(aug, empty, empty, empty, ALL_HITS, lvl);
+}
+
+Augment Augment::from_json(AugmentType augType, const nlohmann::json& augJson) {
     float val = augJson.value("value", 0.0f);
     float val2 = augJson.value("value2", 0.0f);
     float percentage = augJson.value("percentage", 0.0f);
@@ -72,4 +86,9 @@ AugmentType Augment::string_to_augment_type(std::string str) {
 	if (it == augmentMap.end())
 		std::cout << "Invalid Augment String: [" << str << "]" << std::endl;
 	return (it != augmentMap.end()) ? it->second : AugmentType::NONE;
+}
+
+bool Augment::is_surge() const {
+	return augType & AugmentType::ORBITAL_STRIKE ||
+		augType & AugmentType::FIRE_WALL || augType & AugmentType::SHOCK_WAVE;
 }

@@ -2,7 +2,6 @@
 #include <StageEntity.h>
 #include <UnitData.h>
 #include "Augment.h"
-#include "json.hpp"
 
 struct UnitSpawner : public StageEntity {
 	const UnitStats* stats;

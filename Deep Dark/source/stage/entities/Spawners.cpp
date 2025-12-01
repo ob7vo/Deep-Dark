@@ -1,5 +1,6 @@
 #include "Spawners.h"
 #include "Stage.h"
+#include <json.hpp>
 
 EnemySpawner::EnemySpawner(const nlohmann::json& spawnerData, Stage& stage) {
 	currentSpawnIndex = -1;
@@ -18,7 +19,7 @@ EnemySpawner::EnemySpawner(const nlohmann::json& spawnerData, Stage& stage) {
 	nextSpawnTime = firstSpawnTime + INACTIVE_SPAWNER;
 
 	int id = spawnerData["unit_id"];
-	const nlohmann::json unitFile = UnitData::get_unit_json(id);
+	const nlohmann::json unitFile = UnitData::createUnitJson(id);
 	Animation::setup_unit_animation_map(unitFile, aniArr);
 	enemyStats = UnitStats::enemy(unitFile, magnification);
 
@@ -46,29 +47,30 @@ void SurgeSpawner::action(Stage& stage) {
 	stage.create_surge(stats, laneInd, surge.surgeLevel, surgePos, surge.augType);
 }
 void UnitSpawner::create_animation() {
-	std::vector<std::pair<int, AnimationEvent>> events;
 	std::string path = stats->has_augment(CLONE) ? "sprites/action_objs/cloner.png" :
 		"sprites/action_objs/drop_box.png";
 	sf::Vector2i cellSize = { 48,40 };
 	sf::Vector2f origin = { 24,40 };
+
 	int frames = 21;
 	float rate = 0.1f;
-	events.emplace_back(14, TRIGGER);
-	ani = Animation(path, frames, rate, cellSize, origin, events, false);
+	std::vector<int> events(frames);
+	events[14] |= TRIGGER;
 
-	ani.reset(sprite);
+	anim = Animation(path, frames, rate, cellSize, origin, events, false);
+
+	anim.reset(sprite);
 }
 void SurgeSpawner::create_animation() {
-	std::vector<std::pair<int, AnimationEvent>> events;
 	std::string path = "sprites/action_objs/surge_spawner.png";
 	sf::Vector2i cellSize = { 48,40 };
 	sf::Vector2f origin = { 24,48 };
 
 	int frames = 21;
 	float rate = 0.09f;
-	events.emplace_back(14, TRIGGER);
+	std::vector<int> events(frames);
+	events[14] |= TRIGGER;
 
-	ani = Animation(path, frames, rate, cellSize, origin, events, false);
-
-	ani.reset(sprite);
+	anim = Animation(path, frames, rate, cellSize, origin, events, false);
+	anim.reset(sprite);
 }

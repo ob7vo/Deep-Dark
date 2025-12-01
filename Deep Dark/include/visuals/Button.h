@@ -1,8 +1,7 @@
 #pragma once
-#include <SFML/Graphics.hpp>
-#include <functional>
-#include "Camera.h"
-#include <iostream>
+#include "TextureManager.h"
+
+class Camera; 
 
 class Button
 {
@@ -10,11 +9,9 @@ protected:
 	sf::Vector2f bounds = { 0.f,0.f };
 	sf::Vector2f pos = { 0.f,0.f };
 
-	sf::Texture texture = defTexture;
 public:
 	std::function<void(bool)> onClick = nullptr;
-	sf::Sprite sprite = sf::Sprite(defTexture);
-	sf::VertexArray darkOverlay = sf::VertexArray(sf::PrimitiveType::TriangleStrip, 4);
+	sf::Sprite sprite = sf::Sprite(defTex);
 
 	bool ui = true;
 	bool hovering = false;
@@ -22,51 +19,14 @@ public:
 	Button() = default;
 
 	bool check_mouse_hover(sf::Vector2i mPos);
-	bool is_hovering(sf::Vector2i mPos);
-	inline void set_ui_params(sf::Vector2f normPos, sf::Vector2f scale, 
-		const std::string& path, Camera& cam) {
-		cam.set_sprite_params(normPos, scale, path, texture, sprite);
-		pos = sprite.getPosition();
-		bounds = sprite.getGlobalBounds().size * 1.05f;
+	bool is_hovering(sf::Vector2i mPos) const;
 
-		sf::FloatRect _bounds = sprite.getGlobalBounds();
-		float left = _bounds.position.x;
-		float top = _bounds.position.y;
-		float height = _bounds.size.y;
-		float width = _bounds.size.x;
-
-		darkOverlay = cam.create_dark_overlay(left, top, width, height);
-	}
-	inline void setup_world(sf::Vector2f _pos, sf::Vector2f scale,
-		const std::string& path, Camera& cam) {
-		cam.set_sprite_params({1.f,1.f}, scale, path, texture, sprite);
-		sprite.setPosition(_pos);
-		pos = _pos;
-		bounds = sprite.getGlobalBounds().size * 1.05f;
-
-		sf::FloatRect _bounds = sprite.getGlobalBounds();
-		float left = _bounds.position.x;
-		float top = _bounds.position.y;
-		float height = _bounds.size.y;
-		float width = _bounds.size.x;
-
-		darkOverlay = cam.create_dark_overlay(left, top, width, height);
-		ui = false;
-	}
+	void setup(sf::Vector2f uiPos, sf::Vector2f normScale,
+		const Camera& cam, const sf::Texture& texture, sf::IntRect rect = {});
 
 	inline sf::Vector2f get_pos() const { return pos; }
-	inline void set_pos(sf::Vector2f newPos) { 
-		pos = newPos; 
-		sprite.setPosition(newPos);
-	}
-	inline void set_norm_pos(sf::Vector2f norm, Camera& cam) {
-		sf::Vector2f newPos = cam.norm_to_pixels(norm);
-		set_pos(newPos);
-	}
-
-	inline void set_texture(sf::Texture newTexture) {
-		texture = newTexture;
-		sprite.setTexture(texture, true);
-	}
+	void set_pos(sf::Vector2f newPos);
+	void set_norm_pos(sf::Vector2f norm, const Camera& cam);
+	void set_texture(const sf::Texture& texture, sf::IntRect rect = {});
 };
 

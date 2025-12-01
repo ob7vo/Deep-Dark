@@ -38,7 +38,7 @@ public:
 	bool enemy_in_trigger_range(Stage& stage) const;
 	void tick(Stage& stage, float deltaTime) override;
 	void action(Stage& stage) override;
-	void trigger_launch_pad(Stage& stage);
+	void trigger_launch_pad(Stage& stage) const; 
 	void trigger_trap_door(Stage& stage);
 
 	void trigger_attack(Stage& stage) const;

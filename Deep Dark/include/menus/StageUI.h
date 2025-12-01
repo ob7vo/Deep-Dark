@@ -1,22 +1,20 @@
 #pragma once
 #include "Menu.h"
+#include <SFML/Graphics/Sprite.hpp>
 
-const int STAGE_UI_BUTTONS = 3;
-const int STAGE_PAUSE_MENU_BUTTONS = 2;
 struct StageManager;
 struct StageUI;
 
-struct StagePauseMenu : public Menu<STAGE_PAUSE_MENU_BUTTONS> {
+struct StagePauseMenu : public Menu<UI::StageUI::PAUSE_MENU_BTN_COUNT> {
 	StageUI& stageUI;
 	sf::Text pauseText = sf::Text(baseFont);
-
-	sf::Texture pauseMenuTexture = defTexture;
-	sf::Sprite pauseMenuSprite = sf::Sprite(defTexture);
+	sf::Sprite pauseMenuSprite = sf::Sprite(defTex);
 
 	StagePauseMenu(Camera& cam, StageUI& ui);
+	~StagePauseMenu() final = default;
 
-	void draw() override;
-	void reset_positions() override;
+	void draw() final;
+	void reset_positions() final;
 
 	void close_menu();
 	void close_game();
@@ -25,7 +23,7 @@ struct StagePauseMenu : public Menu<STAGE_PAUSE_MENU_BUTTONS> {
 	inline Button& closeMenuBtn() { return buttonManager.buttons[1]; }
 };
 
-struct StageUI : public Menu<STAGE_UI_BUTTONS> {
+struct StageUI : public Menu<UI::StageUI::UI_BTN_COUNT> {
 	StageManager* stageManager;
 	StagePauseMenu pauseMenu;
 
@@ -33,13 +31,15 @@ struct StageUI : public Menu<STAGE_UI_BUTTONS> {
 	sf::Text bagUpgradeCostText = sf::Text(baseFont);
 	sf::Text clearedChallengesText = sf::Text(baseFont);
 
-	StageUI(Camera& cam);
+	explicit StageUI(Camera& cam);
+	~StageUI() final = default;
+
 	void create_buttons();
 
-	void draw() override;
-	bool on_mouse_press(bool isM1) override;
-	void check_mouse_hover() override;
-	void reset_positions() override;
+	void draw() final;
+	bool on_mouse_press(bool isM1) final;
+	void check_mouse_hover() final;
+	void reset_positions() final;
 
 	void pause();
 	void upgrade_bag();

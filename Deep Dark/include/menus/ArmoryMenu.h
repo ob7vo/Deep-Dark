@@ -2,12 +2,15 @@
 #include "Menu.h"
 #include "Slider.h"
 #include "ArmorySlot.h"
-#include "UnitData.h"
+#include "StageSetMenu.h"
+#include <bitset>
 
-const int ARMORY_BTNS = UnitData::TOTAL_PLAYER_UNITS + 1;
 const int ARMORY_SLOTS = 10;
 
-struct ArmoryMenu : public Menu<ARMORY_BTNS> {
+struct ArmoryMenu : public Menu<UI::ArmoryMenu::BTN_COUNT> {
+    bool inStageMode = false;
+    StageSetMenu stageSetMenu;
+    
     sf::Text armoryText = sf::Text(baseFont);
     Slider unitSlider = {};
     
@@ -15,25 +18,26 @@ struct ArmoryMenu : public Menu<ARMORY_BTNS> {
     int filledUnitSlots = 0;
 
     /// <summary> first = unit ID. second = unit form/gear </summary>
-    std::pair<int, int> curHeldUnit = { -1,-1 };
+    std::pair<int, int> curHeldUnit = { -1,1 };
     bool heldUnitWasSlotted = false;
-    std::array<int, UnitData::TOTAL_PLAYER_UNITS> unitSelectionForms;
+    std::array<int, UnitData::TOTAL_PLAYER_UNITS> unitSelectionGears;
     
     explicit ArmoryMenu(Camera& cam);
-    ~ArmoryMenu() = default;
+    ~ArmoryMenu() final = default;
     void set_up_buttons();
 
-    void draw() override;
-    void check_mouse_hover() override;
-    bool on_mouse_press(bool isM1) override;
-    bool on_mouse_release(bool isM1) override;
-    void reset_positions() override;
-    void update(float deltaTime) override;
+    void draw() final;
+    void check_mouse_hover() final;
+    bool on_mouse_press(bool isM1) final;
+    bool on_mouse_release(bool isM1) final;
+    void reset_positions() final;
+    void update(float deltaTime) final;
 
     void drag_unit_into_slot();
-    void drag_unit(int id);
+    void start_dragging_unit(int id);
     void shift_empty_slots();
     void update_selection_slot(int id, int gear);
+    void remove_unusable_units();
 
     inline bool dragging_unit() const { return curHeldUnit.first != -1; }
     inline bool unit_is_slotted(int id) const {
@@ -41,7 +45,8 @@ struct ArmoryMenu : public Menu<ARMORY_BTNS> {
             if (slots[i].id == id) return true;
         return false;
     } 
-    inline void release_hold() { curHeldUnit = { -1,-1 }; }
+    inline void release_hold() { curHeldUnit = { -1, 1 }; }
+    inline bool unit_is_unusable(int id) const { return stageSetMenu.usedUnits[id]; }
 
     inline Slider& slider() { return unitSlider; }
     inline Button& returnBtn() { return buttonManager.buttons[UnitData::TOTAL_PLAYER_UNITS]; }

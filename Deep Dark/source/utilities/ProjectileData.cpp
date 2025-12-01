@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "Projectile.h"
-#include <algorithm>
 
 namespace ProjData {
     std::string get_proj_path(int id) {

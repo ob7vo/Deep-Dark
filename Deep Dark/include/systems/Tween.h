@@ -1,11 +1,6 @@
 #pragma once
-#include <SFML/System/Vector2.hpp>
 #include "Easing.hpp"
 #include "UnitEnums.h"
-#include <iostream>
-#include <vector>
-#include <memory>
-#include <functional>
 
 const EasingType noEase = EasingType::COUNT;
 struct UnitTween {

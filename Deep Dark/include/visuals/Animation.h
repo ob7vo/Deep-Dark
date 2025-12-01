@@ -1,7 +1,5 @@
 #pragma once
-#include <SFML/Graphics.hpp>
 #include "TextureManager.h"
-#include <json.hpp>
 #include "UnitEnums.h"
 
 struct AnimationState;
@@ -17,7 +15,6 @@ const enum AnimationEvent {
 
 struct Animation;
 
-using ani_event_map = std::vector<std::pair<int, AnimationEvent>>;
 using UnitAniMap = std::unordered_map<UnitAnimationState, Animation>;
 
 struct AnimationFrame {
@@ -28,7 +25,7 @@ struct AnimationFrame {
 	AnimationFrame(sf::IntRect rect, float duration, int events);
 };
 struct Animation {
-	float time = 0.0f;
+	float timeElapsed = 0.0f;
 	bool loops = true;
 	sf::Texture texture;
 	sf::Vector2f origin;
@@ -38,8 +35,8 @@ struct Animation {
 	int frameCount = 0;
 
 	Animation() = default;
-	Animation(std::string spritePath, int frames, float framerate, 
-		sf::Vector2i cellSizes, sf::Vector2f origin, ani_event_map events, bool loops = true);
+	Animation(const std::string_view& spritePath, int frames, float framerate, 
+		sf::Vector2i cellSizes, sf::Vector2f origin, const std::vector<int>& events, bool loops = true);
 
 	int update(float deltaTime, sf::Sprite& sprite);
 	int update(float& time, int& curFrame, float deltaTime, sf::Sprite& sprite);
@@ -52,12 +49,12 @@ struct Animation {
 	/// <summary>
 	/// Starts the animation. Sets the current frame and time to 0, 
 	/// then sets the Sprite's Texture, Rect, and Origin
-	/// </summmary>
+	/// </summmary> 
 	void reset(float& tiem, int& curFrame, sf::Sprite& sprite);
 
 	inline int get_events() { return frames[currentFrame].eventsMask; }
 	static void setup_unit_animation_map(const nlohmann::json& unitFile, UnitAniMap& aniMap);
-	static Animation create_unit_animation(const nlohmann::json& file, std::string ani, std::string path, bool loops);
+	static Animation create_unit_animation(const nlohmann::json& file, const std::string_view& ani, const std::string_view& path, bool loops);
 	static bool check_for_event(AnimationEvent desiredEvent, int events);
 
 };

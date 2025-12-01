@@ -1,8 +1,6 @@
 #pragma once
-#include <SFML/System/Vector2.hpp>
 #include <Easing.hpp>
-#include <iostream>
-#include <vector>
+#include <SFML/System/Vector2.hpp>
 
 enum class PathingType {
 	CIRCULAR,
@@ -17,7 +15,7 @@ struct Pathing {
 		float timer;
 	};
 
-	Pathing(sf::Vector2f pos, float spd) : speed(spd), pos(pos) {}
+	Pathing(sf::Vector2f pos, float spd) : pos(pos), speed(spd) {}
 	virtual ~Pathing() = default;
 
 	virtual sf::Vector2f move(float deltaTime) = 0;
@@ -36,7 +34,7 @@ struct CirclePathing : public Pathing {
 		center(cen), radius(), angleDeg(angle) {
 		pos = { cen.x + rad, cen.y + rad };
 	}
-	~CirclePathing() = default;
+	~CirclePathing() override = default;
 
 	sf::Vector2f move(float deltaTime) override;
 	PathingType get_type() const override { return PathingType::CIRCULAR; }
@@ -48,7 +46,7 @@ struct ProjectilePathing : public Pathing {
 
 	ProjectilePathing(sf::Vector2f pos, sf::Vector2f vel, float m) : 
 		Pathing(pos,0.f), velocity(vel), mass(m){}
-	~ProjectilePathing() = default;
+	~ProjectilePathing() override = default;
 
 	sf::Vector2f move(float deltaTime) override;
 	PathingType get_type() const override { return PathingType::PROJECTILE; }
@@ -66,8 +64,8 @@ struct WaypointPathing : public Pathing {
 
 	WaypointPathing(std::vector<sf::Vector2f> wps, int loops, 
 		float timer, EasingType ease) :Pathing(wps[0], timer),
-		start(wps[0]), waypoints(wps), easeType(ease), maxLoops(loops) { }
-	~WaypointPathing() = default;
+		start(wps[0]), maxLoops(loops), waypoints(wps), easeType(ease){ }
+	~WaypointPathing() override = default;
 
 	sf::Vector2f move(float deltaTime) override;
 	PathingType get_type() const override { return PathingType::WAYPOINTS; }
