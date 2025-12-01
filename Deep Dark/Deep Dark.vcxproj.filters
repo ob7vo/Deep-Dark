@@ -54,13 +54,13 @@
     <ClCompile Include="source\stage\Stage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\stage\Surge.cpp">
+    <ClCompile Include="source\stage\entities\Surge.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\stage\entities\Trap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\unit\Unit.cpp">
+    <ClCompile Include="source\stage\unit\Unit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\systems\Camera.cpp">
@@ -69,13 +69,13 @@
     <ClCompile Include="source\systems\Observer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\systems\StageManager.cpp">
+    <ClCompile Include="source\stage\StageManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\systems\StateManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\unit\UnitData.cpp">
+    <ClCompile Include="source\stage\unit\UnitData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\visuals\Animation.cpp">
@@ -84,7 +84,7 @@
     <ClCompile Include="source\visuals\Button.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\stage\Projectile.cpp">
+    <ClCompile Include="source\stage\entities\Projectile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\utilities\ProjectileData.cpp">
@@ -102,19 +102,34 @@
     <ClCompile Include="source\menus\WorkshopMenu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\unit\UnitStatus.cpp">
+    <ClCompile Include="source\stage\unit\UnitStatus.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\unit\UnitMovement.cpp">
+    <ClCompile Include="source\stage\unit\UnitMovement.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\unit\UnitAnimation.cpp">
+    <ClCompile Include="source\stage\unit\UnitAnimation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\unit\UnitCombat.cpp">
+    <ClCompile Include="source\stage\unit\UnitCombat.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\stage\entities\Teleporter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\menus\StageSetMenu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\visuals\Slider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\menus\Menu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\stage\Lane.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\utilities\pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -158,7 +173,7 @@
     <ClInclude Include="include\systems\Loadout.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\systems\StageManager.h">
+    <ClInclude Include="include\stage\StageManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\systems\StageRecord.h">
@@ -188,7 +203,7 @@
     <ClInclude Include="include\stage\StatusEffect.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\stage\Surge.h">
+    <ClInclude Include="include\stage\entities\Surge.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\stage\entities\Teleporter.h">
@@ -197,16 +212,16 @@
     <ClInclude Include="include\stage\entities\Trap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\unit\Unit.h">
+    <ClInclude Include="include\stage\unit\Unit.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\unit\UnitEnums.h">
+    <ClInclude Include="include\enums\UnitEnums.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\enums\ChallengeTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\enums\json.hpp">
+    <ClInclude Include="include\utilities\json.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\utilities\UILayout.h">
@@ -230,13 +245,13 @@
     <ClInclude Include="include\systems\Observer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\stage\Projectile.h">
+    <ClInclude Include="include\stage\entities\Projectile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\utilities\ProjectileData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\unit\UnitData.h">
+    <ClInclude Include="include\stage\unit\UnitData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\utilities\Augment.h">
@@ -257,22 +272,34 @@
     <ClInclude Include="include\visuals\MouseCursor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\unit\UnitStatus.h">
+    <ClInclude Include="include\stage\unit\UnitStatus.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\utilities\Utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\unit\UnitMovement.h">
+    <ClInclude Include="include\stage\unit\UnitMovement.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\unit\UnitAnimation.h">
+    <ClInclude Include="include\stage\unit\UnitAnimation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\unit\UnitCombat.h">
+    <ClInclude Include="include\stage\unit\UnitCombat.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\stage\entities\StageEntity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\stage\StageWallet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\menus\StageSetMenu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\utilities\json_fwd.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\utilities\pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,6 +1,5 @@
 #pragma once
-#include <json.hpp>
-#include <bit>
+#include <json_fwd.hpp>
 
 const enum AugmentType : size_t {
 	NONE = 0,
@@ -68,26 +67,15 @@ struct Augment {
 
 	Augment() = default;
 	Augment(AugmentType aug, float val, float val2, float percentage,
-		int hits, int lvl) :augType(aug), value(val), value2(val2),
-		percentage(percentage), surgeLevel(lvl), activeHits(hits) {
-	}
+		int hits, int lvl);
 
-	static Augment from_json(AugmentType augType, nlohmann::json json);
-	static Augment status(AugmentType aug, float procTime, float chance = 100.f, int hits = ALL_HITS) {
-		return Augment(aug, procTime, empty, chance, hits, empty);
-	}
-	static Augment surge(AugmentType aug, float dist, int lvl, float chance = 100.f, int hits = ALL_HITS) {
-		return Augment(aug, dist, empty, chance, hits, lvl);
-	}
-	static Augment cannon(AugmentType aug, int lvl) {
-		return Augment(aug, empty, empty, empty, ALL_HITS, lvl);
-	}
+	static Augment from_json(AugmentType augType, const nlohmann::json& json);
+	static Augment status(AugmentType aug, float procTime, float chance = 100.f, int hits = ALL_HITS);
+	static Augment surge(AugmentType aug, float dist, int lvl, float chance = 100.f, int hits = ALL_HITS);
+	static Augment cannon(AugmentType aug, int lvl);
 	static AugmentType string_to_augment_type(std::string str);
 
-	inline bool is_surge() const {
-		return augType & AugmentType::ORBITAL_STRIKE ||
-			augType & AugmentType::FIRE_WALL || augType & AugmentType::SHOCK_WAVE;
-	}
+	bool is_surge() const;
 	inline bool is_status_effect() const { return augType <= 64 && augType > 0; }
 	inline bool is_damage_modifier() const { return augType >= 128 && augType <= 512; }
 	inline bool can_hit(int hitIndex) const {

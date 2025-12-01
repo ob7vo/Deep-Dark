@@ -1,5 +1,7 @@
+#include "pch.h"
 #include "Base.h"
 #include "Stage.h"
+
 using json = nlohmann::json;
 
 const int ENEMY_BASE = -1;

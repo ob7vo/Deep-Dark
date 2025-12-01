@@ -1,8 +1,8 @@
+#include "pch.h"
 #include "Stage.h"
 #include "Unit.h"
+#include "StageRecord.h"
 #include "Utils.h"
-#include <iostream>
-#include <fstream>
 
 const int MAX_SUMMONS = 10;
 const int MAX_SURGES = 13;
@@ -12,41 +12,45 @@ using json = nlohmann::json;
 
 #pragma region Constructors
 	
-Stage::Stage(const json& stageFile, StageRecord* rec) : recorder(rec),
+Stage::Stage(const json& stageFile, int stageSet, StageRecord* rec) : recorder(rec),
 	enemyBase(stageFile, -1), playerBase(stageFile, 1)
 {
-	laneCount = stageFile["lane_count"];
+	const json& stageSetJson = stageFile["sets"][stageSet];
+
+	laneCount = stageSetJson["lane_count"];
 	lanes.reserve(laneCount);
 	surges.reserve(MAX_SURGES);
 	projectiles.reserve(MAX_PROJECTILES);
 
 	for (int i = 0; i < laneCount; i++) 
-		lanes.emplace_back(stageFile["lanes"][i], i);
+		lanes.emplace_back(stageSetJson["lanes"][i], i);
 
 	std::sort(lanes.begin(), lanes.end(), [](const Lane& a, const Lane& b) {
 		return a.yPos > b.yPos;
 	});
 
-	if (stageFile.contains("teleporters")) {
-		for (auto& tp : stageFile["teleporters"]) {
+	if (stageSetJson.contains("teleporters")) {
+		for (auto& tp : stageSetJson["teleporters"]) {
 			int lane = tp["lane"];
-			sf::Vector2f pos = { tp["x_position"], lanes[lane].yPos };
+			sf::Vector2f tpPos = { tp["x_position"], lanes[lane].yPos };
 
-			teleporters.emplace_back(tp, pos, lane);
+			teleporters.emplace_back(tp, tpPos, lane);
 		}
 	}
-	if (stageFile.contains("traps")) {
-		for (auto& trap : stageFile["traps"]) {
+	if (stageSetJson.contains("traps")) {
+		for (auto& trap : stageSetJson["traps"]) {
 			int lane = trap["lane"];
-			traps.emplace_back(lanes[lane], trap);
+			sf::Vector2f trapPos = { trap["x_position"], lanes[lane].yPos };
+			traps.emplace_back(trap, trapPos, lane);
 		}
 	}
-	for (auto& spawnData : stageFile["enemy_spawns"]) {
+	for (auto& spawnData : stageSetJson["enemy_spawns"]) {
 		enemySpawners.emplace_back(spawnData, *this);
 	}
 
 	break_spawner_thresholds();
 }
+
 MoveRequest::MoveRequest(Unit& unit, int newLane, float axisPos, RequestType type) :
 unitId(unit.id), team(unit.stats->team), currentLane(unit.get_lane()),
 newLane(newLane), axisPos(axisPos), type(type) {}
@@ -130,7 +134,7 @@ bool Stage::can_summon(int summonId, float magnification) {
 	if (summonData) 
 		return summonData->count < MAX_SUMMONS ? true : false;
 	
-	nlohmann::json unitJson = UnitData::get_unit_json(summonId);
+	nlohmann::json unitJson = UnitData::createUnitJson(summonId);
 	summonData = std::make_unique<SummonData>(unitJson, magnification);
 
 	return summonData ? true : false;

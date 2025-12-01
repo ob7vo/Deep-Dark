@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "game_saves/SaveSystem.h"
 #include "StageManager.h"
 #include "StateManager.h"
@@ -17,7 +18,7 @@ const sf::Color WINDOW_COLOR(54, 2, 11);
 
 const float FPSTimer = 0.5f;
 
-void set_mouse_position(sf::RenderWindow& window, Camera& cam) {
+void set_mouse_position(const sf::RenderWindow& window, Camera& cam) {
     sf::Vector2i mouseScreenPos = sf::Mouse::getPosition(window);
     sf::Vector2f MOUSE_POS = window.mapPixelToCoords(mouseScreenPos);
     cam.cursor.set_pos(MOUSE_POS, mouseScreenPos);
@@ -46,7 +47,6 @@ int main()
         sf::Style::Titlebar | sf::Style::Close);
  
     TextureManager::initialize();
-    Surge::init_animations();
     BaseCannon::init_animations();
 
     SaveSystem::Get().initialize();
@@ -60,11 +60,8 @@ int main()
 
     /**/
     std::array<ArmorySlot, 10> slots = ArmorySlot::default_armory_loadout();
-    std::ifstream stageFile("configs/stage_data/stage_1.json");
-    json stageJson = json::parse(stageFile);
-    stageFile.close();
-    
-    StageEnterData stageEnterData(stageJson, slots);
+    std::string stageJsonPath = "configs/stage_data/stage_1.json";
+    StageEnterData stageEnterData(stageJsonPath, 0, slots);
     //*/
 
     PrepEnterData prepData(MenuType::ARMORY_EQUIP, MenuType::STAGE_SELECT);

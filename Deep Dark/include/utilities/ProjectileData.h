@@ -1,7 +1,5 @@
 #pragma once
 #include "UnitEnums.h"
-#include <json.hpp>
-#include <fstream>
 
 namespace ProjData {
 	std::string get_proj_path(int id);

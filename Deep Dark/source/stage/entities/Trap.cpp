@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Trap.h"
 #include "Stage.h"
 #include "StageRecord.h"
@@ -18,8 +19,8 @@ Trap::Trap(const nlohmann::json& trap, sf::Vector2f pos, int lane) : StageEntity
 	}
 
 	animating = false;
-	ani = get_trap_animation(trapType);
-	ani.reset(sprite);
+	anim = get_trap_animation(trapType);
+	anim.reset(sprite);
 	sprite.setPosition(pos);
 }
 bool Trap::in_trigger_range(Unit& unit) const {
@@ -45,11 +46,11 @@ bool Trap::enemy_in_trigger_range(Stage& stage) const{
 
 void Trap::tick(Stage& stage, float deltaTime) {
 	if (animating) {
-		int events = ani.update(deltaTime, sprite);
+		int events = anim.update(deltaTime, sprite);
 		if (Animation::check_for_event(AnimationEvent::FINAL_FRAME, events)) {
 			timeLeft = checkTimer;
 			animating = false;
-			ani.reset(sprite);
+			anim.reset(sprite);
 		}
 		if (Animation::check_for_event(AnimationEvent::TRIGGER, events))
 			action(stage);
@@ -60,7 +61,7 @@ void Trap::tick(Stage& stage, float deltaTime) {
 	if (timeLeft < 0 && enemy_in_trigger_range(stage)) {
 		animating = true;
 		timeLeft = 999.f;
-		ani.reset(sprite);
+		anim.reset(sprite);
 	}
 }
 void Trap::action(Stage& stage) {
@@ -76,7 +77,7 @@ void Trap::action(Stage& stage) {
 		break;
 	}
 }
-void Trap::trigger_launch_pad(Stage& stage) {
+void Trap::trigger_launch_pad(Stage& stage) const {
 	Lane& lane = stage.get_lane(laneInd);
 
 	for (auto& unit : lane.enemyUnits)
@@ -119,37 +120,42 @@ void Trap::attack_lane(std::vector<Unit>& units) const {
 }
 
 Animation Trap::get_trap_animation(TrapType type) {
-	std::vector<std::pair<int, AnimationEvent>> events;
-	// starts off as LAUNCH_PAD
-	std::string spritePath = "sprites/traps/launch_pad.png";
-	sf::Vector2i cellSize = { 96,32 };
-	sf::Vector2f origin = { 48, 32 };
-	int frames = 16;
-	float rate = 0.2f;
+	std::vector<int> events(25); // 25 is the most amount fo frames that an animatinon here will have
 
 	switch (type) {
-	case TrapType::LAUNCH_PAD:
-		events.emplace_back(8, TRIGGER);
-		break;
+	case TrapType::LAUNCH_PAD: {
+		std::string spritePath = "sprites/traps/launch_pad.png";
+		sf::Vector2i cellSize = { 96,32 };
+		sf::Vector2f origin = { 48, 32 };
+		int frames = 16;
+		float rate = 0.2f;
+		events[8] |= TRIGGER;
+
+		return Animation(spritePath, frames, rate, cellSize, origin, events, false);
+	}
 	case TrapType::TRAP_DOOR: {
-		spritePath = "sprites/traps/trap_door.png";
-		cellSize.x = 144;
-		origin.x = 72;
-		frames = 24;
-		rate = .3f;
-		events.emplace_back(5, TRIGGER);
-		events.emplace_back(20, TRIGGER);
-		break;
+		std::string spritePath = "sprites/traps/trap_door.png";
+		sf::Vector2i cellSize = { 144, 32 };
+		sf::Vector2f origin = { 72, 32 };
+		int frames = 24;
+		float rate = .3f;
+		events[5] |= TRIGGER;
+		events[20] |= TRIGGER;
+
+		return Animation(spritePath, frames, rate, cellSize, origin, events, false);
 	}
 	default: {
-		spritePath = "sprites/traps/flat_dmg.png";
-		cellSize.x = 32;
-		origin.x = 16;
-		frames = 25;
-		rate = .15f;
-		events.emplace_back(13, TRIGGER);
+		std::string spritePath = "sprites/traps/flat_dmg.png";
+		sf::Vector2i cellSize = { 32, 32 };
+		sf::Vector2f origin = { 16, 16 };
+		int frames = 25;
+		float rate = .15f;
+		events[13] |= TRIGGER;
+
+		return Animation(spritePath, frames, rate, cellSize, origin, events, false);
 	}
 	}
 
-	return Animation(spritePath, frames, rate, cellSize, origin, events, false);
+	std::cout << "Did not create Trap Animation" << std::endl;
+	return Animation();
 }

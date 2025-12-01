@@ -16,7 +16,7 @@ const int WORKSHOP_BTNS = ANIMATION_BTNS + 3;
 const int STAT_ICONS = 8;
 const std::array<float, 5> UNIT_ANIMATION_SPEEDS = { 0.5f, 0.75f, 1, 1.5f, 2.f };
 
-struct WorkshopMenu : public Menu<WORKSHOP_BTNS> {
+struct WorkshopMenu : public Menu<UI::Workshop::BTN_COUNT> {
 	UnitStats unitStats;
 	int unitId = 0;
 	int unitGear = 0;
@@ -34,15 +34,16 @@ struct WorkshopMenu : public Menu<WORKSHOP_BTNS> {
 	std::array<sf::Text, STAT_ICONS> statTexts;
 
 	explicit WorkshopMenu(Camera& cam);
-	~WorkshopMenu() = default;
+	~WorkshopMenu() final = default;
+
 	void setup_workshop_unit(int id, int gear);
 	void set_stat_texts(const nlohmann::json& unitJson);
 
-	void draw() override;
-	void check_mouse_hover() override;
-	bool on_mouse_press(bool isM1) override;
-	bool on_mouse_release(bool isM1) override;
-	void reset_positions() override;
+	void draw() final;
+	void check_mouse_hover() final;
+	bool on_mouse_press(bool isM1) final;
+	bool on_mouse_release(bool isM1) final;
+	void reset_positions() final;
 
 	void update(float deltaTime) override;
 	void update_unit_animation(float dt);
@@ -53,50 +54,20 @@ struct WorkshopMenu : public Menu<WORKSHOP_BTNS> {
 
 	void switch_unit_gear();
 
-	inline Button& return_btn() { return get_button(0); }
-	inline Button& pause_btn() { return get_button(1); }
-	inline Button& switchGearBtn() { return get_button(2); }
-	inline Button& animationSpeedBtn() { return get_button(3); }
+	Button& return_btn();
+	Button& pause_btn();
+	Button& switchGearBtn();
+	Button& animationSpeedBtn();
 	// Indexes 2 - 7
-	inline Button& animation_btn(UnitAnimationState ani) {
-		auto i = static_cast<int>(ani);
-		if (i < 0 || i > 4) i = 5; // if its a special animation
-		return animation_btn(i);
-	}
+	Button& animation_btn(UnitAnimationState ani);
 	/// <summary> Index will be incremented by 2 for adjustment </summary>
-	inline Button& animation_btn(int i) { return get_button(i + 4); }
+	Button& animation_btn(int i);
 
 	///<summary>Type in the name of the stat and it will return the index</summary>
-	inline int stat_index(const std::string& str) const {
-		switch (str[0]) {
-		case 'a': return 0; // attack_time
-		case 'c': return 1; // cost
-		case 'h': return 2 + str[1] != 'i'; // hits(2) / hp(3)
-		case 'k': return 4; // knockbacks
-		case 'r': return 5; // recharge_time
-		case 's': return 6 + str[1] != 'i'; // sight_range(7) / speed(8)
-		default: 
-			std::cout << "could not find stat index: " << str[0] << std::endl;
-			return 0;
-		}
-
-		return 0;
-	}
+	int stat_index(const std::string& str) const;
 	inline sf::Sprite& stat_icon(const std::string& str) {return statIcons[stat_index(str)];}
 	inline sf::Text& stat_text(const std::string& str) { return statTexts[stat_index(str)]; }
 
-	static std::array<sf::Sprite, 8> make_statIcons() {
-		return[]<std::size_t... Is>(std::index_sequence<Is...>) {
-			return std::array{ sf::Sprite(TextureManager::t_statusIcons[Is])... };
-		}(std::make_index_sequence<8>{});
-	}
-	static std::array<sf::Text, 8> make_statTexts() {
-		std::array<sf::Text, 8> icons = {
-		sf::Text(baseFont),sf::Text(baseFont),sf::Text(baseFont),
-		sf::Text(baseFont),sf::Text(baseFont),sf::Text(baseFont),
-		sf::Text(baseFont),sf::Text(baseFont)
-		};
-
-		return icons;
-	}
+	static std::array<sf::Sprite, 8> make_statIcons();
+	static std::array<sf::Text, 8> make_statTexts();
 };

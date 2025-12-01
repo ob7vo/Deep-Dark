@@ -1,9 +1,11 @@
+#include "pch.h"
 #include "WorkshopMenu.h"
 #include "UnitData.h"
+#include "Camera.h"
 #include "UILayout.h"
-#include <format>
 
 using namespace UI::Workshop;
+using namespace UI::Colors;
 
 WorkshopMenu::WorkshopMenu(Camera& cam) : Menu(cam), statIcons(make_statIcons()),
 statTexts(make_statTexts()) {
@@ -14,25 +16,23 @@ statTexts(make_statTexts()) {
 	unsigned int fontSize2 = cam.get_norm_font_size(statTexts[0], STAT_TEXT_SIZE);
 	for (int i = 0; i < STAT_ICONS; i++) {
 		statTexts[i].setCharacterSize(fontSize2);
-		statIcons[i].setOrigin((sf::Vector2f)statIcons[i].getTexture().getSize() * 0.5f);
+		statIcons[i].setTextureRect(TextureManager::r_workshopStatsIcons[i]);
+		statIcons[i].setOrigin(statIcons[i].getLocalBounds().size * 0.5f);
 	}
 	 
-	pause_btn().set_ui_params(UNIT_PAUSE_BTN_POS, UNIT_PAUSE_BTN_SIZE, uiPath + "pause.png", cam);
+	pause_btn().setup(UNIT_PAUSE_BTN_POS, UNIT_PAUSE_BTN_SIZE, cam, TextureManager::t_pauseBtn);
+	return_btn().setup(RETURN_BTN_POS, RETURN_BTN_SIZE, cam, TextureManager::t_returnBtn);
+	switchGearBtn().setup(UNIT_SWITCH_GEAR_BTN_POS, UNIT_SWITCH_GEAR_BTN_SIZE, cam, TextureManager::t_switchGearBtn);
+	animationSpeedBtn().setup(UNIT_SPEED_BTN_POS, UNIT_SPEED_BTN_SIZE, cam, TextureManager::t_speedUpBtn);
+
 	pause_btn().onClick = [this](bool isM1) {if (isM1) paused = !paused; };
-	return_btn().set_ui_params(RETURN_BTN_POS, RETURN_BTN_SIZE, uiPath + "return.png", cam);
-	switchGearBtn().set_ui_params(UNIT_SWITCH_GEAR_BTN_POS, UNIT_SWITCH_GEAR_BTN_SIZE, workshopPath + "switch_gear.png", cam);
 	switchGearBtn().onClick = [this](bool isM1) {if (isM1) switch_unit_gear(); };
-	animationSpeedBtn().set_ui_params(UNIT_SPEED_BTN_POS, UNIT_SPEED_BTN_SIZE, workshopPath + "speed_up.png", cam);
 	animationSpeedBtn().onClick = [this](bool isM1) {if (isM1) unitAnimSpeedIndex = (unitAnimSpeedIndex + 1) % 5; };
 
-	const std::string path3 = uiPath + "return.png";
-
-	animation_btn(0).set_ui_params({}, UNIT_ANIMATION_BTN_SIZE, workshopPath + "move_anim_btn.png", cam);
-	animation_btn(1).set_ui_params({}, UNIT_ANIMATION_BTN_SIZE, workshopPath + "attack_anim_btn.png", cam);
-	animation_btn(2).set_ui_params({}, UNIT_ANIMATION_BTN_SIZE, workshopPath + "idle_anim_btn.png", cam);
-	animation_btn(3).set_ui_params({}, UNIT_ANIMATION_BTN_SIZE, workshopPath + "knockback_anim_btn.png", cam);
-	animation_btn(4).set_ui_params({}, UNIT_ANIMATION_BTN_SIZE, workshopPath + "falling_anim_btn.png", cam);
 	for (int i = 0; i < 5; i++) {
+		// Setting the positions for anim Btns takes a lot fo lines, so its done in reset_positions()
+		animation_btn(i).setup({}, UNIT_ANIMATION_BTN_SIZE, cam,
+			TextureManager::t_workshopAnimBtns, TextureManager::r_workshopAnimBtns[i]);
 		animation_btn(i).onClick = [i, this](bool isM1) {
 			if (!isM1) return;
 			currentAnimation = static_cast<UnitAnimationState>(i);
@@ -41,8 +41,12 @@ statTexts(make_statTexts()) {
 			};
 	}
 }
+
 void WorkshopMenu::setup_workshop_unit(int id, int gear) {
-	const nlohmann::json unitJson = UnitData::get_unit_json(id, gear);
+	unitId = id;
+	unitGear = gear;
+
+	const nlohmann::json unitJson = UnitData::createUnitJson(id, gear);
 
 	unitHitboxes.clear();
 	unitAnimations.clear();
@@ -174,3 +178,54 @@ void WorkshopMenu::switch_unit_gear() {
 	unitGear = std::max((unitGear + 1) % 4, 1);
 	setup_workshop_unit(unitId, unitGear);
 }
+
+// BUTTON INDEXEX /////////////////////////////////////////////////////
+#pragma region Button Indexs
+Button& WorkshopMenu::return_btn() { return buttonManager.buttons[0]; }
+Button& WorkshopMenu::pause_btn() { return buttonManager.buttons[1]; }
+Button& WorkshopMenu::switchGearBtn() { return buttonManager.buttons[2]; }
+Button& WorkshopMenu::animationSpeedBtn() { return buttonManager.buttons[3]; }
+Button& WorkshopMenu::animation_btn(UnitAnimationState ani) {
+	auto i = static_cast<int>(ani);
+	if (i < 0 || i > 4) i = 5; // if its a special animation
+	return animation_btn(i);
+}
+Button& WorkshopMenu::animation_btn(int i) { return buttonManager.buttons[i + 4]; }
+
+int WorkshopMenu::stat_index(const std::string& str) const {
+	switch (str[0]) {
+	case 'a': return 0; // attack_time
+	case 'c': return 1; // cost
+	case 'h': return 2 + str[1] != 'i'; // hits(2) / hp(3)
+	case 'k': return 4; // knockbacks
+	case 'r': return 5; // recharge_time
+	case 's': return 6 + str[1] != 'i'; // sight_range(7) / speed(8)
+	default:
+		std::cout << "could not find stat index: " << str[0] << std::endl;
+		return 0;
+	}
+
+	return 0;
+}
+#pragma endregion
+
+#pragma region Static Functions
+std::array<sf::Sprite, 8> WorkshopMenu::make_statIcons() {
+	sf::Transformable t;
+	return {
+		sf::Sprite(TextureManager::t_workshopStatsIcons), sf::Sprite(TextureManager::t_workshopStatsIcons),
+		sf::Sprite(TextureManager::t_workshopStatsIcons), sf::Sprite(TextureManager::t_workshopStatsIcons),
+		sf::Sprite(TextureManager::t_workshopStatsIcons), sf::Sprite(TextureManager::t_workshopStatsIcons),
+		sf::Sprite(TextureManager::t_workshopStatsIcons), sf::Sprite(TextureManager::t_workshopStatsIcons),
+	};
+}
+std::array<sf::Text, 8> WorkshopMenu::make_statTexts() {
+	std::array<sf::Text, 8> icons = {
+	sf::Text(baseFont),sf::Text(baseFont),sf::Text(baseFont),
+	sf::Text(baseFont),sf::Text(baseFont),sf::Text(baseFont),
+	sf::Text(baseFont),sf::Text(baseFont)
+	};
+
+	return icons;
+}
+#pragma endregion

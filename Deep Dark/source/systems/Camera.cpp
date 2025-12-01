@@ -1,8 +1,10 @@
+#include "pch.h"
 #include "Camera.h"
-#include <math.h>
-#include <iostream>
+#include "UILayout.h"
 
+using namespace UI::Colors;
 using Key = sf::Keyboard::Key;
+
 const auto MOUSE_1 = sf::Mouse::Button::Left;
 const auto MOUSE_2 = sf::Mouse::Button::Right;
 const float PAN_MULTIPLIER = 3.f;
@@ -19,25 +21,32 @@ Camera::Camera(sf::RenderWindow& window) : window(window) {
 	limits.set_bounds({ topLeft, boundsSize });
 }
 
-sf::VertexArray Camera::create_dark_overlay(float left, float top, float width, float height, float percentage) const {
+void Camera::reset() {
+	worldView = window.getDefaultView();
+	uiView = worldView;
+	pos = worldView.getCenter();
+	cursor.dragging = false;
+}
+sf::VertexArray Camera::create_dark_overlay(float left, float top, float width, float height, sf::Color color, float fill) const {
 	auto darkOverlay = sf::VertexArray(sf::PrimitiveType::TriangleStrip, 4);
 
-	float darkHeight = height * (1.0f - percentage);
-	
+	float darkHeight = height * fill;
+
 	darkOverlay[0].position = { left, top + height - darkHeight };
-	darkOverlay[0].color = blackTransperent;
+	darkOverlay[0].color = BLACK_TRANSPARENT;
 
 	darkOverlay[1].position = { left + width, top + height - darkHeight };
-	darkOverlay[1].color = blackTransperent;
+	darkOverlay[1].color = BLACK_TRANSPARENT;
 
 	darkOverlay[2].position = { left, top + height };
-	darkOverlay[2].color = blackTransperent;
+	darkOverlay[2].color = BLACK_TRANSPARENT;
 
 	darkOverlay[3].position = { left + width, top + height };
-	darkOverlay[3].color = blackTransperent;
+	darkOverlay[3].color = BLACK_TRANSPARENT;
 
 	return darkOverlay;
 }
+
 void Camera::update_projection() {
 	float aspect = (float)window.getSize().x / (float)window.getSize().y;
 	float worldWidth = worldHeight * aspect;
@@ -46,7 +55,6 @@ void Camera::update_projection() {
 
 	window.setView(worldView);
 }
-
 void Camera::update(float deltaTime) {
 	draw_all_ui();
 
@@ -54,6 +62,7 @@ void Camera::update(float deltaTime) {
 	else if (cursor.has_velocity())
 		apply_velocity(deltaTime);
 }
+
 void Camera::draw_all_ui() {
 	window.setView(uiView);
 
@@ -61,7 +70,7 @@ void Camera::draw_all_ui() {
 		if (p_Draw) window.draw(*p_Draw);
 	uiDrawQueue.clear();
 
-	for (auto& u_draw : tempUIDrawQueue)
+	for (const auto& u_draw : tempUIDrawQueue)
 		if (u_draw) window.draw(*u_draw);
 	tempUIDrawQueue.clear();
 
@@ -71,12 +80,38 @@ void Camera::draw_all_ui() {
 		if (draw) window.draw(*draw);
 	worldDrawQueue.clear();
 }
-void Camera::draw_grey_screen(float opacity) {
-	sf::VertexArray darkOverlay = create_dark_overlay(0, 0, worldView.getSize().x, worldView.getSize().y);
-	for (int i = 0; i < 4; i++) darkOverlay[i].color.a = (uint8_t)(255 * opacity);
-	queue_ui_draw(&darkOverlay);
+void Camera::clear_queues() {
+	uiDrawQueue.clear();
+	tempUIDrawQueue.clear();
+	worldDrawQueue.clear();
 }
 
+void Camera::darken_screen(float opacity) {
+	sf::VertexArray darkOverlay = create_dark_overlay(0, 0, uiView.getSize().x, uiView.getSize().y);
+	for (int i = 0; i < 4; i++) darkOverlay[i].color.a = (uint8_t)(255 * opacity);
+	queue_temp_ui_draw(darkOverlay);
+}
+void Camera::draw_overlay(const sf::Sprite& sprite, sf::Color color, float fill) {
+	sf::FloatRect bounds = sprite.getGlobalBounds();
+	float left = bounds.position.x;
+	float top = bounds.position.y;
+	float height = bounds.size.y;
+	float width = bounds.size.x;
+
+	const sf::VertexArray overlay = create_dark_overlay(left, top, width, height, color, fill);
+	queue_temp_ui_draw(overlay);
+}
+
+
+void Camera::change_lock(bool lock) {
+	if (lock) {
+		locked = true;
+		cursor.dragging = false;
+		cursor.velocity = { 0.f, 0.f };
+	}
+	else
+		locked = false;
+}
 void Camera::handle_events(sf::Event event) {
 	if (locked) return;
 
@@ -91,6 +126,7 @@ void Camera::handle_events(sf::Event event) {
 		zoom(key->code);
 	}
 }
+#pragma Events
 void Camera::on_mouse_press(sf::Event::MouseButtonPressed click) {
 	if (click.button == MOUSE_1) {
 		cursor.velocity = { 0.f,0.f };
@@ -133,6 +169,7 @@ void Camera::zoom(sf::Event::MouseWheelScrolled scroll) {
 	worldView.setSize(newSize);
 	update_pos(newPos);
 }
+#pragma endregion
 
 // Moving
 void Camera::update_pos(sf::Vector2f newPos) {
@@ -179,6 +216,12 @@ void Camera::click_and_drag() {
 	update_pos(newPos);
 }
 
+sf::Vector2f Camera::norm_to_pixels(sf::Vector2f norm) const {
+	return  uiView.getSize() * norm;
+}
+sf::Vector2f Camera::norm_to_pixels_size(sf::Vector2f norm) const {
+	return norm * std::min(uiView.getSize().x, uiView.getSize().y); // both use same dimension!
+}
 
 sf::Vector2f Camera::get_norm_sprite_scale(const sf::Sprite& sprite, sf::Vector2f normScale) const {
 	// Get the sprite's original pixel dimensions
@@ -208,17 +251,19 @@ unsigned int Camera::get_norm_font_size(sf::Text& text, float normHeight) const 
 
 	return fontSize;
 }
-void Camera::set_sprite_params(sf::Vector2f normPos, sf::Vector2f scale,
-	const std::string& path, sf::Texture& texture, sf::Sprite& sprite) const {
-	sf::Vector2f _pos = norm_to_pixels(normPos);
+bool Camera::setup_sprite(sf::Vector2f uiPos, sf::Vector2f normScale, sf::Sprite& sprite, 
+	const sf::Texture& texture, sf::IntRect rect) const {
+	if (rect.size.x == 0 || rect.size.y == 0) rect.size = (sf::Vector2i)texture.getSize();
+	bool isUI = std::abs(uiPos.x) <= 1.f || std::abs(uiPos.y) <= 1.f;
 
-	if (!texture.loadFromFile(path)) std::cout << "wrong path for btn texture" << std::endl;
-	sprite = sf::Sprite(texture);
+	sprite.setTexture(texture);
+	sprite.setTextureRect(rect);
 
-	scale = get_norm_sprite_scale(sprite, scale);
-	sprite.setScale(scale);
-	sprite.setPosition(_pos);
+	sprite.setScale(get_norm_sprite_scale(sprite, normScale));
+	sprite.setPosition((isUI ? norm_to_pixels(uiPos) : uiPos));
 	sprite.setOrigin(sprite.getLocalBounds().size * 0.5f);
+
+	return isUI;
 }
 
 void Camera::set_cursor_ui(sf::Texture& uiTex, sf::Vector2f normOrigin, float opacity, sf::Vector2f normScale) {
@@ -233,3 +278,16 @@ void Camera::set_cursor_ui(sf::Texture& uiTex, sf::Vector2f normOrigin, float op
 	c.a = (uint8_t)(255 * opacity);
 	cursor.ui.setColor(c);
 }
+
+bool Camera::within_camera(sf::FloatRect rect) const {
+	sf::Vector2f center = worldView.getCenter();
+	sf::Vector2f size = worldView.getSize();
+
+	return !(
+		rect.position.x + rect.size.x < center.x - size.x * .5f ||// Too far left
+		rect.position.x > center.x + size.x * .5f ||              // Too far right
+		rect.position.y + rect.size.y < center.y - size.y * .5f ||// Too far up
+		rect.position.y > center.y + size.y * .5f                 // Too far down
+		);
+}
+
