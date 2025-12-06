@@ -29,12 +29,11 @@ UnitType UnitStats::convert_string_to_type(std::string str) {
 namespace UnitData {
     std::string get_unit_folder_path(int id, int gear) {
         if (gear < 1 || gear > 3) {
-            std::cout << "Gear must be between 1 and 3: The gear was: #" << gear << std::endl;
-            return  std::format("configs/unit_data/{}/", id);
+            std::string error = std::format("Gear must be between 1 and 3: The gear was: #{}", gear);
+            throw std::runtime_error(error);
         }
 
-        return gear == 1 ? std::format("configs/unit_data/{}/", id) :
-            std::format("configs/unit_data/{}/gear{}/", id, gear);
+        return std::format("configs/unit_data/{}/gear{}/", id, gear);
     }
     nlohmann::json createUnitJson(int id, int gear) {
         const std::string path = get_unit_folder_path(id, gear) + "unit_data.json";
@@ -48,18 +47,21 @@ namespace UnitData {
             return nlohmann::json();
         }
     }
-    sf::Texture createSlotTexture(int id, int gear, bool printErrorMsg) {
+    sf::Texture createSlotTexture(int id, int gear) {
         const std::string path = id >= 0 ? get_unit_folder_path(id, gear) + "slot.png" :
             "sprites/defaults/empty_slot.png";
 
         sf::Texture slotTex;
 
         if (!slotTex.loadFromFile(path)) {
-            if (printErrorMsg) std::cerr << "wrong slot texture path: [" << path << "], loading default instead" << std::endl;
             (void)slotTex.loadFromFile("sprites/defaults/empty_slot.png");
         }
 
         return slotTex;
+    }
+    int getMaxGear(int id) {
+        return 1 + std::filesystem::exists(get_unit_folder_path(id, 2))
+            + std::filesystem::exists(get_unit_folder_path(id, 3));
     }
 
     std::string get_unit_folder_path(std::pair<int, int> unit) {
@@ -68,8 +70,8 @@ namespace UnitData {
     nlohmann::json createUnitJson(std::pair<int, int> unit) {
         return createUnitJson(unit.first, unit.second);
     }
-    sf::Texture createSlotTexture(std::pair<int, int> unit, bool printErrorMsg) {
-        return createSlotTexture(unit.first, unit.second, printErrorMsg);
+    sf::Texture createSlotTexture(std::pair<int, int> unit) {
+        return createSlotTexture(unit.first, unit.second);
     }
 
 };
@@ -120,11 +122,13 @@ void print_test(UnitStats* stats) {
 void UnitStats::setup(const nlohmann::json& file) {
     std::pair<int, int> baseRange = { 0,0 };
 
-    rechargeTime = file.value("recharge_timer", 0.f);
+    rechargeTime = file["stats"].value("recharge_timer", 0.f);
     unitId = file["unit_id"];
     team = file["team"];
-    if (team == TEAM_PLAYER) parts = file["parts_cost"];
-    else parts = file["parts_dropped"];
+    parts = get_parts_value(file);
+
+    if (file.contains("hurtbox"))
+        hurtBox = { file["hurtbox"]["width"], file["hurtbox"]["height"] };
 
     unitTypes = targetTypes = 0;
     immunities = quickAugMask = 0;
@@ -158,7 +162,7 @@ void UnitStats::setup(const nlohmann::json& file) {
     attackTime = file["stats"]["attack_time"];
     sightRange = file["stats"]["sight_range"];
     laneSight = file["stats"].value("lane_sight", baseRange);
-    singleTarget = file["single_target"];
+    singleTarget = file["stats"]["single_target"];
     parts = get_parts_value(file);
 
     if (!file["stats"].contains("hits")) {
@@ -333,9 +337,9 @@ Augment UnitStats::get_augment(AugmentType aug) const {
     return {};
 }
 int UnitStats::get_parts_value(const nlohmann::json& json) const {
-    int p = json.value("parts_dropped", 0);
-    p = json.value("parts_cost", p);
-    p = json.value("parts", p);
+    int p = json["stats"].value("parts_dropped", 0);
+    p = json["stats"].value("parts_cost", p);
+    p = json["stats"].value("parts", p);
     return p;
 }
 

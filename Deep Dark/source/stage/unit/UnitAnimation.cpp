@@ -2,17 +2,21 @@
 #include "UnitAnimation.h"
 #include "Unit.h"
 
-UnitAnimation::UnitAnimation(UnitAniMap* map) : marker({ 13.f,35.f }), 
-aniMap(map){
-	marker.setFillColor(sf::Color::Cyan);
-	marker.setOrigin(marker.getSize());
+constexpr sf::Color HURTBOX_COLOR = { 0, 255, 255, 75 };
+UnitAnimation::UnitAnimation(UnitAniMap* map, const UnitStats* stats) : aniMap(map){
+	hurtbox.setSize(stats->hurtBox);
+	hurtbox.setFillColor(HURTBOX_COLOR);
+
+	sf::Vector2f origin = hurtbox.getSize();
+	if (!stats->is_player()) origin.x = 0.f;
+	hurtbox.setOrigin(origin);
 
 	start(UnitAnimationState::MOVE);
 }
 
 void UnitAnimation::draw(sf::RenderWindow& window) const {
 	window.draw(sprite);
-	window.draw(marker);
+	window.draw(hurtbox);
 }
 void UnitAnimation::start(UnitAnimationState newState) {
 	state = newState;
@@ -31,5 +35,5 @@ int UnitAnimation::update(float deltaTime) {
 }
 void UnitAnimation::set_position(sf::Vector2f pos) {
 	sprite.setPosition(pos);
-	marker.setPosition(pos);
+	hurtbox.setPosition(pos);
 }

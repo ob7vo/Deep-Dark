@@ -31,16 +31,16 @@
           "y_position": 600.0
         }
       ],
-      "teleporters": [
+      "teleporters_": [
         {
           "lane": 0,
           "connected_lane": 2,
           "team": 1,
-          "x_position": 300,
+          "x_position": 230,
           "x_destination": 400
         }
       ],
-      "traps": [
+      "traps_": [
         {
           "lane": 1,
           "trap_type": 4,
@@ -61,7 +61,7 @@
           "magnification": 1.5,
 
           "first_spawn_time": 1.0,
-          "spawn_delays": [ 3.67, 5.21 ],
+          "spawn_delays": [ 30.67, 50.21 ],
           "lane_indexes": [ 0, 2, 2, 1, 0 ]
         },
         {
@@ -69,7 +69,7 @@
           "total_spawns": 6,
           "magnification": 1.5,
 
-          "first_spawn_time": 1.5,
+          "first_spawn_time": 100.5,
           "spawn_delays": [ 2.29, 3.56 ],
           "lane_indexes": [ 2, 2, 1, 2, 0, 1 ]
         }

@@ -84,7 +84,7 @@ void StageState::on_exit() {
 	stageManager.stage = {};
 
 	stageUI.paused = false;
-	for (int i = 0; i < UI::StageUI::UI_BTN_COUNT; i++)
+	for (int i = 0; i < UI::StageUI::BTN_COUNT; i++)
 		stageUI.buttonManager.buttons[i].sprite.setColor(sf::Color::White);
 }
 

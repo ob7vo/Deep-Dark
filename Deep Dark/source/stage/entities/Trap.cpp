@@ -19,50 +19,57 @@ Trap::Trap(const nlohmann::json& trap, sf::Vector2f pos, int lane) : StageEntity
 	}
 
 	animating = false;
-	anim = get_trap_animation(trapType);
+	anim = create_trap_animation(trapType);
 	anim.reset(sprite);
 	sprite.setPosition(pos);
 }
-bool Trap::in_trigger_range(Unit& unit) const {
+
+#pragma region Checks
+bool Trap::in_trigger_range(const Unit& unit) const {
 	float x = unit.get_pos().x; 
 	float y = unit.get_pos().y;
 	return x >= triggerRange.first && x <= triggerRange.second &&
 	y <= pos.y + TRAP_HEIGHT && y >= pos.y - TRAP_HEIGHT
 		&& !(unit.stats->unitTypes & NANO);
 }
-bool Trap::valid_attack_target(Unit& unit) const {
+bool Trap::valid_attack_target(const Unit& unit) const {
 	return unit.get_pos().x >= attackRange.first && unit.get_pos().x <= attackRange.second &&
 		!unit.anim.invincible();
 }
 bool Trap::enemy_in_trigger_range(Stage& stage) const{
-	for (auto& unit : stage.get_lane(laneInd).enemyUnits)
+	for (const auto& unit : stage.lanes[laneInd].enemyUnits)
 		if (in_trigger_range(unit))
 			return true;
-	for (auto& unit : stage.get_lane(laneInd).playerUnits)
+	for (const auto& unit : stage.lanes[laneInd].playerUnits)
 		if (in_trigger_range(unit))
 			return true;
 	return false;
 }
+#pragma endregion
 
 void Trap::tick(Stage& stage, float deltaTime) {
-	if (animating) {
-		int events = anim.update(deltaTime, sprite);
-		if (Animation::check_for_event(AnimationEvent::FINAL_FRAME, events)) {
-			timeLeft = checkTimer;
-			animating = false;
-			anim.reset(sprite);
-		}
-		if (Animation::check_for_event(AnimationEvent::TRIGGER, events))
-			action(stage);
-	}
+	if (animating) update_animation(stage, deltaTime);
 
 	timeLeft -= deltaTime;
 
 	if (timeLeft < 0 && enemy_in_trigger_range(stage)) {
 		animating = true;
-		timeLeft = 999.f;
+		timeLeft = 9999.f;
 		anim.reset(sprite);
 	}
+}
+int Trap::update_animation(Stage& stage, float deltaTime) {
+	int events = anim.update(deltaTime, sprite);
+
+	if (Animation::check_for_event(AnimationEvent::FINAL_FRAME, events)) {
+		timeLeft = checkTimer;
+		animating = false;
+		anim.reset(sprite);
+	}
+	if (Animation::check_for_event(AnimationEvent::TRIGGER, events))
+		action(stage);
+
+	return events;
 }
 void Trap::action(Stage& stage) {
 	switch (trapType) {
@@ -77,8 +84,10 @@ void Trap::action(Stage& stage) {
 		break;
 	}
 }
+
+#pragma region Trap Actions
 void Trap::trigger_launch_pad(Stage& stage) const {
-	Lane& lane = stage.get_lane(laneInd);
+	Lane& lane = stage.lanes[laneInd];
 
 	for (auto& unit : lane.enemyUnits)
 		if (valid_attack_target(unit))
@@ -88,7 +97,7 @@ void Trap::trigger_launch_pad(Stage& stage) const {
 			unit.movement.push_launch_request(unit);
 }
 void Trap::trigger_trap_door(Stage& stage) {
-	Lane& lane = stage.get_lane(laneInd);
+	Lane& lane = stage.lanes[laneInd];
 
 	if (!triggered) {
 		lane.gaps.emplace_back(attackRange);
@@ -100,7 +109,6 @@ void Trap::trigger_trap_door(Stage& stage) {
 	}
 	triggered = !triggered;
 }
-
 void Trap::trigger_attack(Stage& stage) const {
 	attack_lane(stage.lanes[laneInd].enemyUnits);
 	attack_lane(stage.lanes[laneInd].playerUnits);
@@ -118,10 +126,9 @@ void Trap::attack_lane(std::vector<Unit>& units) const {
 			unit.status.add_status_effect(aug);
 	}
 }
+#pragma endregion
 
-Animation Trap::get_trap_animation(TrapType type) {
-	std::vector<int> events(25); // 25 is the most amount fo frames that an animatinon here will have
-
+Animation Trap::create_trap_animation(TrapType type) {
 	switch (type) {
 	case TrapType::LAUNCH_PAD: {
 		std::string spritePath = "sprites/traps/launch_pad.png";
@@ -129,9 +136,8 @@ Animation Trap::get_trap_animation(TrapType type) {
 		sf::Vector2f origin = { 48, 32 };
 		int frames = 16;
 		float rate = 0.2f;
-		events[8] |= TRIGGER;
 
-		return Animation(spritePath, frames, rate, cellSize, origin, events, false);
+		return Animation(spritePath, frames, rate, cellSize, origin, {{8, TRIGGER}});
 	}
 	case TrapType::TRAP_DOOR: {
 		std::string spritePath = "sprites/traps/trap_door.png";
@@ -139,10 +145,9 @@ Animation Trap::get_trap_animation(TrapType type) {
 		sf::Vector2f origin = { 72, 32 };
 		int frames = 24;
 		float rate = .3f;
-		events[5] |= TRIGGER;
-		events[20] |= TRIGGER;
+		AnimationEventsList events = { {5, TRIGGER}, {20, TRIGGER} };
 
-		return Animation(spritePath, frames, rate, cellSize, origin, events, false);
+		return Animation(spritePath, frames, rate, cellSize, origin, events);
 	}
 	default: {
 		std::string spritePath = "sprites/traps/flat_dmg.png";
@@ -150,9 +155,8 @@ Animation Trap::get_trap_animation(TrapType type) {
 		sf::Vector2f origin = { 16, 16 };
 		int frames = 25;
 		float rate = .15f;
-		events[13] |= TRIGGER;
 
-		return Animation(spritePath, frames, rate, cellSize, origin, events, false);
+		return Animation(spritePath, frames, rate, cellSize, origin, { {13, TRIGGER} });
 	}
 	}
 

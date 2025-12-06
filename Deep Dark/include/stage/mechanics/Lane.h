@@ -24,13 +24,15 @@ struct Lane {
 	void setShapes();
 	void add_shape(std::pair<float, float> gap);
 
-	inline std::vector<Unit>& get_targets(int team) { return team == PLAYER_TEAM ? enemyUnits : playerUnits; }
-	inline std::vector<Unit>& get_source(int team) { return team == ENEMY_TEAM ? enemyUnits : playerUnits; }
+	inline std::vector<Unit>& getOpponentUnits(int team) { return team == PLAYER_TEAM ? enemyUnits : playerUnits; }
+	inline std::vector<Unit>& getAllyUnits(int team) { return team == ENEMY_TEAM ? enemyUnits : playerUnits; }
 	size_t get_unit_count(int team = 0) const;
 	sf::Vector2f get_spawn_pos(int team) const;
-	float get_wall(int team) const;
+	float get_team_boundary(int team) const;
+	std::pair<float, float> get_lane_boundaries() const 
+	{ return { get_team_boundary(1), get_team_boundary(-1) }; }
 
-	bool out_of_lane(float xPos) const;
-	bool within_gap(float xPos) const;
+	bool out_of_lane(float left, float right) const;
+	bool within_gap(float leftHurtboxEdge, float rightHurtboxEdge) const;
 };
 

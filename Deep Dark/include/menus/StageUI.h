@@ -5,7 +5,7 @@
 struct StageManager;
 struct StageUI;
 
-struct StagePauseMenu : public Menu<UI::StageUI::PAUSE_MENU_BTN_COUNT> {
+struct StagePauseMenu : public Menu<UI::StageUI::PauseMenu::BTN_COUNT> {
 	StageUI& stageUI;
 	sf::Text pauseText = sf::Text(baseFont);
 	sf::Sprite pauseMenuSprite = sf::Sprite(defTex);
@@ -19,11 +19,11 @@ struct StagePauseMenu : public Menu<UI::StageUI::PAUSE_MENU_BTN_COUNT> {
 	void close_menu();
 	void close_game();
 
-	inline Button& closeGameBtn() { return buttonManager.buttons[0]; }
-	inline Button& closeMenuBtn() { return buttonManager.buttons[1]; }
+	inline Button& closeGameBtn() { return buttonManager.buttons[static_cast<int>(UI::StageUI::PauseMenu::ButtonIndex::CLOSE_GAME)]; }
+	inline Button& closeMenuBtn() { return buttonManager.buttons[static_cast<int>(UI::StageUI::PauseMenu::ButtonIndex::CLOSE_GAME)]; }
 };
 
-struct StageUI : public Menu<UI::StageUI::UI_BTN_COUNT> {
+struct StageUI : public Menu<UI::StageUI::BTN_COUNT> {
 	StageManager* stageManager;
 	StagePauseMenu pauseMenu;
 
@@ -45,7 +45,7 @@ struct StageUI : public Menu<UI::StageUI::UI_BTN_COUNT> {
 	void upgrade_bag();
 	void fire_cannon();
 
-	inline Button& fireCannonBtn() { return buttonManager.buttons[2]; }
-	inline Button& upgradeBagBtn() { return buttonManager.buttons[1]; }
-	inline Button& pauseBtn() { return buttonManager.buttons[0]; }
+	inline Button& pauseBtn() { return buttonManager.buttons[static_cast<int>(UI::StageUI::ButtonIndex::PAUSE)]; }
+	inline Button& upgradeBagBtn() { return buttonManager.buttons[static_cast<int>(UI::StageUI::ButtonIndex::UPGRADE_BAG)]; }
+	inline Button& fireCannonBtn() { return buttonManager.buttons[static_cast<int>(UI::StageUI::ButtonIndex::FIRE_CANNON)]; }
 };

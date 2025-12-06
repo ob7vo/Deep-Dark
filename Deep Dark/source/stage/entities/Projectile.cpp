@@ -50,7 +50,7 @@ void Projectile::tick(Lane& lane, float deltaTime) {
 	attack_units(lane);
 }
 void Projectile::attack_units(Lane& lane) {
-	for (auto& unit : lane.get_targets(stats->team)) {
+	for (auto& unit : lane.getOpponentUnits(stats->team)) {
 		if (!valid_target(unit)) continue;
 		std::pair<int, float> hitTime = { unit.id,2.5f };
 		hitUnits.push_back(hitTime);
@@ -61,7 +61,7 @@ void Projectile::attack_units(Lane& lane) {
 		if (unit.status.can_proc_status(unit, stats->aug))
 			unit.status.add_status_effect(stats->aug);
 
-		hitsLeft -= 1 + unit.has_augment(CHIP);
+		hitsLeft -= 1 + unit.stats->has_augment(CHIP);
 		if (hitsLeft <= 0) {
 			enter_destroyed_state();
 			return;

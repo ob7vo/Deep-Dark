@@ -1,13 +1,14 @@
 #pragma once
 #include "Animation.h"
+#include "UnitMoveRequest.h"
 #include "Lane.h"
 #include "UnitData.h"
 #include "Base.h"
 #include "Spawners.h"
 #include "Trap.h"
 #include "Teleporter.h"
-#include "Surge.h"
 #include "Projectile.h"
+#include "Surge.h"
 #include <iostream>
 
 const int p_team = 1;
@@ -32,32 +33,10 @@ struct SummonData {
 	}
 }; 
 
-/// <summary>
-/// Needed to move Units between vectors (Lanes), and can ONLY be called
-/// for that purpose, not just any plain old movement.
-/// </summary>
-struct MoveRequest {
-	int unitId;
-	int currentLane;
-	int newLane;
-	int team;
-	float axisPos;
-	RequestType type;
-
-	MoveRequest(Unit& unit, int newLane, float axisPos, RequestType type);
-
-	void move_unit_by_request(Unit& unit, Stage& stage) const;
-	inline bool fall_request() const { return type == RequestType::FALL; }
-	inline bool teleport_request() const { return type == RequestType::TELEPORT; }
-	inline bool squash_request() const { return type == RequestType::SQUASH; }
-	inline bool jump_request() const { return type == RequestType::JUMP; }
-	inline bool	launch_request() const { return type == RequestType::LAUNCH; }
-	
-};
-
 struct Stage
 {
 	StageRecord* recorder = nullptr;
+	float timeSinceStart = 0.f;
 
 	std::vector<Lane> lanes = {};
 	int laneCount = 0;
@@ -83,34 +62,32 @@ struct Stage
 	Base playerBase = {};
 
 	Stage() = default;
-	Stage(const nlohmann::json& stageFile, int stageSet, StageRecord* recorder);
+	Stage(const nlohmann::json& stageSetJson, StageRecord* recorder);
 	Lane& get_closest_lane(float y);
 
-	Unit* create_unit(int laneIndex, const UnitStats* unitStats, UnitAniMap* aniMap);
-	void create_summon(Unit& unit);
-	bool can_summon(int summonId, float magnification);
-	void try_revive_unit(UnitSpawner* spawner);
-	void break_spawner_thresholds(float timeSinceStart = 0.f);
+	void break_spawner_thresholds();
 
-	Surge* create_surge(Unit& unit, const Augment& surge);
-	void create_surge(BaseCannon* pCannon, const Augment& surge);
-	void create_surge(BaseCannon* eCannon, const Augment& surge, int lane, float distance);
+	// Creating Units
+	Unit* create_unit(int laneIndex, const UnitStats* unitStats, UnitAniMap* aniMap);
+	void try_revive_unit(UnitSpawner* spawner);
+	void create_summon(const Unit& unit);
+	bool can_summon(int summonId, float magnification);
+
+	// Creating Surges
+	Surge* create_surge(const Unit& unit, const Augment& surge);
+	void create_surge(const BaseCannon* cannon, const Augment& surge);
+	void create_surge(const BaseCannon* cannon, const Augment& surge, int lane, float distance);
 	Surge* create_surge(const UnitStats* stats, int curLane, int level, sf::Vector2f pos, AugmentType aug);
-	void create_projectile(Unit& unit, const Augment& proj);
+
+	void create_projectile(const Unit& unit, const Augment& proj);
 	void create_hitbox_visualizers(sf::Vector2f pos, std::pair<float, float> range, int team);
 
-	std::pair<float, int> find_lane_to_fall_on(Unit& unit);
-	int find_lane_to_knock_to(Unit& unit, int incrementer) const;
+	std::pair<float, int> find_lane_to_fall_on(const Unit& unit);
+	int find_lane_to_knock_to(const Unit& unit, int incrementer) const;
 
-	inline std::vector<Unit>& get_lane_targets(int i, int team) { return lanes[i].get_targets(team); }
-	inline std::vector<Unit>& get_source_vector(int i, int team) { return lanes[i].get_source(team); }
-	inline Lane& get_lane(int i) { return lanes[i]; }
+	inline std::vector<Unit>& get_lane_targets(int i, int team) { return lanes[i].getOpponentUnits(team); }
+	inline std::vector<Unit>& get_source_vector(int i, int team) { return lanes[i].getAllyUnits(team); }
 	inline Base& get_enemy_base(int team) { return team == p_team ? enemyBase : playerBase; }
-
-	inline bool over_gap(int i, float xPos) { return lanes[i].within_gap(xPos); }
-	inline bool out_of_lane(int i, float xPos) { return lanes[i].out_of_lane(xPos); }
-	inline float get_team_wall(int i, int team) { return lanes[i].get_wall(team); }
-	inline std::pair<float, float> get_walls(int i) { return { lanes[i].get_wall(1), lanes[i].get_wall(-1) }; }
 
 	inline bool can_push_move_request(int id) {
 		auto it = std::find_if(moveRequests.begin(), moveRequests.end(),

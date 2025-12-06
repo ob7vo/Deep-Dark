@@ -3,18 +3,6 @@
 #include <iostream>
 #include "Augment.h"
 
-enum class RequestType {
-	NOT_DONE,
-	NONE,
-	KNOCKBACK,
-	TELEPORT,
-	FALL,
-	SQUASH,
-	LAUNCH,
-	JUMP,
-	LEAP,
-	PHASE
-};
 enum class UnitAnimationState {
 	WAITING = -2,
 	PHASE = -1,

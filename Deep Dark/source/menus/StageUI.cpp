@@ -61,7 +61,7 @@ void StageUI::check_mouse_hover() {
 }
 void StageUI::pause() {
 	stageManager->pause();
-	for (int i = 0; i < UI_BTN_COUNT; i++) 
+	for (int i = 0; i < BTN_COUNT; i++) 
 		buttonManager.buttons[i].sprite.setColor(sf::Color::White);
 }
 void StageUI::upgrade_bag() {
@@ -77,21 +77,21 @@ Menu(cam), stageUI(ui) {
 	pauseText.setPosition(cam.norm_to_pixels(PAUSE_TEXT_POS));
 	pauseText.setString("game is PAUSED baby");
 
-	closeGameBtn().setup(CLOSE_GAME_BTN_POS, CLOSE_GAME_BTN_SIZE, cam, TextureManager::t_returnBtn);
-	closeMenuBtn().setup(CLOSE_MENU_BTN_POS, CLOSE_MENU_BTN_SIZE, cam, TextureManager::t_closeBtn);
+	closeGameBtn().setup(PauseMenu::CLOSE_GAME_BTN_POS, PauseMenu::CLOSE_GAME_BTN_SIZE, cam, TextureManager::t_returnBtn);
+	closeMenuBtn().setup(PauseMenu::CLOSE_MENU_BTN_POS, PauseMenu::CLOSE_MENU_BTN_SIZE, cam, TextureManager::t_closeBtn);
 
 	closeGameBtn().onClick = [this](bool m1) { if (m1) close_game(); };
 	closeMenuBtn().onClick = [this](bool m1) { if (m1) close_menu(); };
 
-	cam.setup_sprite(PAUSE_MENU_POS, PAUSE_MENU_SIZE, pauseMenuSprite, TextureManager::t_menuBG1);
+	cam.setup_sprite(PauseMenu::PAUSE_MENU_POS, PauseMenu::PAUSE_MENU_SIZE, pauseMenuSprite, TextureManager::t_menuBG1);
 }
 void StagePauseMenu::reset_positions() {
 	pauseText.setPosition(cam.norm_to_pixels(PAUSE_TEXT_POS));
 
-	closeMenuBtn().sprite.setPosition(cam.norm_to_pixels(CLOSE_MENU_BTN_POS));
-	closeGameBtn().sprite.setPosition(cam.norm_to_pixels(CLOSE_GAME_BTN_POS));
+	closeMenuBtn().sprite.setPosition(cam.norm_to_pixels(PauseMenu::CLOSE_MENU_BTN_POS));
+	closeGameBtn().sprite.setPosition(cam.norm_to_pixels(PauseMenu::CLOSE_GAME_BTN_POS));
 
-	pauseMenuSprite.setPosition(cam.norm_to_pixels(PAUSE_MENU_POS));
+	pauseMenuSprite.setPosition(cam.norm_to_pixels(PauseMenu::PAUSE_MENU_POS));
 }
 void StagePauseMenu::draw() {
 	cam.darken_screen(0.5f);

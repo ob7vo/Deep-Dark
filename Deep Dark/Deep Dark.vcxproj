@@ -109,7 +109,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)\include\game_states\;$(ProjectDir)\include\visuals\;$(ProjectDir)\include\systems\;$(ProjectDir)\include\enums\;$(ProjectDir)\include\stage\entities\;$(ProjectDir)\include\stage\;$(ProjectDir)include\menus\;$(ProjectDir)\include\utilities\;$(ProjectDir)\include\stage\unit\;$(ProjectDir)\game_saves\;C:\Users\amaec\source\SFML-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include\game_states\;$(ProjectDir)\include\visuals\;$(ProjectDir)\include\systems\;$(ProjectDir)\include\enums\;$(ProjectDir)\include\stage\entities\;$(ProjectDir)\include\stage\;$(ProjectDir)include\menus\;$(ProjectDir)\include\utilities\;$(ProjectDir)\include\stage\mechanics\;$(ProjectDir)\include\stage\unit\;$(ProjectDir)\game_saves\;C:\Users\amaec\source\SFML-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -153,11 +153,12 @@
     <ClCompile Include="source\menus\StartMenu.cpp" />
     <ClCompile Include="source\menus\WorkshopMenu.cpp" />
     <ClCompile Include="source\stage\entities\Spawners.cpp" />
-    <ClCompile Include="source\stage\Base.cpp" />
-    <ClCompile Include="source\stage\BaseCannon.cpp" />
+    <ClCompile Include="source\stage\entities\Base.cpp" />
+    <ClCompile Include="source\stage\entities\BaseCannon.cpp" />
+    <ClCompile Include="source\stage\entities\StageEntity.cpp" />
     <ClCompile Include="source\stage\entities\Teleporter.cpp" />
     <ClCompile Include="source\stage\entities\Projectile.cpp" />
-    <ClCompile Include="source\stage\Lane.cpp" />
+    <ClCompile Include="source\stage\mechanics\Lane.cpp" />
     <ClCompile Include="source\stage\Stage.cpp" />
     <ClCompile Include="source\stage\entities\Surge.cpp" />
     <ClCompile Include="source\stage\entities\Trap.cpp" />
@@ -170,12 +171,12 @@
     <ClCompile Include="source\stage\unit\UnitAnimation.cpp" />
     <ClCompile Include="source\stage\unit\UnitCombat.cpp" />
     <ClCompile Include="source\stage\unit\UnitMovement.cpp" />
-    <ClCompile Include="source\utilities\Augment.cpp" />
+    <ClCompile Include="source\stage\mechanics\Augment.cpp" />
     <ClCompile Include="source\utilities\Pathing.cpp" />
     <ClCompile Include="source\utilities\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="source\utilities\ProjectileData.cpp" />
+    <ClCompile Include="source\stage\mechanics\ProjectileData.cpp" />
     <ClCompile Include="source\stage\unit\UnitData.cpp" />
     <ClCompile Include="source\stage\unit\UnitStatus.cpp" />
     <ClCompile Include="source\visuals\Animation.cpp" />
@@ -195,27 +196,29 @@
     <ClInclude Include="include\menus\StageUI.h" />
     <ClInclude Include="include\menus\StartMenu.h" />
     <ClInclude Include="include\enums\ChallengeTypes.h" />
+    <ClInclude Include="include\stage\mechanics\UnitMoveRequest.h" />
+    <ClInclude Include="include\utilities\CustomErrors.hpp" />
     <ClInclude Include="include\utilities\json.hpp" />
     <ClInclude Include="include\stage\entities\StageEntity.h" />
-    <ClInclude Include="include\stage\StageWallet.h" />
+    <ClInclude Include="include\stage\mechanics\StageWallet.h" />
     <ClInclude Include="include\stage\unit\UnitAnimation.h" />
     <ClInclude Include="include\stage\unit\UnitCombat.h" />
     <ClInclude Include="include\enums\UnitEnums.h" />
     <ClInclude Include="include\menus\WorkshopMenu.h" />
     <ClInclude Include="include\stage\entities\Spawners.h" />
-    <ClInclude Include="include\stage\Base.h" />
-    <ClInclude Include="include\stage\BaseCannon.h" />
-    <ClInclude Include="include\stage\Lane.h" />
+    <ClInclude Include="include\stage\entities\Base.h" />
+    <ClInclude Include="include\stage\entities\BaseCannon.h" />
+    <ClInclude Include="include\stage\mechanics\Lane.h" />
     <ClInclude Include="include\stage\entities\Projectile.h" />
     <ClInclude Include="include\stage\unit\UnitMovement.h" />
-    <ClInclude Include="include\utilities\ArmorySlot.h" />
-    <ClInclude Include="include\utilities\Augment.h" />
+    <ClInclude Include="include\visuals\ArmorySlot.h" />
+    <ClInclude Include="include\stage\mechanics\Augment.h" />
     <ClInclude Include="include\utilities\json_fwd.hpp" />
     <ClInclude Include="include\utilities\Pathing.h" />
     <ClInclude Include="include\utilities\pch.h" />
-    <ClInclude Include="include\utilities\ProjectileData.h" />
+    <ClInclude Include="include\stage\mechanics\ProjectileData.h" />
     <ClInclude Include="include\stage\Stage.h" />
-    <ClInclude Include="include\stage\StatusEffect.h" />
+    <ClInclude Include="include\stage\mechanics\StatusEffect.h" />
     <ClInclude Include="include\stage\entities\Surge.h" />
     <ClInclude Include="include\stage\entities\Teleporter.h" />
     <ClInclude Include="include\stage\entities\Trap.h" />
@@ -239,13 +242,14 @@
     <ClInclude Include="include\visuals\Button.h" />
     <ClInclude Include="include\visuals\MouseCursor.h" />
     <ClInclude Include="include\visuals\Slider.h" />
+    <ClInclude Include="include\stage\unit\UnitTween.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="configs\base _data\player_bases\p_wave_base.json" />
     <None Include="configs\proj_data\0\proj_data.json" />
-    <None Include="configs\unit_data\1\unit_data.json" />
+    <None Include="configs\unit_data\1\gear1\unit_data.json" />
     <None Include="configs\base data\enemy bases\orbitral base\orbital base.json" />
-    <None Include="configs\unit_data\101\unit_data.json" />
+    <None Include="configs\unit_data\101\gear1\unit_data.json" />
     <None Include="configs\stage data\stage 1.json" />
     <None Include="game_saves\stage_save.json" />
     <None Include="game_saves\unit_save.json" />

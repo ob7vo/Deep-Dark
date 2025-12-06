@@ -4,9 +4,6 @@
   "name": "Cursed Soldier",
   "level": 1,
   "team": 1,
-  "parts_cost": 5,
-  "recharge_timer": 2.5,
-  "single_target": false,
   "stats": {
     "hp": 150,
     "knockbacks": 2,
@@ -14,6 +11,7 @@
     "attack_time": 2.25,
     "sight_range": 225.0,
     "lane_sight": [ 1, 1 ],
+    "single_target": false,
     "hits": [
       {
         "dmg": 30,
@@ -30,12 +28,18 @@
         "lane_reach": [ 1, 1 ],
         "attack_range": [ -75, 300 ]
       }
-    ]
+    ],
+    "parts_cost": 5,
+    "recharge_timer": 2.5
+  },
+  "hurtbox": {
+    "width": 50.0,
+    "height": 65.0
   },
   "animations": {
     "move": {
       "cell_size": [ 162, 162 ],
-      "origin": [124, 100],
+      "origin": [100, 100],
       "frames": 8,
       "fps": 8
     },
@@ -79,7 +83,7 @@
       "surge_level": 3
     },
     {
-      "augment": "projectile",
+      "augment": "_projectile",
       "active_hits": [ 0 ],
       "int_value": 0
     }

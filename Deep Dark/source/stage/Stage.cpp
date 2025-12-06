@@ -10,13 +10,9 @@ const int MAX_PROJECTILES = 10;
 
 using json = nlohmann::json;
 
-#pragma region Constructors
-	
-Stage::Stage(const json& stageFile, int stageSet, StageRecord* rec) : recorder(rec),
-	enemyBase(stageFile, -1), playerBase(stageFile, 1)
+Stage::Stage(const json& stageSetJson, StageRecord* rec) : recorder(rec),
+	enemyBase(stageSetJson["enemy_base"], -1), playerBase(stageSetJson["player_base"], 1)
 {
-	const json& stageSetJson = stageFile["sets"][stageSet];
-
 	laneCount = stageSetJson["lane_count"];
 	lanes.reserve(laneCount);
 	surges.reserve(MAX_SURGES);
@@ -29,53 +25,41 @@ Stage::Stage(const json& stageFile, int stageSet, StageRecord* rec) : recorder(r
 		return a.yPos > b.yPos;
 	});
 
-	if (stageSetJson.contains("teleporters")) {
+	if (stageSetJson.contains("teleporters")) 
 		for (auto& tp : stageSetJson["teleporters"]) {
 			int lane = tp["lane"];
 			sf::Vector2f tpPos = { tp["x_position"], lanes[lane].yPos };
 
 			teleporters.emplace_back(tp, tpPos, lane);
 		}
-	}
-	if (stageSetJson.contains("traps")) {
+	
+
+	if (stageSetJson.contains("traps")) 
 		for (auto& trap : stageSetJson["traps"]) {
 			int lane = trap["lane"];
 			sf::Vector2f trapPos = { trap["x_position"], lanes[lane].yPos };
+
 			traps.emplace_back(trap, trapPos, lane);
 		}
-	}
-	for (auto& spawnData : stageSetJson["enemy_spawns"]) {
+	
+	for (auto& spawnData : stageSetJson["enemy_spawns"]) 
 		enemySpawners.emplace_back(spawnData, *this);
-	}
+	
 
 	break_spawner_thresholds();
 }
+MoveRequest::MoveRequest(const Unit& unit, int newLane, float axisPos, RequestType type) :
+unitId(unit.id), currentLane(unit.get_lane()), newLane(newLane), team(unit.stats->team),
+axisPos(axisPos), type(type) {}
 
-MoveRequest::MoveRequest(Unit& unit, int newLane, float axisPos, RequestType type) :
-unitId(unit.id), team(unit.stats->team), currentLane(unit.get_lane()),
-newLane(newLane), axisPos(axisPos), type(type) {}
-#pragma endregion
-
-void Stage::break_spawner_thresholds(float timeSinceStart) {
+void Stage::break_spawner_thresholds() {
 	float percentage = enemyBase.get_hp_percentage();
-	enemyBase.tookDmgThisFrame = false;
 
-	std::cout << "updating bade percentage\n";
 	for (auto& spawner : enemySpawners) {
-		if (spawner.currentSpawnIndex >= 0) {
-			std::cout << "Spawn Index is >= 0: " << spawner.currentSpawnIndex << std::endl;
-			continue;
-		}
-		if (percentage > spawner.percentThreshold) {
-			std::cout << "threshold not met. SpawnerThreshold: [" << spawner.percentThreshold
-				<< "] - Current Base Percent: " << percentage << std::endl;
-			continue;
-		}
+		if (spawner.currentSpawnIndex >= 0 || percentage > spawner.percentThreshold) continue;
 
 		spawner.currentSpawnIndex = 0;
 		spawner.nextSpawnTime -= (INACTIVE_SPAWNER - timeSinceStart);
-		std::cout << "Activating spawner. First spawn at: " <<
-			spawner.nextSpawnTime << std::endl;
 	}
 }
 Lane& Stage::get_closest_lane(float y) {
@@ -130,16 +114,7 @@ void Stage::try_revive_unit(UnitSpawner* spawner) {
 		newUnit->anim.start(UnitAnimationState::MOVE);
 	}
 }
-bool Stage::can_summon(int summonId, float magnification) {
-	if (summonData) 
-		return summonData->count < MAX_SUMMONS ? true : false;
-	
-	nlohmann::json unitJson = UnitData::createUnitJson(summonId);
-	summonData = std::make_unique<SummonData>(unitJson, magnification);
-
-	return summonData ? true : false;
-}
-void Stage::create_summon(Unit& unit) {
+void Stage::create_summon(const Unit& unit) {
 	Augment salvage = unit.stats->get_augment(SALVAGE);
 	int id = salvage.intValue;
 
@@ -158,8 +133,7 @@ void Stage::create_summon(Unit& unit) {
 	}
 }
 
-// units
-Surge* Stage::create_surge(Unit& unit, const Augment& surge) {
+Surge* Stage::create_surge(const Unit& unit, const Augment& surge) {
 	int lane = unit.get_lane();
 	int level = surge.surgeLevel;
 	sf::Vector2f pos = unit.get_pos();
@@ -174,17 +148,15 @@ Surge* Stage::create_surge(Unit& unit, const Augment& surge) {
 	pSurge->hitIndex = unit.combat.hitIndex;
 	return surges.back().get();
 }
-// player bases
-void Stage::create_surge(BaseCannon* pCannon, const Augment& surge) {
-	Surge* pSurge = create_surge(&pCannon->cannonStats, selectedLane, surge.surgeLevel, pCannon->pos, surge.augType);
+void Stage::create_surge(const BaseCannon* cannon, const Augment& surge) {
+	Surge* pSurge = create_surge(&cannon->cannonStats, selectedLane, surge.surgeLevel, cannon->pos, surge.augType);
 	if (pSurge) pSurge->set_as_cannon_creation();
 }
-// enemy bases
-void Stage::create_surge(BaseCannon* eCannon, const Augment& surge, int lane, float distance) {
-	sf::Vector2f pos = eCannon->pos;
+void Stage::create_surge(const BaseCannon* cannon, const Augment& surge, int lane, float distance) {
+	sf::Vector2f pos = cannon->pos;
 	pos.x -= distance;
 
-	Surge* pSurge = create_surge(&eCannon->cannonStats, lane, surge.surgeLevel, pos, surge.augType);
+	Surge* pSurge = create_surge(&cannon->cannonStats, lane, surge.surgeLevel, pos, surge.augType);
 	if (pSurge) pSurge->set_as_cannon_creation();
 }
 Surge* Stage::create_surge(const UnitStats* stats, int lane, int level, sf::Vector2f pos, AugmentType aug) {
@@ -202,7 +174,7 @@ Surge* Stage::create_surge(const UnitStats* stats, int lane, int level, sf::Vect
 	return nullptr;
 }
 
-void Stage::create_projectile(Unit& unit, const Augment& aug) {
+void Stage::create_projectile(const Unit& unit, const Augment& aug) {
 	if (projectiles.size() >= MAX_PROJECTILES) {
 		std::cout << "too many projectiles to add more" << std::endl;
 		return;
@@ -263,26 +235,39 @@ void Stage::create_hitbox_visualizers(sf::Vector2f pos, std::pair<float, float> 
 	hitboxes.emplace_back(shape, HITBOX_TIMER );
 }
 
-std::pair<float, int> Stage::find_lane_to_fall_on(Unit& unit) {
+std::pair<float, int> Stage::find_lane_to_fall_on(const Unit& unit) {
 	float newY = FLOOR;
 
-	for (int i = unit.get_lane() - 1; i >= 0; i--) {
-		Lane& lane = lanes[i];
+	const auto& [leftHurtboxEdge, rightHurtboxEdge] = unit.getHurtboxEdges();
 
-		if (!lane.within_gap(unit.get_pos().x)) {
-			newY = lane.yPos;
+	for (int i = unit.get_lane() - 1; i >= 0; i--) {
+		if (!lanes[i].within_gap(leftHurtboxEdge, rightHurtboxEdge)) {
+			newY = lanes[i].yPos;
 			return { newY, i };
 		}
 	}
 
 	return { newY, -1 };
 }
-int Stage::find_lane_to_knock_to(Unit& unit, int inc) const {
+int Stage::find_lane_to_knock_to(const Unit& unit, int inc) const {
+	const auto& [leftHurtboxEdge, rightHurtboxEdge] = unit.getHurtboxEdges();
+
 	for (int i = unit.get_lane() + inc; i >= 0 && i < laneCount; i += inc) {
-		if (lanes[i].within_gap(unit.get_pos().x)) continue;
+		if (lanes[i].within_gap(leftHurtboxEdge, rightHurtboxEdge)) continue;
+
 		return i;
 	}
+
 	return unit.get_lane();
+}
+bool Stage::can_summon(int summonId, float magnification) {
+	if (summonData)
+		return summonData->count < MAX_SUMMONS ? true : false;
+
+	nlohmann::json unitJson = UnitData::createUnitJson(summonId);
+	summonData = std::make_unique<SummonData>(unitJson, magnification);
+
+	return summonData ? true : false;
 }
 
 void MoveRequest::move_unit_by_request(Unit& unit, Stage& stage) const{

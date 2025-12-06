@@ -1,6 +1,6 @@
+#include "pch.h"
 #include "MainMenusGameState.h"
 #include "PreparationState.h"
-#include <fstream>
 
 MainMenusState::MainMenusState(Camera& cam) :
 startMenu(cam), GameState(cam){

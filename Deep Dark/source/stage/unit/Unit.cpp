@@ -10,10 +10,9 @@ const float BASE_PHASING_TIMER = 1.f; // over 50 distance
 const float BASE_PHASE_DISTANCE = 50;
 
 Unit::Unit(Stage* curStage, sf::Vector2f startPos, int startingLane, const UnitStats* data,
-	UnitAniMap* aniMap, int id)
-	: stage(curStage),anim(aniMap), movement(startPos, startingLane), stats(data), id(id), status(data)
+	UnitAniMap* aniMap, int id) : stage(curStage), stats(data), status(data),
+	anim(aniMap, data), movement(startPos, startingLane), id(id)
 {}
-
 
 void Unit::destroy_unit() {
 	std::cout << "destroying Unit with id #" << id << std::endl;
@@ -82,7 +81,11 @@ bool Unit::enemy_is_in_sight_range() const{
 bool Unit::found_valid_target(const Unit& enemy, float minRange, float maxRange) const {
 	return !enemy.anim.invincible() && enemy_in_range(enemy.movement.pos.x, minRange, maxRange);
 }
-bool Unit::over_gap() const { return stage->over_gap(get_lane(), get_pos().x); }
+bool Unit::over_gap() const { 
+	// Check if the front of the hurtbox, as well as the back are BOTH off the lane
+	const auto& [left, right] = getHurtboxEdges();
+	return stage->lanes[movement.currentLane].within_gap(left, right);
+}
 
 bool Unit::can_make_surge(const Augment& aug) const {
 	return aug.is_surge() && Random::chance(aug.percentage) &&
@@ -91,8 +94,8 @@ bool Unit::can_make_surge(const Augment& aug) const {
 bool Unit::rust_type_and_near_gap() const {
 	if (!stats->rusted_tyoe()) return false;
 
-	for (auto const [leftEdge, rightEdge] : stage->get_lane(get_lane()).gaps) {
-		float edge = player_team() ? leftEdge : rightEdge;
+	for (const auto& [gapLeft, gapRight] : stage->lanes[get_lane()].gaps) {
+		float edge = player_team() ? gapLeft : gapRight;
 		float dist = (edge - get_pos().x) * static_cast<float>(stats->team);
 
 		if (dist > 0 && dist <= RUST_TYPE_LEDGE_RANGE)
@@ -152,9 +155,10 @@ void Unit::moving_state(float deltaTime) {
 	}
 	else {
 		// in case Unit has both JUMP and LEAP, return if they succeed in jumping
-		if (has_augment(JUMP) && get_lane() < stage->laneCount - 1 && movement.try_push_jump_request(*this)) 
+		if (stats->has_augment(JUMP) && get_lane() < stage->laneCount - 1 && 
+			movement.try_push_jump_request(*this)) 
 			return; 
-		if (has_augment(LEAP) && movement.try_leap(*this)) return;
+		if (stats->has_augment(LEAP) && movement.try_leap(*this)) return;
 		if (rust_type_and_near_gap())
 			anim.start(UnitAnimationState::IDLE);
 	}
@@ -164,7 +168,7 @@ void Unit::attack_state(float deltaTime) {
 
 	if (events & FINAL_FRAME) {
 		combat.cooldown = stats->attackTime;
-		if (has_augment(SELF_DESTRUCT)) destroy_unit();
+		if (stats->has_augment(SELF_DESTRUCT)) destroy_unit();
 		else if (enemy_is_in_sight_range()) 
 			anim.start_idle_or_attack_animation(*this);	
 		else if (!rust_type_and_near_gap())
@@ -174,7 +178,7 @@ void Unit::attack_state(float deltaTime) {
 	}
 	if (events & ATTACK) {
 		combat.attack(*this);
-		if (has_augment(SELF_DESTRUCT)) status.hp = 0;
+		if (stats->has_augment(SELF_DESTRUCT)) status.hp = 0;
 	}
 }
 void Unit::idling_state(float deltaTime) {
@@ -200,8 +204,9 @@ void Unit::knockback_state(float deltaTime) {
 		else anim.start(UnitAnimationState::MOVE);
 	}
 	else {
+		// If the tween ends, and it was a LAUNCH tween, enter the drop portion of it.
 		RequestType finishedType = movement.update_tween(deltaTime);
-		if (finishedType == RequestType::LAUNCH) movement.finish_launch_tween(*this);
+		if (finishedType == RequestType::LAUNCH) movement.finish_launch_tween(stage);
 	}
 }
 void Unit::falling_state(float deltaTime) {
@@ -239,14 +244,15 @@ void Unit::phase_state(float deltaTime) {
 			status.statusFlags &= ~PHASE;
 
 			float end = get_pos().x + stats->get_augment(PHASE).value * static_cast<float>(stats->team);
-			auto [minWall, maxWall] = stage->get_walls(get_lane());
-			end = std::clamp(end, minWall, maxWall);
+			auto [minBound, maxBound] = stage->lanes[movement.currentLane].get_lane_boundaries();
+			end = std::clamp(end, minBound, maxBound);
 
 			float timer = calculate_phase_timer(std::abs(get_pos().x - end));
 
-			movement.create_tween({ end, get_pos().y}, timer, RequestType::PHASE);
 			combat.cooldown = timer;
-			anim.start_phasing();
+			movement.create_tween({ end, get_pos().y}, timer, RequestType::PHASE);
+
+			anim.enter_is_phasing_state();
 		}
 		else {
 			if (status.dead()) destroy_unit();
@@ -258,6 +264,8 @@ void Unit::phase_state(float deltaTime) {
 }
 void Unit::waiting_state() {
 	if (combat.cooldown <= 0) {
+		combat.cooldown = stats->attackTime;
+		
 		if (anim.is_phasing())
 			anim.start(UnitAnimationState::PHASE);
 		else {
@@ -271,14 +279,22 @@ void Unit::waiting_state() {
 #pragma endregion
 
 std::pair<int, int> Unit::get_lane_reach() const {
-	auto& hit = stats->get_hit_stats(combat.hitIndex);
-	// laneReach.first will be negative
-	int min = std::max(get_lane() - std::abs(hit.laneReach.first), 0);
-	int max = std::min(get_lane() + hit.laneReach.second + 1, stage->laneCount);
+	const auto& [minLane, maxLane] = stats->get_hit_stats(combat.hitIndex).laneReach;
+
+	// minLane.might be negative, s do std::abs
+	int min = std::max(get_lane() - std::abs(minLane), 0);
+	int max = std::min(get_lane() + maxLane + 1, stage->laneCount);
+
 	return { min, max };
 }
 std::pair<int, int> Unit::get_lane_sight_range() const {
+
 	int min = std::max(get_lane() - stats->laneSight.first, 0);
 	int max = std::min(get_lane() + stats->laneSight.second + 1, stage->laneCount);
+
 	return { min, max };
+}
+std::pair<float, float> Unit::getHurtboxEdges() const {
+	float edge = movement.pos.x - (stats->hurtBox.x * (float)stats->team);
+	return std::minmax(movement.pos.x, edge);
 }

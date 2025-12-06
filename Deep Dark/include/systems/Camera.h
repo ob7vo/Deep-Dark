@@ -84,6 +84,8 @@ public:
 
 	inline void close_window() { window.close(); }
 	inline sf::RenderWindow& get_window() const { return window; }
-	inline sf::Vector2f& getMouseWorldPos() { return cursor.worldPos; }
-	inline sf::Vector2i& getMouseScreenPos() { return cursor.screenPos; }
+	inline const sf::Vector2f& getMouseWorldPos() const { return cursor.worldPos; }
+	inline const sf::Vector2i& getMouseScreenPos() const { return cursor.screenPos; }
+
+	inline bool doubleClicked() const { return cursor.lastClickTime <= DOUBLE_CLICK_WINDOW; }
 };

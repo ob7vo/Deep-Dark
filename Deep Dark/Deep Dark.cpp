@@ -47,8 +47,7 @@ int main()
         sf::Style::Titlebar | sf::Style::Close);
  
     TextureManager::initialize();
-    BaseCannon::init_animations();
-
+    Surge::init_animations();
     SaveSystem::Get().initialize();
 
     fpsText.setCharacterSize(20);
@@ -60,13 +59,13 @@ int main()
 
     /**/
     std::array<ArmorySlot, 10> slots = ArmorySlot::default_armory_loadout();
-    std::string stageJsonPath = "configs/stage_data/stage_1.json";
+    std::string stageJsonPath = "configs/stage_data/stage_0.json";
     StageEnterData stageEnterData(stageJsonPath, 0, slots);
     //*/
 
-    PrepEnterData prepData(MenuType::ARMORY_EQUIP, MenuType::STAGE_SELECT);
+    PrepEnterData prepData(MenuType::STAGE_SELECT, MenuType::ARMORY_EQUIP);
     OnStateEnterData enterData(GameState::Type::MAIN_MENU);
-    stateManager.switch_state(&prepData);
+    stateManager.switch_state(&stageEnterData);
 
     while (window.isOpen())
     {

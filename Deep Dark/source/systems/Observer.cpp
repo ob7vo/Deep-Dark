@@ -7,7 +7,7 @@ bool Challenge::notify(StageManager& manager) {
 
 	switch (challengeType) {
 	case ChallengeType::CLEAR_TIME:
-		return compare((int)manager.timeSinceStart, value);
+		return compare((int)manager.stage.timeSinceStart, value);
 	case ChallengeType::UNITS_AT_ONCE: {
 		size_t totalUnitsOfTeam = get_current_unit_count(manager);
 		return compare((int)totalUnitsOfTeam, value);

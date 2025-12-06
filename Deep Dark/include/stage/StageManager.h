@@ -20,7 +20,6 @@ struct StageManager
 	std::vector<Challenge> challenges = {};
 	int clearedChallenges = 0;
 
-	float timeSinceStart = 0.f;
 	float oneSecondTimer = 0;
 	int selectedLane = 0;
 
@@ -33,8 +32,8 @@ struct StageManager
 
 	void unload();
 
-	void create_stage(const nlohmann::json& stageJson, int stageSet = 0);
-	void create_challenges(const nlohmann::json& stageJson);
+	void create_stage(const nlohmann::json& stageSetJson, int stageSet = 0);
+	void create_challenges(const nlohmann::json& stageSetJson);
 	void set_texts();
 
 	void update_game_ticks(float deltaTime);
@@ -57,12 +56,12 @@ struct StageManager
 	void upgrade_bag();
 	void pause();
 
-	void try_spawn_death_surge(Unit& unit);
+	void try_spawn_death_surge(const Unit& unit);
 	void create_drop_box(int lane, const UnitStats* stats, UnitAniMap* aniMap);
-	void try_create_cloner(Unit& unit);
-	void collect_parts(Unit& unit);
-	void handle_enemy_unit_death(Unit& unit);
-	void handle_player_unit_death(Unit& unit);
+	void try_create_cloner(const Unit& unit);
+	void collect_parts(const Unit& unit);
+	void handle_enemy_unit_death(const Unit& unit);
+	void handle_player_unit_death(const Unit& unit);
 
 	inline void notify_challenges() {
 		int clears = 0;

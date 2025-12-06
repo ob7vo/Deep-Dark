@@ -9,7 +9,6 @@ struct UnitCombat {
 
 	UnitCombat() = default;
 
-
 	void attack(Unit& attackerUnit);
 	bool process_attack_on_lanes(Unit& attackerUnit) const;
 	bool attack_lane(Unit& attacker, int laneIndex) const;

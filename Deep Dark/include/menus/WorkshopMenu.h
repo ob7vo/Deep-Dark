@@ -19,8 +19,8 @@ const std::array<float, 5> UNIT_ANIMATION_SPEEDS = { 0.5f, 0.75f, 1, 1.5f, 2.f }
 struct WorkshopMenu : public Menu<UI::Workshop::BTN_COUNT> {
 	UnitStats unitStats;
 	int unitId = 0;
-	int unitGear = 0;
-	int numberOfForms = 0;
+	int unitGear = 1;
+	int highestGear = 0;
 
 	sf::Text unitNameText = sf::Text(baseFont);
 	sf::Text unitDescText = sf::Text(baseFont);

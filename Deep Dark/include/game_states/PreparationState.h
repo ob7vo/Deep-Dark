@@ -8,16 +8,19 @@ struct PrepEnterData;
 struct StageSetEnterData;
 
 class PreparationState : public GameState {
+private:
 	StageSelect stageSelect;
 	ArmoryMenu armoryMenu;
 	WorkshopMenu workshopMenu;
 
-	MenuBase* menu;
+	MenuBase* menu = nullptr;
 	MenuType curMenuType = MenuType::STAGE_SELECT;
 	MenuType prevMenuType = MenuType::MAIN_MENU;
 public:
+
 	explicit PreparationState(Camera& cam);
 	~PreparationState() = default;
+	void setup_button_functions();
 
 	void update(float deltaTime) override;
 	void render() override;

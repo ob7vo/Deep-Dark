@@ -23,10 +23,10 @@ void Teleporter::check_units(std::vector<Unit>& units) const {
 void Teleporter::action(Stage& stage) {
 	// input the units to check for
 	if (team == 0) {
-		check_units(stage.get_lane(laneInd).get_source(-1));
-		check_units(stage.get_lane(laneInd).get_source(1));
+		check_units(stage.lanes[laneInd].getAllyUnits(-1));
+		check_units(stage.lanes[laneInd].getAllyUnits(1));
 	}
-	else check_units(stage.get_lane(laneInd).get_source(team));
+	else check_units(stage.lanes[laneInd].getAllyUnits(team));
 }
 
 void Teleporter::create_animation() {

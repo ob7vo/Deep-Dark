@@ -45,6 +45,7 @@ statTexts(make_statTexts()) {
 void WorkshopMenu::setup_workshop_unit(int id, int gear) {
 	unitId = id;
 	unitGear = gear;
+	highestGear = UnitData::getMaxGear(id);
 
 	const nlohmann::json unitJson = UnitData::createUnitJson(id, gear);
 
@@ -175,22 +176,23 @@ bool WorkshopMenu::on_mouse_release(bool isM1) {
 }
 
 void WorkshopMenu::switch_unit_gear() {
-	unitGear = std::max((unitGear + 1) % 4, 1);
+	unitGear = std::clamp((unitGear + 1), 1, highestGear);
 	setup_workshop_unit(unitId, unitGear);
 }
 
 // BUTTON INDEXEX /////////////////////////////////////////////////////
 #pragma region Button Indexs
-Button& WorkshopMenu::return_btn() { return buttonManager.buttons[0]; }
-Button& WorkshopMenu::pause_btn() { return buttonManager.buttons[1]; }
-Button& WorkshopMenu::switchGearBtn() { return buttonManager.buttons[2]; }
-Button& WorkshopMenu::animationSpeedBtn() { return buttonManager.buttons[3]; }
+Button& WorkshopMenu::return_btn() { return buttonManager.buttons[static_cast<int>(ButtonIndex::RETURN)]; }
+Button& WorkshopMenu::pause_btn() { return buttonManager.buttons[static_cast<int>(ButtonIndex::PAUSE)]; }
+Button& WorkshopMenu::switchGearBtn() { return buttonManager.buttons[static_cast<int>(ButtonIndex::SWITCH_GEAR)]; }
+Button& WorkshopMenu::animationSpeedBtn() { return buttonManager.buttons[static_cast<int>(ButtonIndex::SPEED_UP)]; }
+
 Button& WorkshopMenu::animation_btn(UnitAnimationState ani) {
 	auto i = static_cast<int>(ani);
 	if (i < 0 || i > 4) i = 5; // if its a special animation
 	return animation_btn(i);
 }
-Button& WorkshopMenu::animation_btn(int i) { return buttonManager.buttons[i + 4]; }
+Button& WorkshopMenu::animation_btn(int i) { return buttonManager.buttons[i + static_cast<int>(ButtonIndex::ANIMATIONS)]; }
 
 int WorkshopMenu::stat_index(const std::string& str) const {
 	switch (str[0]) {

@@ -45,10 +45,10 @@
     <ClCompile Include="source\stage\entities\Spawners.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\stage\Base.cpp">
+    <ClCompile Include="source\stage\entities\Base.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\stage\BaseCannon.cpp">
+    <ClCompile Include="source\stage\entities\BaseCannon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\stage\Stage.cpp">
@@ -87,10 +87,10 @@
     <ClCompile Include="source\stage\entities\Projectile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\utilities\ProjectileData.cpp">
+    <ClCompile Include="source\stage\mechanics\ProjectileData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\utilities\Augment.cpp">
+    <ClCompile Include="source\stage\mechanics\Augment.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\utilities\Pathing.cpp">
@@ -126,10 +126,13 @@
     <ClCompile Include="source\menus\Menu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\stage\Lane.cpp">
+    <ClCompile Include="source\stage\mechanics\Lane.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\utilities\pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\stage\entities\StageEntity.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -188,19 +191,19 @@
     <ClInclude Include="include\stage\entities\Spawners.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\stage\Base.h">
+    <ClInclude Include="include\stage\entities\Base.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\stage\BaseCannon.h">
+    <ClInclude Include="include\stage\entities\BaseCannon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\stage\Lane.h">
+    <ClInclude Include="include\stage\mechanics\Lane.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\stage\Stage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\stage\StatusEffect.h">
+    <ClInclude Include="include\stage\mechanics\StatusEffect.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\stage\entities\Surge.h">
@@ -248,13 +251,13 @@
     <ClInclude Include="include\stage\entities\Projectile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\utilities\ProjectileData.h">
+    <ClInclude Include="include\stage\mechanics\ProjectileData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\stage\unit\UnitData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\utilities\Augment.h">
+    <ClInclude Include="include\stage\mechanics\Augment.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\utilities\Pathing.h">
@@ -263,7 +266,7 @@
     <ClInclude Include="include\visuals\Slider.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\utilities\ArmorySlot.h">
+    <ClInclude Include="include\visuals\ArmorySlot.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\menus\WorkshopMenu.h">
@@ -290,27 +293,36 @@
     <ClInclude Include="include\stage\entities\StageEntity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\stage\StageWallet.h">
+    <ClInclude Include="include\stage\mechanics\StageWallet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\menus\StageSetMenu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\utilities\pch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="include\utilities\json_fwd.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\utilities\pch.h">
+    <ClInclude Include="include\utilities\CustomErrors.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\stage\unit\UnitTween.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\stage\mechanics\UnitMoveRequest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="configs\base _data\player_bases\p_wave_base.json" />
-    <None Include="configs\unit_data\1\unit_data.json" />
+    <None Include="configs\unit_data\1\gear1\unit_data.json" />
     <None Include="game_saves\stage_save.json" />
     <None Include="game_saves\unit_save.json" />
     <None Include="configs\proj_data\0\proj_data.json" />
     <None Include="configs\base data\enemy bases\orbitral base\orbital base.json" />
-    <None Include="configs\unit_data\101\unit_data.json" />
+    <None Include="configs\unit_data\101\gear1\unit_data.json" />
     <None Include="configs\stage data\stage 1.json" />
   </ItemGroup>
 </Project>

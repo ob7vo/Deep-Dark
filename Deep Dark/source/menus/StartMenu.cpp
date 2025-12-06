@@ -47,7 +47,7 @@ void StartMenu::check_mouse_hover() {
 void StartMenu::quit_game() { cam.close_window(); }
 
 #pragma region Button Indexes
-Button& StartMenu::startBtn() { return buttonManager.buttons[0]; }
-Button& StartMenu::quitBtn() { return buttonManager.buttons[1]; }
-Button& StartMenu::settingsBtn() { return buttonManager.buttons[2]; }
+Button& StartMenu::startBtn() { return buttonManager.buttons[static_cast<int>(ButtonIndex::START)]; }
+Button& StartMenu::quitBtn() { return buttonManager.buttons[static_cast<int>(ButtonIndex::QUIT)]; }
+Button& StartMenu::settingsBtn() { return buttonManager.buttons[static_cast<int>(ButtonIndex::SETTINGS)]; }
 #pragma endregion

@@ -21,27 +21,30 @@ ArmoryMenu::ArmoryMenu(Camera& cam) : Menu(cam), stageSetMenu(cam) {
 		btn.setup(UI::ZERO, SLIDER_SLOT_SCLAE, cam, TextureManager::getUnitSlot(id, 1));
 		unitSelectionGears[id] = 1;
 	}
-	
+
 	const std::string path2 = "sprites/ui/slider.png";
-	auto b = cam.norm_to_pixels(SLIDER_AXIS_BOUNDS);
-	std::pair<float, float> axisBounds = { b.x, b.y };
+	auto bounds = cam.norm_to_pixels(SLIDER_AXIS_BOUNDS);
+	std::pair<float, float> axisBounds = { bounds.x, bounds.y };
 	slider().setup(SLIDER_POS, SLIDER_SIZE, cam, TextureManager::t_slider);
 	slider().setup_slider(false, axisBounds);
 	slider().set_anchored_btns(btns);
 
 	for (int i = 0; i < 10; i++) {
-		//slots[i].set_unit(-1, 1);
+		slots[i].set_unit(-1, 1);
+
 		sf::Vector2f scale = cam.get_norm_sprite_scale(slots[i].sprite, SLOT_SCALE);
 		slots[i].sprite.setScale(scale);
+
 		slots[i].sprite.setOrigin(slots[i].sprite.getLocalBounds().size * 0.5f);
 	}
 
 	returnBtn().setup(RETURN_BTN_POS, RETURN_BTN_SIZE, cam, TextureManager::t_returnBtn);
-}
-void ArmoryMenu::set_up_buttons() {
-	/*
-	* Will add the set ups later
-	*/
+	stageSetBtn().setup(STAGE_SET_BTN_POS, STAGE_SET_BTN_SIZE, cam, TextureManager::t_enterStageSetBtn);
+	stageSetBtn().onClick = [this](bool m1) {if (m1) paused = true; };
+
+	stageSetMenu.closeBtn().onClick = [this](bool m1) {
+		if (m1) paused = false;
+		};
 }
 void ArmoryMenu::reset_positions() {
 	sf::Vector2f pos = cam.norm_to_pixels(FIRST_SLOT_POS);
@@ -70,6 +73,8 @@ void ArmoryMenu::reset_positions() {
 	slider().reset_offsets();
 
 	returnBtn().set_norm_pos(RETURN_BTN_POS, cam);
+
+	stageSetMenu.reset_positions();
 }
 
 void ArmoryMenu::update(float dt) {
@@ -78,10 +83,8 @@ void ArmoryMenu::update(float dt) {
 	slider().update(cam.getMouseScreenPos(), dt);
 }
 
-void ArmoryMenu::draw() {
-	if (paused && inStageMode) stageSetMenu.draw();
-	
-	// Sraw Unit slots from the SLECTOR
+void ArmoryMenu::draw() {	
+	// Draw the Unit slots from the SELECTOR
 	for (int i = 0; i < TOTAL_PLAYER_UNITS; i++) {
 		sf::Sprite& slotSprite = unitSelectionBtn(i).sprite;
 		sf::FloatRect rect = slotSprite.getGlobalBounds();
@@ -89,82 +92,101 @@ void ArmoryMenu::draw() {
 		cam.queue_world_draw(&slotSprite, rect);
 		if (unit_is_unusable(i)) cam.draw_overlay(slotSprite, RED_TRANSPARENT);
 	}
+
+	// Draw the slider
 	cam.queue_ui_draw(&slider().sprite);
 
-	buttonManager.draw(cam, TOTAL_PLAYER_UNITS); // Draw all other buttons
+	// Checking the rest of the buttons (EXCLUDING the stageSetBtn)
+	buttonManager.draw(cam, TOTAL_PLAYER_UNITS, BTN_COUNT - 1); 
 
+	// Draw the slots of the current equpied units
 	for (int i = 0; i < ARMORY_SLOTS; i++)
 		cam.queue_ui_draw(&slots[i].sprite);
 
 	if (dragging_unit()) cam.queue_ui_draw(&cam.cursor.ui);
+
+	if (inStageMode) {
+		cam.queue_ui_draw(&stageSetBtn().sprite);
+		if (paused) stageSetMenu.draw();
+	}
 }
 
 bool ArmoryMenu::on_mouse_press(bool isM1) {
-	if (paused && inStageMode) return stageSetMenu.on_mouse_press(isM1);
+	const auto& mScreenPos = cam.getMouseScreenPos();
+
+	if (inStageMode) {
+		if (paused) return stageSetMenu.on_mouse_press(isM1);
+		else return stageSetBtn().try_mouse_press(mScreenPos, isM1);
+	}
 	if (dragging_unit()) return false;
 
-	const auto& mPos = cam.getMouseScreenPos();
-	if (slider().check_mouse_hover(mPos))
-		slider().onClick(isM1);
+	if (slider().try_mouse_press(mScreenPos, isM1)) return true;
 
-	buttonManager.on_mouse_press(mPos, isM1);
+	// Checking the rest of the buttons (EXCLUDING the stageSetBtn)
+	if (buttonManager.on_mouse_press(mScreenPos, isM1, BTN_COUNT - 1)) return true;
 
 	if (isM1) {
 		// Dont need the UNSUABLE check here. Unsuable untis will already be unequipped
 		for (int i = 0; i < ARMORY_SLOTS; i++) {
 			ArmorySlot& slot = slots[i];
-			if (!slot.empty() && slot.hovered_over(mPos)) {
+			if (!slot.empty() && slot.hovered_over(mScreenPos)) {
 				int id = slot.id;
+
 				slot.clear();
 				shift_empty_slots();
+
 				start_dragging_unit(id);
-				break;
+				return true;
 			}
 		}
 	}
 
-	return true;
+	return false;
 }
 bool ArmoryMenu::on_mouse_release(bool isM1) {
-	if (paused && inStageMode) return stageSetMenu.on_mouse_press(isM1);
-
+	// For letting go of the slider or dragged Unit
 	if (isM1) {
 		slider().set_mouse_hold(false);
 		
 		if (dragging_unit())
 			drag_unit_into_slot();
-
-		release_hold();
 	}
 
-	curHeldUnit = { -1, -1 };
+	release_held_unit();
 	return true;
 }
+
 void ArmoryMenu::check_mouse_hover() {
-	if (paused && inStageMode) {
-		stageSetMenu.check_mouse_hover();
+	sf::Vector2i mScreenPos = cam.getMouseScreenPos();
+
+	if (inStageMode) {
+		if (paused) stageSetMenu.check_mouse_hover();
+		else stageSetBtn().check_mouse_hover(mScreenPos);
 		return;
 	}
 
-	sf::Vector2i mPos = cam.getMouseScreenPos();
+	// Sliders aren't part of the Button array
+	slider().check_mouse_hover(mScreenPos);
 
-	slider().check_mouse_hover(mPos);
-	buttonManager.check_mouse_hover(mPos);
+	// Checking the rest of the buttons (EXCLUDING the stageSetBtn)
+	buttonManager.check_mouse_hover(mScreenPos, BTN_COUNT - 1);
 }
 
 #pragma region Unit Slots and Dragging
 void ArmoryMenu::drag_unit_into_slot() {
 	auto mPos = cam.getMouseScreenPos();
+
 	for (int i = 0; i < ARMORY_SLOTS; i++) {
 		if (slots[i].hovered_over(mPos)) {
 			slots[i].set_unit(curHeldUnit);
 			shift_empty_slots();
+
 			return;
 		}
 	}
 }
 void ArmoryMenu::start_dragging_unit(int id) {
-	if (unit_is_slotted(id) || unit_is_unusable(id)) return;
+	if (unit_is_equipped(id) || unit_is_unusable(id)) return;
 
 	curHeldUnit = { id, unitSelectionGears[id] };
 	cam.set_cursor_ui(TextureManager::getUnitSlot(curHeldUnit), DRAG_SLOT_ORIGIN, DRAG_SLOT_OPACITY, SLOT_SCALE);
@@ -184,7 +206,7 @@ void ArmoryMenu::shift_empty_slots() {
 	}
 }
 void ArmoryMenu::update_selection_slot(int id, int gear) {
-	if (id >= 100) return;
+	if (id >= 100) return; // IDs of over 100 belong to enemies
 
 	for (int i = 0; i < filledUnitSlots; i++)
 		if (slots[i].id == id) {
@@ -193,7 +215,6 @@ void ArmoryMenu::update_selection_slot(int id, int gear) {
 		}
 
 	unitSelectionGears[id] = gear;
-	std::cout << "gear: " << gear << std::endl;
 	unitSelectionBtn(id).set_texture(TextureManager::getUnitSlot(id, gear));
 }
 void ArmoryMenu::remove_unusable_units() {
@@ -232,6 +253,7 @@ std::array<ArmorySlot, 10> ArmorySlot::default_armory_loadout() {
 
 	slots[0].set_unit(0, 3, 0);
 	slots[1].set_unit(1, 2);
+	for (int i = 2; i < 10; i++) slots[i].set_unit(-1, 1);
 
 	return slots;
 }

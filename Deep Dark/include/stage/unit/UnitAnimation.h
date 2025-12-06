@@ -3,6 +3,7 @@
 #include "SFML/Graphics/RectangleShape.hpp"
 
 class Unit;
+struct UnitStats;
 
 struct UnitAnimation {
 private:
@@ -13,9 +14,9 @@ private:
 	UnitAniMap* aniMap; // Owned by Enemy Spawners and Loadout slots
 	sf::Sprite sprite = sf::Sprite(defTex);
 
-	sf::RectangleShape marker;
+	sf::RectangleShape hurtbox;
 public:
-	explicit UnitAnimation(UnitAniMap* map);
+	explicit UnitAnimation(UnitAniMap* map, const UnitStats* stats);
 
 	void start(UnitAnimationState newState);
 	void draw(sf::RenderWindow& window) const;
@@ -30,7 +31,7 @@ public:
 	inline bool invincible() const { return static_cast<int>(state) > 2; }
 
 	inline void die() { state = UnitAnimationState::DYING; }
-	inline void start_phasing() { state = UnitAnimationState::IS_PHASING; }
+	inline void enter_is_phasing_state() { state = UnitAnimationState::IS_PHASING; }
 	inline UnitAniMap* get_ani_map() const { return aniMap; }
 	inline UnitAnimationState get_state() const { return state; }
 };

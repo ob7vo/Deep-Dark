@@ -14,6 +14,7 @@ struct TextureManager {
 	static sf::Texture t_returnBtn;
 	static sf::Texture t_closeBtn;
 	static sf::Texture t_pauseBtn;
+	static sf::Texture t_startBtn;
 	static sf::Texture t_settingsBtn;
 	static sf::Texture t_slider;
 
@@ -29,6 +30,8 @@ struct TextureManager {
 	// WorkShop
 	static sf::Texture t_switchGearBtn;
 	static sf::Texture t_speedUpBtn;
+	// Armory Menu
+	static sf::Texture t_enterStageSetBtn;
 	#pragma endregion 
 	// END OF BUTTONS REGION ----------------------------------------------
 
@@ -38,6 +41,10 @@ struct TextureManager {
 	static sf::Texture t_statusIcons;
 	static std::array<sf::IntRect, 8> r_statusIcons;
 
+#pragma region Stage Bases
+	static sf::Texture t_base1;
+	static sf::Texture t_base2;
+#pragma endregion
 
 	/// <summary>
 	/// Right now it doesnt matter, but make sure the first 5 textures of this 
@@ -52,6 +59,7 @@ struct TextureManager {
 
 	static void initialize();
 	static void loadTexture(sf::Texture& tex, const std::string& path, bool printErrorMsg = true);
+	static sf::Texture createTexture(const std::string& path);
 
 	static void fillTextureRects(std::span<sf::IntRect> out, sf::Vector2u texSize, sf::Vector2i cellSize);
 	template<int FRAMES>

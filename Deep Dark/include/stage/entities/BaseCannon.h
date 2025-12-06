@@ -10,7 +10,7 @@ class Base;
 
 struct BaseCannon
 {
-	sf::Vector2f pos;
+	sf::Vector2f pos = {};
 	UnitStats cannonStats;
 	int team = 1;
 
@@ -18,51 +18,50 @@ struct BaseCannon
 	virtual ~BaseCannon() = default;
 
 	virtual void fire(Stage& stage) = 0;
-	virtual Animation* get_cannon_animation_ptr() = 0;
-	static void init_animations();
-	static Animation* ga_ptr();
+	virtual Animation create_animation() = 0;
 };
 struct WaveCannon : public BaseCannon {
 public:
 	Augment shockWave;
 
 	WaveCannon(const nlohmann::json& baseJson, float magnification);
-	~WaveCannon() = default;
+	~WaveCannon() override  = default;
 
 	void fire(Stage& stage) override;
-	Animation* get_cannon_animation_ptr() override;
+	Animation create_animation() override;
 };
 struct FireWallCannon : public BaseCannon {
 	Augment fireWall;
 
 	FireWallCannon(const nlohmann::json& baseJson, float magnification);
-	~FireWallCannon() = default;
+	~FireWallCannon() override = default;
 
 	void fire(Stage& stage) override;
-	Animation* get_cannon_animation_ptr() override;
+	Animation create_animation() override;
 };
 struct OrbitalCannon : public BaseCannon {
 	//spawns 4 equally spaced orbital strikes
 	Augment orbitalStrike;
 
 	OrbitalCannon(const nlohmann::json& baseJson, float magnification);
-	~OrbitalCannon() = default;
+	~OrbitalCannon() override = default;
 
 	void fire(Stage& stage) override;
-	Animation* get_cannon_animation_ptr() override;
+	Animation create_animation() override;
 };
 struct AreaCannon : public BaseCannon {
 	// hits units in all lanes within a range
 	float areaRange = 100;
 
 	AreaCannon(const nlohmann::json& baseJson, float magnification);
-	~AreaCannon() = default;
+	~AreaCannon() override = default;
 
 	void fire(Stage& stage) override;
-	bool is_valid_target(Unit& target);
-	inline bool within_range(float xPos) {
-		float dist = (xPos - pos.x) * cannonStats.team;
+	bool is_valid_target(const Unit& target) const;
+	inline bool within_range(float xPos) const {
+		float dist = (xPos - pos.x) * static_cast<float>(cannonStats.team);
 		return dist <= areaRange;
 	}
-	Animation* get_cannon_animation_ptr() override;
+
+	Animation create_animation() override;
 };

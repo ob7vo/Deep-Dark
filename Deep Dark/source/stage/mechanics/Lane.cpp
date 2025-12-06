@@ -54,15 +54,15 @@ void Lane::add_shape(std::pair<float, float> gap) {
 #pragma endregion
 
 #pragma region Checks
-bool Lane::out_of_lane(float xPos) const {
-	return xPos < playerXPos - EDGE_EXTENSION || xPos > enemyXPos + EDGE_EXTENSION;
+bool Lane::out_of_lane(float left, float right) const {
+	return right < playerXPos - EDGE_EXTENSION || left > enemyXPos + EDGE_EXTENSION;
 }
-bool Lane::within_gap(float xPos) const {
-	if (xPos < playerXPos - EDGE_EXTENSION || xPos > enemyXPos + EDGE_EXTENSION)
+bool Lane::within_gap(float leftHurtboxEdge, float rightHurtboxEdge) const {
+	if (out_of_lane(leftHurtboxEdge, rightHurtboxEdge))
 		return true;
 
-	for (auto const [leftEdge, rightEdge] : gaps)
-		if (xPos > leftEdge && xPos < rightEdge)
+	for (const auto& [gapLeft, gapRight] : gaps)
+		if (leftHurtboxEdge > gapLeft && rightHurtboxEdge < gapRight)
 			return true;
 
 	return false;
@@ -74,7 +74,7 @@ sf::Vector2f Lane::get_spawn_pos(int team) const {
 	float xPos = team == PLAYER_TEAM ? playerXPos : enemyXPos;
 	return { xPos, yPos };
 }
-float Lane::get_wall(int team) const {
+float Lane::get_team_boundary(int team) const {
 	return team == PLAYER_TEAM ? playerXPos + WALL_PADDING : enemyXPos - WALL_PADDING;
 }
 size_t Lane::get_unit_count(int team) const {
