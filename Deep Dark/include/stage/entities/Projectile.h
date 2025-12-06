@@ -18,12 +18,15 @@ struct ProjectileConfig {
 };
 
 class Projectile {
+private:
 	sf::Vector2f pos = { 0.f, 0.f };
 
-	float hitCountTime = 0.f;
 	float maxLifespan = 999.f;
+
+	float hitCountTime = 0.f;
 	int hitsLeft = 0;
 	std::vector<std::pair<int, float>> hitUnits = {};
+
 	ProjectileStats* stats = nullptr;
 
 	std::array<Animation, 2>* aniArr = nullptr;
@@ -31,7 +34,9 @@ class Projectile {
 	int frame = 0;
 	float aniTime = 0.f;
 	int aniState = 0;
+
 public:
+
 	std::unique_ptr<Pathing> pathing = nullptr;
 	bool readyForRemoval = false;
 

@@ -18,6 +18,7 @@ public:
 
 	Button() = default;
 
+	bool try_mouse_press(sf::Vector2i mPos, bool isM1) const;
 	bool check_mouse_hover(sf::Vector2i mPos);
 	bool is_hovering(sf::Vector2i mPos) const;
 

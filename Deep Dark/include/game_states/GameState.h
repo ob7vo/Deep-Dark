@@ -10,6 +10,7 @@ class GameState {
 protected:
 	Camera& cam;
 	std::unique_ptr<OnStateEnterData> nextStateEnterData = nullptr;
+
 	bool readyToEndState = false;
 	bool transitioning = false;
 	bool clicked = false;
@@ -38,7 +39,8 @@ public:
 	inline OnStateEnterData* get_next_state() {
 		return readyToEndState ? nextStateEnterData.get() : nullptr;
 	}
-	inline bool clickedOnThisFrame() { return clicked; }
+
+	inline bool clickedOnThisFrame() const { return clicked; }
 	inline void reset_click_status() { clicked = false; }
 	inline bool is_M1(const sf::Event::MouseButtonPressed* click) const { 
 		return click->button == M1; 

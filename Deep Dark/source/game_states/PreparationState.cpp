@@ -3,19 +3,40 @@
 #include "StageGameState.h"
 
 PreparationState::PreparationState(Camera& cam) : GameState(cam),
-stageSelect(cam), armoryMenu(cam), workshopMenu(cam){
+stageSelect(cam), armoryMenu(cam), workshopMenu(cam)
+{
 	stageSelect.reset_positions();
 	armoryMenu.reset_positions();
 	workshopMenu.reset_positions();
 
+	setup_button_functions();
+}
+void PreparationState::setup_button_functions() {
+#pragma region StageSelect
 	for (int i = 0; i < STAGES; i++)
 		stageSelect.stageNodeBtn(i).onClick = [this, i](bool m1) { if (m1) start_stage_set(i, 0); };
-	stageSelect.armoryBtn().onClick = [this](bool m1) { if (m1) switch_menu(MenuType::ARMORY_EQUIP); };
-	armoryMenu.returnBtn().onClick = [this](bool m1) { if (m1) switch_menu(prevMenuType); };
-	workshopMenu.return_btn().onClick = [this](bool m1) { 
+	stageSelect.enterArmoryBtn().onClick = [this](bool m1) {
 		if (m1) {
-			switch_menu(prevMenuType);
-			armoryMenu.update_selection_slot(workshopMenu.unitId, workshopMenu.unitGear);
+			armoryMenu.inStageMode = true;
+			armoryMenu.stageSetMenu.setup_menu(stageSelect.selectedStage);
+			switch_menu(MenuType::ARMORY_EQUIP);
+		}
+		};
+#pragma endregion
+
+#pragma region ArmoryMenu
+	armoryMenu.returnBtn().onClick = [this](bool m1) 
+		{ if (m1) switch_menu(prevMenuType); };
+
+	armoryMenu.stageSetMenu.startStageBtn().onClick = [this](bool m1) {
+		if (m1) start_stage_set(armoryMenu.stageSetMenu.stageId, armoryMenu.stageSetMenu.stageSet);
+		};
+	armoryMenu.stageSetMenu.exitStageBtn().onClick = [this](bool m1) {
+		if (m1) {
+			armoryMenu.paused = armoryMenu.inStageMode = false;
+			armoryMenu.stageSetMenu.full_reset();
+
+			switch_menu(MenuType::STAGE_SELECT);
 		}
 		};
 
@@ -28,6 +49,14 @@ stageSelect(cam), armoryMenu(cam), workshopMenu(cam){
 			}
 			};
 	}
+#pragma endregion
+
+	workshopMenu.return_btn().onClick = [this](bool m1) {
+		if (m1) {
+			switch_menu(prevMenuType);
+			armoryMenu.update_selection_slot(workshopMenu.unitId, workshopMenu.unitGear);
+		}
+		};
 }
 
 void PreparationState::update(float deltaTime) {
@@ -69,20 +98,20 @@ MenuBase* PreparationState::get_menu() {
 	return nullptr;
 }
 void PreparationState::start_stage_set(int stage, int set) {
-	std::string jsonPath = std::format("configs/stage_data/stage_{}.json", stage + 1);
+	std::string jsonPath = std::format("configs/stage_data/stage_{}.json", stage);
 	
-	if (std::filesystem::exists(jsonPath)) {
+	if (!std::filesystem::exists(jsonPath)) {
 		std::cerr << "Error: Could not open file: " << jsonPath << std::endl;
 		return;
 	}
-	if (armoryMenu.filledUnitSlots == 0) {
+	if (armoryMenu.filledUnitSlots == -10) {
 		std::cerr << "Error: loadout is empty. \n";
 		return;
 	}
 
 	nextStateEnterData = std::make_unique<StageEnterData>(jsonPath, set, armoryMenu);
 	readyToEndState = true;
-	std::cout << "starting stage #" << stage + 1 << std::endl;
+	std::cout << "starting stage #" << stage << std::endl;
 }
 void PreparationState::on_enter(OnStateEnterData* enterData) {
 	if (auto prepData = dynamic_cast<PrepEnterData*>(enterData))

@@ -61,6 +61,8 @@ void Camera::update(float deltaTime) {
 	if (cursor.dragging) click_and_drag();
 	else if (cursor.has_velocity())
 		apply_velocity(deltaTime);
+
+	cursor.lastClickTime += deltaTime;
 }
 
 void Camera::draw_all_ui() {
@@ -128,6 +130,8 @@ void Camera::handle_events(sf::Event event) {
 }
 #pragma Events
 void Camera::on_mouse_press(sf::Event::MouseButtonPressed click) {
+	cursor.lastClickTime = 0.f;
+
 	if (click.button == MOUSE_1) {
 		cursor.velocity = { 0.f,0.f };
 		cursor.dragOrigin = cursor.worldPos;
@@ -144,10 +148,12 @@ void Camera::on_mouse_released(sf::Event::MouseButtonReleased release) {
 // Zoom
 void Camera::zoom(Key key) {
 	float oldZoom = zoomLevel;
+
 	if (key == Key::O)
 		zoomLevel = std::min(zoomLevel + ZOOM_SPEED, MAX_ZOOM);
 	else if (key == Key::I)
 		zoomLevel = std::max(zoomLevel - ZOOM_SPEED, MIN_ZOOM);
+
 	if (oldZoom == zoomLevel) return;
 
 	sf::Vector2f newSize = (sf::Vector2f)window.getSize() * zoomLevel;

@@ -36,18 +36,18 @@ bool ButtonManager<BUTTONS>::on_mouse_press(sf::Vector2i mPos, bool m1, int star
 }
 
 
-template class ButtonManager<UI::ArmoryMenu::BTN_COUNT>;
-template class ButtonManager<UI::StageSelect::BTN_COUNT>;
-template class ButtonManager<UI::StageSet::BTN_COUNT>;
-template class ButtonManager<UI::StageUI::UI_BTN_COUNT>;
-template class ButtonManager<UI::StageUI::PAUSE_MENU_BTN_COUNT>;
-template class ButtonManager<UI::StartMenu::BTN_COUNT>;
-template class ButtonManager<UI::Workshop::BTN_COUNT>;
+template struct ButtonManager<UI::ArmoryMenu::BTN_COUNT>;
+template struct ButtonManager<UI::StageSelect::BTN_COUNT>;
+template struct ButtonManager<UI::StageSet::BTN_COUNT>;
+template struct ButtonManager<UI::StageUI::BTN_COUNT>;
+template struct ButtonManager<UI::StageUI::PauseMenu::BTN_COUNT>;
+template struct ButtonManager<UI::StartMenu::BTN_COUNT>;
+template struct ButtonManager<UI::Workshop::BTN_COUNT>;
 
-template class Menu<UI::ArmoryMenu::BTN_COUNT>;
-template class Menu<UI::StageSelect::BTN_COUNT>;
-template class Menu<UI::StageSet::BTN_COUNT>;
-template class Menu<UI::StageUI::UI_BTN_COUNT>;
-template class Menu<UI::StageUI::PAUSE_MENU_BTN_COUNT>;
-template class Menu<UI::StartMenu::BTN_COUNT>;
-template class Menu<UI::Workshop::BTN_COUNT>;
+template struct Menu<UI::ArmoryMenu::BTN_COUNT>;
+template struct Menu<UI::StageSelect::BTN_COUNT>;
+template struct Menu<UI::StageSet::BTN_COUNT>;
+template struct Menu<UI::StageUI::BTN_COUNT>;
+template struct Menu<UI::StageUI::PauseMenu::BTN_COUNT>;
+template struct Menu<UI::StartMenu::BTN_COUNT>;
+template struct Menu<UI::Workshop::BTN_COUNT>;

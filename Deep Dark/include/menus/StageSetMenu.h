@@ -1,6 +1,7 @@
 #pragma once
 #include "Menu.h"
 #include "UnitData.h"
+#include "ArmorySlot.h"
 
 // Will be owned by the Armroy Menu as a big overlay/draw.
 // IT will comprise of the background to show the enemys, the small sprites
@@ -13,13 +14,15 @@ const int STAGE_SET_BUTTONS = 3;
 
 struct StageSetMenu : public Menu<STAGE_SET_BUTTONS> {
     std::bitset<UnitData::TOTAL_PLAYER_UNITS> usedUnits;
+    std::bitset<UnitData::TOTAL_PLAYER_UNITS> unitViolatesCondition;
+
     int stageId = 0;
-    int stageSet = 1;
+    int stageSet = 0;
 
     sf::Sprite backgroundSprite = sf::Sprite(defTex);
 
     sf::Text startStageSetText = sf::Text(baseFont);
-    std::vector<sf::Texture> unitTextures = {};
+    std::vector<sf::Texture> enemyUnitTextures = {};
     std::vector<sf::Sprite> enemyUnitSprites = {};
     std::array<sf::Sprite, 10> usedUnitsSlotSprites = make_unitSlotSprites();
 
@@ -27,11 +30,17 @@ struct StageSetMenu : public Menu<STAGE_SET_BUTTONS> {
     ~StageSetMenu() final = default;
 
     void reset_positions() final;
-    void setup_menu(const std::vector<int>& ids, int stage, int set);
+    void draw() final;
 
-    inline Button& startStageBtn() { return buttonManager.buttons[0]; }
-    inline Button& closeBtn() { return buttonManager.buttons[1]; }
-    inline Button& exitStageBtn() { return buttonManager.buttons[2]; }
+    void setup_menu(int stage, int set = {}, const std::array<std::pair<int,int>, 10>& units = emptyUnits());
+    void create_enemy_sprites(const nlohmann::json& stageSetJson);
+
+    void reset_sprites();
+    void full_reset();
+
+    inline Button& startStageBtn() { return buttonManager.buttons[static_cast<int>(UI::StageSet::ButtonIndex::START_STAGE)]; }
+    inline Button& closeBtn() { return buttonManager.buttons[static_cast<int>(UI::StageSet::ButtonIndex::CLOSE)]; }
+    inline Button& exitStageBtn() { return buttonManager.buttons[static_cast<int>(UI::StageSet::ButtonIndex::EXIT_STAGE)]; }
 
     static std::array<sf::Sprite, 10> make_unitSlotSprites() {
         const sf::Texture& tex = TextureManager::t_defaultUnitSlot;
@@ -41,5 +50,10 @@ struct StageSetMenu : public Menu<STAGE_SET_BUTTONS> {
             sf::Sprite(tex),sf::Sprite(tex)
         };
     }
-
+    /// <summary> Exists so I dont get the 'Invalid Gear Value' error </summary>
+    static std::array<std::pair<int, int>, 10> emptyUnits(){
+        std::array<std::pair<int,int>, 10> units;
+        for (int i = 0; i < 10; i++) units[i] = { -1, 1 };
+        return units;
+    }
 };

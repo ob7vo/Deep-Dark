@@ -15,7 +15,7 @@ AnimationFrame::AnimationFrame(sf::IntRect rect, float duration, int events) :
 }
 
 Animation::Animation(const std::string_view& spritePath, int frameCount, float rate, 
-    sf::Vector2i cellSize, sf::Vector2f og, const std::vector<int>& events, bool loops)
+    sf::Vector2i cellSize, sf::Vector2f og, AnimationEventsList events, bool loops)
     : loops(loops), origin(og), frameCount(frameCount)
 {
     if (!texture.loadFromFile(spritePath)) {
@@ -28,8 +28,10 @@ Animation::Animation(const std::string_view& spritePath, int frameCount, float r
 
     auto rects = TextureManager::createTextureRects(frameCount, texSize, cellSize);
 
-    for (int i = 0; i < frameCount; i++) frames.emplace_back(rects[i], rate, events[i]);
+    for (int i = 0; i < frameCount; i++) frames.emplace_back(rects[i], rate);
 
+    // setting the events
+    for (const auto& [frame, eventMask] : events) frames[frame].eventsMask = eventMask;
     frames[0].eventsMask |= AnimationEvent::FIRST_FRAME;
     frames[frameCount - 1].eventsMask |= AnimationEvent::FINAL_FRAME;
 };
@@ -79,7 +81,7 @@ bool Animation::check_for_event(AnimationEvent targetEvent, int events) {
 
 Animation Animation::create_unit_animation(const json& file, const std::string_view& ani, const std::string_view& path, bool loops) {
     int frames = file["frames"];
-   
+
     float rate = 1.f / file.value("fps", (float)frames);
     if (ani == "knockback") rate = KNOCKBACK_DURATION / (float)frames;
     else if (ani == "falling") rate = FALL_DURATION / (float)frames;
@@ -88,10 +90,11 @@ Animation Animation::create_unit_animation(const json& file, const std::string_v
     sf::Vector2i cellSizes = { file["cell_size"][0], file["cell_size"][1] };
     sf::Vector2f origin = { file["origin"][0], file["origin"][1] };
 
-    std::vector<int> events(frames);
+    AnimationEventsList events; // using AnimationEventsList = std::initializer_list<std::pair<int, int>>;
+
     if (file.contains("attack_frames"))
         for (const int& frame : file["attack_frames"])
-            events[frame] = AnimationEvent::ATTACK;
+            events.emplace_back(frame, AnimationEvent::ATTACK);
 
     return Animation(path, frames, rate, cellSizes, origin, events, loops);
 }

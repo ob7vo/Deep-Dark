@@ -1,15 +1,20 @@
+#include "pch.h"
 #include "Spawners.h"
 #include "Stage.h"
-#include <json.hpp>
 
+#pragma region Constructors
 EnemySpawner::EnemySpawner(const nlohmann::json& spawnerData, Stage& stage) {
 	currentSpawnIndex = -1;
 	totalSpawns = spawnerData["total_spawns"];
+
 	float magnification = spawnerData["magnification"];
+
 	float firstSpawnTime = spawnerData["first_spawn_time"];
 	spawnDelays = spawnerData["spawn_delays"].get<std::pair<float, float>>(); // min-max pair.
+
 	std::vector<int> laneIndexes = spawnerData["lane_indexes"];
 	laneSpawnIndexes = laneIndexes;
+
 	infinite = spawnerData.contains("infinite");
 	percentThreshold = spawnerData.value("percent_threshold", 101.0f);
 
@@ -19,18 +24,21 @@ EnemySpawner::EnemySpawner(const nlohmann::json& spawnerData, Stage& stage) {
 	nextSpawnTime = firstSpawnTime + INACTIVE_SPAWNER;
 
 	int id = spawnerData["unit_id"];
+
 	const nlohmann::json unitFile = UnitData::createUnitJson(id);
 	Animation::setup_unit_animation_map(unitFile, aniArr);
 	enemyStats = UnitStats::enemy(unitFile, magnification);
 
-	for (auto& aug : enemyStats.augments)
+	for (const auto& aug : enemyStats.augments)
 		if (aug.augType & PROJECTILE)
 			stage.projConfigs[id] = ProjectileConfig(id, magnification);
 }
+
 UnitSpawner::UnitSpawner(const UnitStats* stats, UnitAniMap* aniMap, sf::Vector2f pos, int lane) :
-	stats(stats), aniMap(aniMap), StageEntity(pos, lane) {}
+	StageEntity(pos, lane), stats(stats), aniMap(aniMap) {}
 SurgeSpawner::SurgeSpawner(const UnitStats* stats, const Augment& surge, sf::Vector2f pos, int lane) :
-	stats(stats), surge(surge), StageEntity(pos, lane) {}
+	StageEntity(pos, lane), stats(stats), surge(surge) {}
+#pragma endregion
 
 void UnitSpawner::action(Stage& stage) {
 	if (stats->has_augment(CLONE)) stage.try_revive_unit(this);
@@ -41,11 +49,13 @@ void UnitSpawner::action(Stage& stage) {
 }
 void SurgeSpawner::action(Stage& stage) {
 	sf::Vector2f surgePos = sprite.getPosition();
+
 	if (surge.augType != AugmentType::SHOCK_WAVE)
 		surgePos.x += surge.value * static_cast<float>(stats->team);
 
 	stage.create_surge(stats, laneInd, surge.surgeLevel, surgePos, surge.augType);
 }
+
 void UnitSpawner::create_animation() {
 	std::string path = stats->has_augment(CLONE) ? "sprites/action_objs/cloner.png" :
 		"sprites/action_objs/drop_box.png";
@@ -54,10 +64,7 @@ void UnitSpawner::create_animation() {
 
 	int frames = 21;
 	float rate = 0.1f;
-	std::vector<int> events(frames);
-	events[14] |= TRIGGER;
-
-	anim = Animation(path, frames, rate, cellSize, origin, events, false);
+	anim = Animation(path, frames, rate, cellSize, origin, {{14, TRIGGER}});
 
 	anim.reset(sprite);
 }
@@ -68,9 +75,6 @@ void SurgeSpawner::create_animation() {
 
 	int frames = 21;
 	float rate = 0.09f;
-	std::vector<int> events(frames);
-	events[14] |= TRIGGER;
-
-	anim = Animation(path, frames, rate, cellSize, origin, events, false);
+	anim = Animation(path, frames, rate, cellSize, origin, {{14, TRIGGER}});
 	anim.reset(sprite);
 }

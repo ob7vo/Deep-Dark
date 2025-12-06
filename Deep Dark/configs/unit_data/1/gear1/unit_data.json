@@ -4,9 +4,6 @@
   "name": "archdemon",
   "level": 1,
   "team": 1,
-  "parts_cost": 7,
-  "recharge_timer": 2.0,
-  "single_target": false,
   "stats": {
     "hp": 100,
     "knockbacks": 4,
@@ -14,6 +11,7 @@
     "attack_time": 1.5,
     "sight_range": 100.0,
     "lane_sight": [ 1, 0 ],
+    "single_target": false,
     "hits": [
       {
         "dmg": 25,
@@ -23,37 +21,42 @@
         "dmg": 1,
         "attack_range": [ 0, 175.0 ]
       }
-    ]
-
+    ],
+    "parts_cost": 7,
+    "recharge_timer": 2.0
+  },
+  "hurtbox": {
+    "width": 40.0,
+    "height": 30.0
   },
   "animations": {
     "move": {
       "cell_size": [ 128, 128 ],
-      "origin": [60, 100],
+      "origin": [ 60, 100 ],
       "frames": 6,
       "fps": 6
     },
     "idle": {
       "cell_size": [ 128, 128 ],
-      "origin": [60, 100],
+      "origin": [ 60, 100 ],
       "frames": 6,
       "fps": 3
     },
     "knockback": {
       "cell_size": [ 128, 128 ],
-      "origin": [60, 100],
+      "origin": [ 60, 100 ],
       "frames": 4
     },
     "attack": {
       "cell_size": [ 256, 128 ],
-      "origin": [60, 100],
+      "origin": [ 60, 100 ],
       "attack_frames": [ 10, 12 ],
       "frames": 15,
       "fps": 10
     },
     "falling": {
       "cell_size": [ 128, 128 ],
-      "origin": [60, 100],
+      "origin": [ 60, 100 ],
       "frames": 8
     }
   },

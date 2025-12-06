@@ -35,16 +35,18 @@ public:
 	Trap(const nlohmann::json& json, sf::Vector2f pos, int lane);
 	~Trap() override = default;
 
-	bool enemy_in_trigger_range(Stage& stage) const;
 	void tick(Stage& stage, float deltaTime) override;
 	void action(Stage& stage) override;
+	int update_animation(Stage& stage, float deltaTime) override;
+
+	bool enemy_in_trigger_range(Stage& stage) const;
 	void trigger_launch_pad(Stage& stage) const; 
 	void trigger_trap_door(Stage& stage);
 
 	void trigger_attack(Stage& stage) const;
 	void attack_lane(std::vector<Unit>& units) const;
-	bool valid_attack_target(Unit& unit) const;
-	bool in_trigger_range(Unit& unit) const;
+	bool valid_attack_target(const Unit& unit) const;
+	bool in_trigger_range(const Unit& unit) const;
 
-	static Animation get_trap_animation(TrapType type);
+	static Animation create_trap_animation(TrapType type);
 };

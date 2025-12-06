@@ -6,6 +6,12 @@ const int STAGES = 3;
 struct StageSelect : public Menu<UI::StageSelect::BTN_COUNT> {
     sf::Text selectStageText = sf::Text(baseFont);
 
+    /// <summary>
+    /// The stage the user has clicked on to view. Needed for creating ArmoryMenu
+    /// Since I havent yet made the Stage View menu, this will be the last stage hoveredd on
+    /// </summary>
+    int selectedStage = 0;
+
     explicit StageSelect(Camera& cam);
     ~StageSelect() final = default;
 
@@ -17,6 +23,6 @@ struct StageSelect : public Menu<UI::StageSelect::BTN_COUNT> {
     inline Button& stageNodeBtn(int stage) {
         return buttonManager.buttons[stage];
     }
-    inline Button& returnBtn() { return buttonManager.buttons[STAGES]; }
-    inline Button& armoryBtn() { return buttonManager.buttons[STAGES + 1]; }
+    inline Button& returnBtn() { return buttonManager.buttons[static_cast<int>(UI::StageSelect::ButtonIndex::RETURN)]; }
+    inline Button& enterArmoryBtn() { return buttonManager.buttons[static_cast<int>(UI::StageSelect::ButtonIndex::ENTER_ARMORY)]; }
 };

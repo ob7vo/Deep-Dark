@@ -7,20 +7,21 @@
 #pragma region Attacking Functions
 void UnitCombat::attack(Unit& attacker) {
 	cooldown = attacker.stats->attackTime;
+
 	attacker.stage->create_hitbox_visualizers(
 		attacker.get_pos(), attacker.get_attack_range(), attacker.stats->team);
 
 	bool hitEnemy = process_attack_on_lanes(attacker);
 	handle_post_attack_effects(attacker, hitEnemy);
+
 	hitIndex = (hitIndex + 1) % attacker.stats->totalHits;
 }
 bool UnitCombat::process_attack_on_lanes(Unit& attacker) const{
 	auto [minLane, maxLane] = attacker.get_lane_reach();
 	bool hitEnemy = false;
 
-	for (int lane = minLane; lane < maxLane; lane++) {
+	for (int lane = minLane; lane < maxLane; lane++) 
 		hitEnemy |= attack_lane(attacker, lane);
-	}
 
 	return hitEnemy;
 }
@@ -44,7 +45,7 @@ bool UnitCombat::attack_single_target(Unit& attacker, std::vector<Unit>& enemies
 			float dist = abs(attacker.get_pos().x - it->get_pos().x);
 			if (dist < minDist) {
 				minDist = dist;
-				singleTargetedUnit = &(*it);
+				singleTargetedUnit = std::to_address(it);
 			}
 		}
 	}
@@ -84,16 +85,18 @@ void UnitCombat::try_create_surge(Unit& attacker, bool hitEnemy) const{
 
 	for (auto& augment : attacker.stats->augments) {
 		if (attacker.can_make_surge(augment)) {
-			auto surge = attacker.stage->create_surge(attacker, augment);
+			bool surgeExist = attacker.stage->create_surge(attacker, augment); // returns pointer
 
-			if (!surge || augment.augType != ORBITAL_STRIKE) continue;
+			if (!surgeExist || augment.augType != ORBITAL_STRIKE) continue;
 
 			// Create additional orbital strikes with spacing
 			int additionalStrikes = augment.surgeLevel - 1;
 			float strikeSpacing = augment.value2;
 			float currentOffset = strikeSpacing;
+
 			for (int i = 0; i < additionalStrikes; i++) {
 				Surge* strike = attacker.stage->create_surge(attacker, augment);
+
 				strike->pos.x += currentOffset;
 				currentOffset += strikeSpacing;
 			}
@@ -106,26 +109,31 @@ void UnitCombat::try_attack_enemy_base(Unit& attacker, bool& hitEnemy) const{
 	Base& enemyBase = attacker.stage->get_enemy_base(attacker.stats->team);
 	auto [minRange, maxRange] = attacker.get_attack_range();
 
+	// I need to set hitEnemy Reference to true here, as in the case the the ATTACKER
+	// Is single target and has not hit an enemy, the base can count for a hit enemy,
+	// Thus allowing the ATTACK to run try_create_surge() directly after this
 	if (attacker.enemy_in_range(enemyBase.pos.x, minRange, maxRange)) {
-		enemyBase.take_damage(attacker.get_dmg());
+		enemyBase.take_damage(attacker.stage, attacker.get_dmg());
 		hitEnemy = true;
 	}
 }
 void UnitCombat::try_create_projectile(Unit& attacker) const{
-	if (!attacker.has_augment(PROJECTILE)) return;
+	if (!attacker.stats->has_augment(PROJECTILE)) return;
 
 	for (auto& aug : attacker.stats->augments)
 		if (aug.augType & PROJECTILE && aug.can_hit(hitIndex))
 			attacker.stage->create_projectile(attacker, aug);
 }
+
 bool UnitCombat::try_terminate_unit(const Unit& attacker, Unit& enemyUnit, int dmg) const {
-	if (!attacker.has_augment(TERMINATE)) return false;
+	if (!attacker.stats->has_augment(TERMINATE)) return false;
 
 	float threshold = attacker.stats->get_augment(TERMINATE).value;
 	float curHpPercent = (float)(enemyUnit.status.hp - dmg) / (float)enemyUnit.stats->maxHp;
 
 	return curHpPercent <= threshold;
 }
+
 void UnitCombat::on_kill(Unit& attacker, Unit& enemyUnit) const {
 	if (attacker.stats->try_proc_augment(PLUNDER))
 		enemyUnit.status.statusFlags |= PLUNDER;

@@ -5,6 +5,7 @@
 const float M_PI = 3.1415927f;
 namespace Easing {
     // Linear (no easing)
+    inline float zero(float t) { return 0; }
     inline float linear(float t) { return t; }
 
     // ========== QUADRATIC ==========
@@ -148,11 +149,12 @@ enum class EasingType {
     COUNT
 };
 using EasingFunc = float(*)(float);
-static auto easeFuncArr = std::array<EasingFunc, 6>{
+static const auto easeFuncArr = std::array<EasingFunc, 7>{
     Easing::linear,
     Easing::easeOutBounce,
     Easing::easeOutCubic,
     Easing::easeInOutSine,
     Easing::easeOutQuart,
-    Easing::easeOutBack
+    Easing::easeOutBack,
+    Easing::zero
 };

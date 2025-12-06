@@ -1,61 +1,7 @@
 #pragma once
 #include "Easing.hpp"
-#include "UnitEnums.h"
+#include <memory>
 
-const EasingType noEase = EasingType::COUNT;
-struct UnitTween {
-    float duration = 0.f;
-    float elapsedTime = 0.0f;
-    bool isComplete = false;
-    EasingType easingFuncX = EasingType::COUNT;
-    EasingType easingFuncY = EasingType::COUNT;
-    RequestType tweenType = RequestType::NONE;
-    sf::Vector2f pos;
-    sf::Vector2f startVec;
-    sf::Vector2f endVec;
-
-    UnitTween(sf::Vector2f val, const sf::Vector2f& end, float dur, RequestType type,
-        EasingType funcX = EasingType::COUNT, EasingType funcY = EasingType::COUNT) :
-        duration(dur), pos(val), startVec(val), endVec(end), tweenType(type),
-        easingFuncX(funcX), easingFuncY(funcY) {}
-    UnitTween() = default;
-    ~UnitTween() = default;
-
-    void update(float deltaTime) {
-        if (isComplete) return;
-        elapsedTime += deltaTime;
-
-        if (elapsedTime >= duration) {
-            elapsedTime = duration;
-            updateValue();
-            isComplete = true;
-        }
-        else updateValue();
-    }
-    float getEasedTX() const {
-        float t = elapsedTime / duration;
-        return easingFuncX < EasingType::COUNT ? 
-            easeFuncArr[static_cast<int>(easingFuncX)](t) : t;
-    }
-    float getEasedTY() const {
-        float t = elapsedTime / duration;
-        return easeFuncArr[static_cast<int>(easingFuncY)](t);
-    }
-    inline sf::Vector2f update_and_get(float deltaTime) {
-        update(deltaTime);
-        return pos;
-    }
-    inline void updateValue() {
-        if (easingFuncX < EasingType::COUNT) {
-            float t = getEasedTX();
-            pos.x = startVec.x + (endVec.x - startVec.x) * t;
-        }
-        if (easingFuncY < EasingType::COUNT) {
-            float t = getEasedTY();
-            pos.y = startVec.y + (endVec.y - startVec.y) * t;
-        }
-    }
-};
 struct BaseTween
 {
     float duration;

@@ -16,13 +16,14 @@ const enum AnimationEvent {
 struct Animation;
 
 using UnitAniMap = std::unordered_map<UnitAnimationState, Animation>;
+using AnimationEventsList = std::vector<std::pair<int, int>>;
 
 struct AnimationFrame {
 	sf::IntRect rect;
 	float duration = 0.0f;
 	int eventsMask;
 
-	AnimationFrame(sf::IntRect rect, float duration, int events);
+	AnimationFrame(sf::IntRect rect, float duration, int events = 0);
 };
 struct Animation {
 	float timeElapsed = 0.0f;
@@ -36,7 +37,7 @@ struct Animation {
 
 	Animation() = default;
 	Animation(const std::string_view& spritePath, int frames, float framerate, 
-		sf::Vector2i cellSizes, sf::Vector2f origin, const std::vector<int>& events, bool loops = true);
+		sf::Vector2i cellSizes, sf::Vector2f origin, AnimationEventsList eventList = {}, bool loops = false);
 
 	int update(float deltaTime, sf::Sprite& sprite);
 	int update(float& time, int& curFrame, float deltaTime, sf::Sprite& sprite);

@@ -1,7 +1,6 @@
 #pragma once
 #include "Animation.h"
 #include "UnitData.h"
-#include <fstream>
 
 const sf::Vector2f FIRST_SLOT_POS = { 0.278f, 0.84375f };
 const sf::Vector2f SLOT_INCREMENT = { 0.089f, 0.0625f };

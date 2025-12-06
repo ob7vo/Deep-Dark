@@ -42,3 +42,7 @@ void SaveSystem::create_stage_save() {
 void SaveSystem::load_save(const std::string file) {
 
 }
+
+bool SaveSystem::saveFileExists(const std::string file) {
+    return std::filesystem::exists(SAVE_FOLDER_PATH + file);
+}

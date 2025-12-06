@@ -12,6 +12,12 @@ void Button::setup(sf::Vector2f uiPos, sf::Vector2f normScale,
 	bounds = sprite.getGlobalBounds().size * 1.05f;
 }
 
+bool Button::try_mouse_press(sf::Vector2i mPos, bool isM1) const {
+	if (!is_hovering(mPos)) return false;
+		
+	onClick(isM1);
+	return true;
+}
 bool Button::check_mouse_hover(sf::Vector2i mPos) {
 	if (is_hovering(mPos)) {
 		//if (!hovering) std::cout << "mouse over button" << std::endl;
@@ -27,10 +33,10 @@ bool Button::check_mouse_hover(sf::Vector2i mPos) {
 }
 
 bool Button::is_hovering(sf::Vector2i mPos) const {
-	return mPos.x >= pos.x - bounds.x * 0.5f
-		&& mPos.x <= pos.x + bounds.x * 0.5f
-		&& mPos.y >= pos.y - bounds.y * 0.5f
-		&& mPos.y <= pos.y + bounds.y * 0.5f;
+	return static_cast<float>(mPos.x) >= pos.x - bounds.x * 0.5f
+		&& static_cast<float>(mPos.x) <= pos.x + bounds.x * 0.5f
+		&& static_cast<float>(mPos.y) >= pos.y - bounds.y * 0.5f
+		&& static_cast<float>(mPos.y) <= pos.y + bounds.y * 0.5f;
 }
 
 void Button::set_pos(sf::Vector2f newPos) {

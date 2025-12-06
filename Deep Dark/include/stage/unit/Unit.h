@@ -65,6 +65,7 @@ public:
 
 	std::pair<int, int> get_lane_reach() const;
 	std::pair<int, int> get_lane_sight_range() const;
+	std::pair<float, float> getHurtboxEdges() const;
 
 	inline bool player_team() const { return stats->team == PLAYER_TEAM; }
 	inline bool dead() const { return status.hp <= 0 && anim.dying(); }
@@ -82,6 +83,5 @@ public:
 
 	inline std::pair<float, float> get_attack_range() const 
 	{ return stats->get_hit_stats(combat.hitIndex).attackRange; }
-	inline bool has_augment(AugmentType aug) const { return stats->has_augment(aug); }
 	inline float get_dir() const { return stats->get_dir(); }
 };

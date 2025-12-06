@@ -1,6 +1,8 @@
 #pragma once
 #include "TextureManager.h"
 
+const float DOUBLE_CLICK_WINDOW = 0.3f;
+
 struct MouseCursor {
 public:
 	sf::Vector2f worldPos = { 0.f, 0.f };
@@ -13,6 +15,8 @@ public:
 	sf::Vector2f velocity{ 0.f,0.f };
 	bool dragging = false;
 
+	float lastClickTime = 0.f;
+
 	MouseCursor() = default;
 
 	inline void set_pos(sf::Vector2f mPos, sf::Vector2i mS_Pos) {
@@ -23,3 +27,4 @@ public:
 		return std::abs(velocity.x) > 0.1f || std::abs(velocity.y) > 0.1f;
 	}
 };
+

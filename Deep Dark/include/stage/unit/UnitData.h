@@ -13,13 +13,15 @@ namespace UnitData {
 
 	const int NULL_ID = -1;
 
-	std::string get_unit_folder_path(int id, int gear = 0);
-	nlohmann::json createUnitJson(int id, int gear = 0);
-	sf::Texture createSlotTexture(int id, int gear, bool printErrorMsg = true);
+	std::string get_unit_folder_path(int id, int gear = 1);
+	nlohmann::json createUnitJson(int id, int gear = 1);
+	sf::Texture createSlotTexture(int id, int gear);
+	/// <summary> Gets the highest gear leel Unit #id has  </summary>
+	int getMaxGear(int id);
 
 	std::string get_unit_folder_path(std::pair<int,int> unit);
 	nlohmann::json createUnitJson(std::pair<int, int> unit);
-	sf::Texture createSlotTexture(std::pair<int, int> unit, bool printErrorMsg = true);
+	sf::Texture createSlotTexture(std::pair<int, int> unit);
 };
 
 struct Hit {
@@ -36,6 +38,13 @@ struct UnitStats {
 	// * = wont be change by core
 	int unitId = 0; // *
 	float rechargeTime = 0.f;
+
+	/// <summary>
+	/// Needed for trigger checking on traps, Projectile collision, and 
+	/// for falling off gaps (bigger Units falling off on their origin looks ridiculous).
+	/// Some checks, like Unit-on-Unit attacks, just use world position, no hurtBoxes
+	/// </summary>
+	sf::Vector2f hurtBox = {25.f, 30.f};
 
 	int team = 0; // *
 	int parts = 0;

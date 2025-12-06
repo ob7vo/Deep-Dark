@@ -24,7 +24,6 @@ struct ArmoryMenu : public Menu<UI::ArmoryMenu::BTN_COUNT> {
     
     explicit ArmoryMenu(Camera& cam);
     ~ArmoryMenu() final = default;
-    void set_up_buttons();
 
     void draw() final;
     void check_mouse_hover() final;
@@ -40,15 +39,19 @@ struct ArmoryMenu : public Menu<UI::ArmoryMenu::BTN_COUNT> {
     void remove_unusable_units();
 
     inline bool dragging_unit() const { return curHeldUnit.first != -1; }
-    inline bool unit_is_slotted(int id) const {
+    inline void release_held_unit() { curHeldUnit = { -1, 1 }; }
+
+    inline bool unit_is_equipped(int id) const {
         for (int i = 0; i < 10; i++)
             if (slots[i].id == id) return true;
         return false;
     } 
-    inline void release_hold() { curHeldUnit = { -1, 1 }; }
-    inline bool unit_is_unusable(int id) const { return stageSetMenu.usedUnits[id]; }
+    inline bool unit_is_unusable(int id) const 
+    { return stageSetMenu.usedUnits[id] || stageSetMenu.unitViolatesCondition[id]; }
 
     inline Slider& slider() { return unitSlider; }
-    inline Button& returnBtn() { return buttonManager.buttons[UnitData::TOTAL_PLAYER_UNITS]; }
+    inline Button& returnBtn() { return buttonManager.buttons[static_cast<int>(UI::ArmoryMenu::ButtonIndex::RETURN)]; }
+    inline Button& stageSetBtn() { return buttonManager.buttons[UI::ArmoryMenu::BTN_COUNT - 1]; }
     inline Button& unitSelectionBtn(int i) { return buttonManager.buttons[i]; }
 };
+// The Expression '_Param_(1)<5' is not true at this call

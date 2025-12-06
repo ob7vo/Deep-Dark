@@ -37,6 +37,10 @@ namespace Printing {
     inline std::string wrapString(const std::string& str) {
         return std::format("[{}]", str);
     }
+    template<typename T>
+    inline std::string vec2(sf::Vector2<T> v2) {
+        return std::format("({}, {})", v2.x, v2.y);
+    }
 }
 namespace FolderPaths {
     inline std::string path(std::string_view folder, std::string_view file) {
@@ -52,4 +56,5 @@ namespace FolderPaths {
     inline constexpr std::string_view iconsPath = "sprites/icons/";
     inline constexpr std::string_view defaultsPath = "sprites/defaults/";
     inline constexpr std::string_view uiPath = "sprites/ui/";
+    inline constexpr std::string_view baseSpritesPath = "sprites/bases/";
 }

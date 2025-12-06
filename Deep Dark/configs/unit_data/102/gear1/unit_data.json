@@ -3,54 +3,58 @@
   "level": 1,
   "name": "mushroom",
   "team": -1,
-  "parts_dropped": 15,
-  "single_target": false,
   "stats": {
     "hp": 100,
     "knockbacks": 1,
     "speed": 45.0,
     "attack_time": 0.0,
     "sight_range": 85.0,
+    "single_target": false,
     "hits": [
       {
         "dmg": 5,
         "attack_range": [ -100, 85.0 ],
-        "lane_reach": [-1,1]
+        "lane_reach": [ -1, 1 ]
       },
       {
         "dmg": 5,
         "attack_range": [ 0, 85.0 ]
       }
-    ]
+    ],
+    "parts_dropped": 15
+  },
+  "hurtbox": {
+    "width": 50.0,
+    "height": 65.0
   },
   "animations": {
     "move": {
       "cell_size": [ 80, 64 ],
-      "origin": [20, 64],
+      "origin": [ 20, 64 ],
       "frames": 8,
       "fps": 4
     },
     "idle": {
       "cell_size": [ 80, 64 ],
-      "origin": [20, 64],
+      "origin": [ 20, 64 ],
       "frames": 7,
       "fps": 7
     },
     "knockback": {
       "cell_size": [ 80, 64 ],
-      "origin": [20, 64],
+      "origin": [ 20, 64 ],
       "frames": 5
     },
     "attack": {
       "cell_size": [ 80, 64 ],
-      "origin": [20, 64],
+      "origin": [ 20, 64 ],
       "attack_frames": [ 3, 6 ],
       "frames": 24,
       "fps": 8
     },
     "falling": {
       "cell_size": [ 80, 64 ],
-      "origin": [20, 64],
+      "origin": [ 20, 64 ],
       "frames": 7
     }
   },
@@ -63,7 +67,7 @@
       "augment": "salvage",
       "value": 30.0,
       "percentage": 100.0,
-      "int_value":  103
+      "int_value": 103
     }
   ],
   "types": [ "nano", "floating" ],

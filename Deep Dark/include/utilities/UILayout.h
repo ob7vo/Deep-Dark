@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML/System/Vector2.hpp>
 #include <array>
+#include <UnitData.h>
 
 namespace UI 
 {
@@ -20,7 +21,7 @@ namespace Colors {
 
 //MENUS
 namespace ArmoryMenu {
-	constexpr int BTN_COUNT = 4;
+	constexpr int BTN_COUNT = 5;
 
 	constexpr sf::Vector2f FIRST_SLOT_POS = { 0.225f, 0.15f };
 	constexpr sf::Vector2f SLOT_INCREMENT = { 0.15f, 0.1f };
@@ -39,6 +40,14 @@ namespace ArmoryMenu {
 
 	constexpr sf::Vector2f RETURN_BTN_POS = { 0.9f, 0.1f };
 	constexpr sf::Vector2f RETURN_BTN_SIZE = { 0.08f, 0.08f };
+
+	constexpr sf::Vector2f STAGE_SET_BTN_POS = { 0.1f, 0.1f };
+	constexpr sf::Vector2f STAGE_SET_BTN_SIZE = { 0.08f, 0.08f };
+
+	enum class ButtonIndex {
+		RETURN = UnitData::TOTAL_PLAYER_UNITS,
+		STAGE_SET = BTN_COUNT - 1
+	};
 	// 0.089f, 0.0625f
 } // namespace ArmoryMenu
 
@@ -56,11 +65,16 @@ namespace StartMenu {
 
 	// Texts
 	constexpr sf::Vector2f START_TEXT_POS = { 0.5f, 0.35f };
+
+	enum class ButtonIndex {
+		START,
+		QUIT,
+		SETTINGS
+	};
 } // StartMenu
 
 namespace StageUI {
-	constexpr int UI_BTN_COUNT = 3;
-	constexpr int PAUSE_MENU_BTN_COUNT = 2;
+	constexpr int BTN_COUNT = 3;
 	// Buttons
 	constexpr  sf::Vector2f PAUSE_BTN_POS = { 0.15f,0.25f };
 	constexpr  sf::Vector2f PAUSE_BTN_SIZE = { 0.1f,0.1f };
@@ -71,12 +85,6 @@ namespace StageUI {
 	constexpr  sf::Vector2f BAG_BTN_POS = { 0.12f,0.85f };
 	constexpr  sf::Vector2f BAG_BTN_SIZE = { 0.1f,0.1f };
 
-	constexpr  sf::Vector2f CLOSE_GAME_BTN_POS = { 0.4f, 0.7f };
-	constexpr  sf::Vector2f CLOSE_GAME_BTN_SIZE = { 0.1f, 0.1f };
-
-	constexpr  sf::Vector2f CLOSE_MENU_BTN_POS = { .6f, .7f };
-	constexpr  sf::Vector2f CLOSE_MENU_BTN_SIZE = { 0.1f, 0.1f };
-
 	// Texts
 	constexpr  sf::Vector2f PARTS_TEXT_POS = { 0.1f,0.1f };
 	constexpr  sf::Vector2f CHALLENGES_TEXT_POS = { 0.7f,0.8f };
@@ -84,11 +92,32 @@ namespace StageUI {
 	constexpr  sf::Vector2f PAUSE_TEXT_POS = { 0.5f, 0.35f };
 
 	// Sprites
-	constexpr  sf::Vector2f PAUSE_MENU_POS = { 0.5f,0.5f };
-	constexpr  sf::Vector2f PAUSE_MENU_SIZE = { 0.2f,0.2f };
-
 	constexpr  sf::Vector2f FIRST_UNIT_SLOT_POS = { 0.278f, 0.84375f };
 	constexpr  sf::Vector2f UNIT_SLOT_INCREMENT = { 0.089f, 0.0625f };
+
+	enum class ButtonIndex {
+		PAUSE,
+		UPGRADE_BAG,
+		FIRE_CANNON
+	};
+
+	namespace PauseMenu {
+		constexpr int BTN_COUNT = 2;
+
+		constexpr  sf::Vector2f CLOSE_GAME_BTN_POS = { 0.4f, 0.7f };
+		constexpr  sf::Vector2f CLOSE_GAME_BTN_SIZE = { 0.1f, 0.1f };
+
+		constexpr  sf::Vector2f CLOSE_MENU_BTN_POS = { .6f, .7f };
+		constexpr  sf::Vector2f CLOSE_MENU_BTN_SIZE = { 0.1f, 0.1f };
+
+		constexpr  sf::Vector2f PAUSE_MENU_POS = { 0.5f,0.5f };
+		constexpr  sf::Vector2f PAUSE_MENU_SIZE = { 0.2f,0.2f };
+
+		enum class ButtonIndex {
+			CLOSE_GAME,
+			CLOSE_MENU
+		};
+	}
 } //namespace Stage
 
 namespace StageSelect {
@@ -105,18 +134,44 @@ namespace StageSelect {
 		{1400.f, 250.f},
 		{350.f, 1400.f}
 	} };
+
+	enum class ButtonIndex {
+		RETURN = 3,
+		ENTER_ARMORY
+	};
 } // namespace StageSelect
 
 namespace StageSet {
 	constexpr int BTN_COUNT = 3;
 
-	constexpr sf::Vector2f BACKGROUND_POS = { .5f, 0.4f };
-	constexpr sf::Vector2f BACKGROUND_SIZE = { .3f, 0.125f };
-	constexpr float TEXT_HEIGHT = 0.035f;
+	constexpr sf::Vector2f BACKGROUND_POS = { .5f, 0.5f };
+	constexpr sf::Vector2f BACKGROUND_SIZE = { .5f, 0.5f };
 
-	constexpr sf::Vector2f FIRST_UNIT_SLOT_POS = { 0.225f, 0.15f };
-	constexpr sf::Vector2f UNIT_SLOT_INCREMENT = { 0.15f, 0.1f };
-	constexpr sf::Vector2f UNIT_SLOT_SCALE = { 0.06f, 0.06f };
+	constexpr sf::Vector2f TEXT_POS = { .5f, 0.25f };
+	constexpr float TEXT_HEIGHT = 0.035f;
+	
+	constexpr sf::Vector2f ENEMY_UNITS_CENTER = { 0.5f, 0.325f };
+	constexpr sf::Vector2f ENEMY_UNITS_SPACING = { 0.1f, 0.f };
+	constexpr sf::Vector2f ENEMY_UNITS_SIZE = { 0.08f, 0.08f };
+
+	constexpr sf::Vector2f FIRST_UNIT_SLOT_POS = { 0.275f, 0.4f };
+	constexpr sf::Vector2f UNIT_SLOT_INCREMENT = { 0.065f, 0.06f };
+	constexpr sf::Vector2f UNIT_SLOT_SCALE = { 0.05f, 0.05f };
+
+	constexpr sf::Vector2f START_BTN_POS = { .3f, .5f };
+	constexpr sf::Vector2f START_BTN_SIZE = { .06f, 0.06f };
+
+	constexpr sf::Vector2f EXIT_BTN_POS = { .6f, .5f };
+	constexpr sf::Vector2f EXIT_BTN_SIZE = { .06f, .06f };
+
+	constexpr sf::Vector2f CLOSE_MENU_BTN_POS = { 0.45f, 0.55f };
+	constexpr sf::Vector2f CLOSE_MENU_BTN_SIZE = { 0.06f, 0.06f };
+
+	enum class ButtonIndex {
+		START_STAGE,
+		CLOSE,
+		EXIT_STAGE
+	};
 } // namespace StageSet
 
 namespace Workshop {
@@ -154,6 +209,14 @@ namespace Workshop {
 	constexpr sf::Vector2f UNIT_ANIMATION_BTN_POS = { 0.65f, 0.25f };
 	constexpr sf::Vector2f UNIT_ANIMATION_BTN_INCREMENT = { 0.f, 0.075f };
 	constexpr sf::Vector2f UNIT_ANIMATION_BTN_SIZE = { 0.05f, 0.05f };
+
+	enum class ButtonIndex {
+		RETURN,
+		PAUSE,
+		SWITCH_GEAR,
+		SPEED_UP,
+		ANIMATIONS
+	};
 } // namespace Workshop
 
 } // namespace UI

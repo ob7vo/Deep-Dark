@@ -12,23 +12,23 @@ float random_float(float min, float max) {
 	return dis(gen);
 }
 
-void StageManager::create_stage(const json& stageJson, int stageSet) 
-{
-	int lanes = stageJson["lane_count"];
+void StageManager::create_stage(const json& stageJson, int stageSet) {
+	const json& stageSetJson = stageJson["sets"][stageSet];
+	int lanes = stageSetJson["lane_count"];
 
 	challenges.clear();
 	stageRecorder = StageRecord(lanes);
-	stage = Stage(stageJson, stageSet, &stageRecorder);
+	stage = Stage(stageSetJson, &stageRecorder);
 	wallet = {};
 
-	create_challenges(stageJson);
+	create_challenges(stageSetJson);
 	set_texts();
 }
-void StageManager::create_challenges(const json& stageJson) {
-	size_t challengeCount = stageJson["challenges"].size();
+void StageManager::create_challenges(const json& stageSetJson) {
+	size_t challengeCount = stageSetJson["challenges"].size();
 	challenges.reserve(challengeCount);
 
-	for (auto& ch : stageJson["challenges"]) {
+	for (auto& ch : stageSetJson["challenges"]) {
 		std::string desc = ch.value("description", "");
 		bool startState = ch.value("starting_state", false);
 
@@ -62,7 +62,7 @@ void StageManager::unload() {
 	wallet = {};
 }
 
-// Reading Inputs
+// Buttons
 void StageManager::upgrade_bag() {
 	wallet.curLevel++;
 
@@ -72,12 +72,13 @@ void StageManager::upgrade_bag() {
 
 	ui.bagUpgradeCostText.setString(std::format("${}", wallet.upgradeCost));
 	ui.partsCountText.setString(std::format("#{}/{}", wallet.parts, wallet.partsCap));
-
 }
 void StageManager::pause() {
 	ui.paused = !ui.paused;
 	cam.change_lock(ui.paused);
 }
+
+// Reading Inputs
 bool StageManager::read_lane_switch_inputs(Key key) {
 	if (key == Key::Up) {
 		selectedLane = (selectedLane + 1) % stage.laneCount;
@@ -132,7 +133,7 @@ void StageManager::handle_events(sf::Event event) {
 }
 
 // Action Objects
-void StageManager::try_spawn_death_surge(Unit& unit) {
+void StageManager::try_spawn_death_surge(const Unit& unit) {
 	if (!unit.stats->try_proc_augment(DEATH_SURGE)) return;
 	const Augment& augment = unit.stats->get_augment(DEATH_SURGE);
 
@@ -155,14 +156,15 @@ void StageManager::create_drop_box(int laneInd, const UnitStats* stats, UnitAniM
 	stage.entities.emplace_back(
 		std::make_unique<UnitSpawner>(stats, aniMap, spawnPos, laneInd));
 }
-void StageManager::try_create_cloner(Unit& unit) {
-	if (!unit.has_augment(CLONE) || unit.status.statusFlags & CODE_BREAKER) return;
+void StageManager::try_create_cloner(const Unit& unit) {
+	if (!unit.stats->has_augment(CLONE) || unit.status.statusFlags & CODE_BREAKER) return;
 
 	stage.entities.emplace_back(std::make_unique<UnitSpawner>
 		(unit.stats, unit.anim.get_ani_map(), unit.get_pos(), unit.get_lane()));
 }
 
-void StageManager::collect_parts(Unit& unit) {
+// Parts
+void StageManager::collect_parts(const Unit& unit) {
 	int p = unit.stats->parts;
 	if (unit.status.statusFlags & PLUNDER) p *= 2;
 	wallet.gain_parts(p, stageRecorder);
@@ -175,14 +177,16 @@ void StageManager::increment_parts_and_notify(float deltaTime) {
 		oneSecondTimer -= 1.0f;
 	}
 }
-void StageManager::handle_enemy_unit_death(Unit& unit) {
+
+// Handling Unit Death
+void StageManager::handle_enemy_unit_death(const Unit& unit) {
 	if (unit.causeOfDeath != DeathCause::FALLING) {
 		try_spawn_death_surge(unit);
 		try_create_cloner(unit);
 	}
 	collect_parts(unit);
 }
-void StageManager::handle_player_unit_death(Unit& unit) {
+void StageManager::handle_player_unit_death(const Unit& unit) {
 	if (unit.causeOfDeath != DeathCause::FALLING) {
 		try_spawn_death_surge(unit);
 		try_create_cloner(unit);
@@ -193,7 +197,7 @@ void StageManager::spawn_enemies() {
 	for (size_t i = stage.enemySpawners.size(); i--;) {
 		auto& data = stage.enemySpawners[i];
 
-		if (data.can_force_spawn(timeSinceStart)) {
+		if (data.can_force_spawn(stage.timeSinceStart)) {
 			stage.create_unit(data.forcedSpawnTimes[0].second, &data.enemyStats, &data.aniArr);
 			data.forcedSpawnTimes.erase(data.forcedSpawnTimes.begin());
 		}
@@ -201,7 +205,7 @@ void StageManager::spawn_enemies() {
 		int curIndex = data.currentSpawnIndex;
 		if (curIndex >= data.totalSpawns || curIndex < 0) continue;
 
-		if (timeSinceStart > data.nextSpawnTime) {
+		if (stage.timeSinceStart > data.nextSpawnTime) {
 			data.nextSpawnTime += random_float(data.spawnDelays.first, data.spawnDelays.second);
 
 			int laneIndex = data.laneSpawnIndexes[curIndex];
@@ -239,6 +243,7 @@ void StageManager::process_move_requests() {
 	}
 }
 
+// Updating GameObjects
 void StageManager::update_unit(float deltaTime) {
 	for (auto& lane : stage.lanes) {
 		for (auto it = lane.enemyUnits.begin(); it != lane.enemyUnits.end();) {
@@ -277,31 +282,29 @@ void StageManager::update_projectiles(float deltaTime) {
 	}
 }
 void StageManager::update_entities(float dt) {
-	for (auto it = stage.surges.begin(); it != stage.surges.end();) {
-		if ((*it)->readyForRemoval) it = stage.surges.erase(it);
-		else {
-			(*it)->tick(dt, stage);
-			++it;
-		}
-	}
-
+	// Ticking Unique Pointers
+	for (auto const& surge : stage.surges)
+		surge->tick(dt, stage);
 	for (auto const& entity : stage.entities) 
 		entity->tick(stage, dt);
+
+	// Raw values (Won't delete)
 	for (auto& tp : stage.teleporters)
 		tp.tick(stage, dt);
 	for (auto& trap : stage.traps)
 		trap.tick(stage, dt);
 
-	std::erase_if(stage.entities, [](const auto& e) {
-		return e->readyForRemoval;
+	// Deleting Surges and Entities
+	std::erase_if(stage.entities, [](const auto& entity) {
+		return entity->readyForRemoval;
 		});
+	std::erase_if(stage.surges, [](const auto& surge) {
+		return surge->readyForRemoval;
+		}); 
 }
 void StageManager::update_base(float deltaTime) {
 	stage.playerBase.tick(stage, deltaTime);
-
 	stage.enemyBase.tick(stage, deltaTime);
-	if (stage.enemyBase.tookDmgThisFrame)
-		stage.break_spawner_thresholds(timeSinceStart);
 }
 void StageManager::update_hitbox_visualizers(float deltaTime) {
 	for (size_t i = stage.hitboxes.size(); i--;) {
@@ -350,7 +353,7 @@ void StageManager::draw(sf::RenderWindow& window) {
 		window.draw(hitbox);
 }
 void StageManager::update_game_ticks(float deltaTime) {
-	timeSinceStart += deltaTime;
+	stage.timeSinceStart += deltaTime;
 	stage.effectSpritePositions.clear();
 
 	spawn_enemies();
