@@ -1,59 +1,63 @@
 {
   "unit_id": 103,
-  "level": 1,
-  "name": "drone",
-  "path": "configs/enemy_units/103/",
+  "gear": 1,
+  "name": "Ground Droid",
   "team": -1,
   "stats": {
-    "hp": 500,
-    "knockbacks": 1,
-    "speed": 50.0,
-    "attack_time": 0.1,
-    "sight_range": 50.0,
-    "dmg": 50,
-    "attack_range": [ -250.0, 350.0 ],
-    "lane_reach": [ -1, 1 ],
+    "hp": 175,
+    "knockbacks": 2,
+    "speed": 10,
+    "attack_time": 3.25,
+    "sight_range": 120.0,
     "single_target": false,
-    "parts_dropped": 2
+    "hits": [
+      {
+        "dmg":50,
+        "attack_range": [ 0, 120 ]
+      }
+    ],
+    "parts_dropped": 15
   },
   "hurtbox": {
-    "width": 22.0,
+    "width": 30.0,
     "height": 30.0
   },
   "animations": {
     "move": {
-      "cell_size": [ 32, 32 ],
-      "frames": 10,
-      "fps": 6
+      "cell_size": [ 48, 48 ],
+      "origin": [ 12, 38 ],
+      "frames": 8,
+      "fps": 8
     },
     "idle": {
-      "cell_size": [ 32, 32 ],
-      "frames": 8,
-      "fps": 6
+      "cell_size": [ 48, 48 ],
+      "origin": [ 12, 38 ],
+      "frames": 4,
+      "fps": 3
     },
     "knockback": {
-      "cell_size": [ 32, 32 ],
+      "cell_size": [ 48, 48 ],
+      "origin": [ 12, 38 ],
       "frames": 4
     },
     "attack": {
-      "cell_size": [ 32, 32 ],
-      "attack_frames": [ 8 ],
-      "frames": 12,
-      "fps": 6
+      "cell_size": [ 48, 48 ],
+      "origin": [ 12, 38 ],
+      "frames": 9,
+      "fps": 6,
+      "events": [ [ "attack", 7 ] ]
     },
     "falling": {
-      "cell_size": [ 32, 32 ],
-      "frames": 8
+      "cell_size": [ 48, 48 ],
+      "origin": [ 12, 38 ],
+      "frames": 4
+    },
+    "death": {
+      "cell_size": [ 48, 48 ],
+      "origin": [ 24, 48 ],
+      "frames": 8,
+      "duration": 1.5
     }
   },
-  "augments": [
-    {
-      "augment": "overload",
-      "value": 5.0,
-      "percentage": 100.0
-    }
-  ],
-  "types": [ "nano", "floating" ],
-  "target_types": [ "all" ],
-  "quick_augment_masks": [ "bully", "self_destruct" ]
+  "types": [ "typeless" ]
 }

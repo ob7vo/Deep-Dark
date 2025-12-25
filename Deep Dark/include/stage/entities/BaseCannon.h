@@ -1,5 +1,7 @@
 #pragma once
 #include "UnitData.h"
+#include "Animation.h"
+#include <json_fwd.hpp>
 #include <SFML/System/Vector2.hpp>
 
 struct Stage;
@@ -14,11 +16,13 @@ struct BaseCannon
 	UnitStats cannonStats;
 	int team = 1;
 
+	AnimationClip animClip;
+
 	BaseCannon(const nlohmann::json& baseJson, float magnification);
 	virtual ~BaseCannon() = default;
 
 	virtual void fire(Stage& stage) = 0;
-	virtual Animation create_animation() = 0;
+	virtual void create_animation() = 0;
 };
 struct WaveCannon : public BaseCannon {
 public:
@@ -28,7 +32,7 @@ public:
 	~WaveCannon() override  = default;
 
 	void fire(Stage& stage) override;
-	Animation create_animation() override;
+	void create_animation() override;
 };
 struct FireWallCannon : public BaseCannon {
 	Augment fireWall;
@@ -37,7 +41,7 @@ struct FireWallCannon : public BaseCannon {
 	~FireWallCannon() override = default;
 
 	void fire(Stage& stage) override;
-	Animation create_animation() override;
+	void create_animation() override;
 };
 struct OrbitalCannon : public BaseCannon {
 	//spawns 4 equally spaced orbital strikes
@@ -47,7 +51,7 @@ struct OrbitalCannon : public BaseCannon {
 	~OrbitalCannon() override = default;
 
 	void fire(Stage& stage) override;
-	Animation create_animation() override;
+	void create_animation() override;
 };
 struct AreaCannon : public BaseCannon {
 	// hits units in all lanes within a range
@@ -63,5 +67,5 @@ struct AreaCannon : public BaseCannon {
 		return dist <= areaRange;
 	}
 
-	Animation create_animation() override;
+	void create_animation() override;
 };

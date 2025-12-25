@@ -1,61 +1,63 @@
 #pragma once
 #include "TextureManager.h"
+#include <SFML\Graphics\Sprite.hpp>
 #include "UnitEnums.h"
+#include "AnimationEvent.h"
+#include <deque>
 
 struct AnimationState;
 
-const enum AnimationEvent {
-	EMPTY_EVENT = 0,
-	FIRST_FRAME = 1 << 0,
-	FINAL_FRAME = 1 << 1,
-	ATTACK = 1 << 2,
-	TRIGGER = 1 << 3,
-	TRIGGER_2 = 1 << 4
-};
+struct AnimationClip;
 
-struct Animation;
-
-using UnitAniMap = std::unordered_map<UnitAnimationState, Animation>;
-using AnimationEventsList = std::vector<std::pair<int, int>>;
+using UnitAniMap = std::unordered_map<UnitAnimationState, AnimationClip>;
 
 struct AnimationFrame {
 	sf::IntRect rect;
 	float duration = 0.0f;
-	int eventsMask;
+	AnimationEvent eventsMask;
 
-	AnimationFrame(sf::IntRect rect, float duration, int events = 0);
+	AnimationFrame(sf::IntRect rect, float duration, AnimationEvent events = AnimationEvent::EMPTY_EVENT);
 };
-struct Animation {
-	float timeElapsed = 0.0f;
+struct AnimationClip {
+	sf::Texture* texture = nullptr;   // NOT owning
+	sf::Vector2f origin = { 0.f, 0.f };
+	std::vector<AnimationFrame> frames = {};
 	bool loops = true;
-	sf::Texture texture;
-	sf::Vector2f origin;
 
+	AnimationClip() = default;
+	AnimationClip(sf::Texture* pTexture, int frames, float framerate,
+		sf::Vector2i cellSizes, sf::Vector2f origin, const AnimationEventsList& eventList = {},
+		bool loops = false);
+
+	void set_duration(float duration);
+
+	/// <summary>
+	/// Takes passed in aniMap and unitTexture vector and sets them up.
+	/// This function EXPECTS the two variables to be EMPTY when called
+	/// </summary>
+	static void setup_unit_animation_map(const nlohmann::json& unitFile, UnitAniMap& aniMap, std::deque<sf::Texture>& unitTextures);
+	static AnimationClip create_unit_animation(const nlohmann::json& file, sf::Texture* pTexture, 
+		UnitAnimationState ani, bool loops);
+	static AnimationClip from_json(const nlohmann::json& file, sf::Texture* pTexture, bool loops);
+};
+struct AnimationPlayer {
+	const AnimationClip* clip = nullptr;
+
+	float time = 0.f;
 	int currentFrame = 0;
-	std::vector<AnimationFrame> frames;
-	int frameCount = 0;
 
-	Animation() = default;
-	Animation(const std::string_view& spritePath, int frames, float framerate, 
-		sf::Vector2i cellSizes, sf::Vector2f origin, AnimationEventsList eventList = {}, bool loops = false);
+	AnimationPlayer() = default;
 
-	int update(float deltaTime, sf::Sprite& sprite);
-	int update(float& time, int& curFrame, float deltaTime, sf::Sprite& sprite);
-	
+	AnimationEvent update(float deltaTime, sf::Sprite& sprite);
+	/// <summary>  Sets the new clip then calls reset </summmary>
+	void start(const AnimationClip* newClip, sf::Sprite& sprite);
 	/// <summary>
-	/// Starts the animation. Sets the current frame and time to 0, 
-	/// then sets the Sprite's Texture, Rect, and Origin
-	/// </summmary>
+	/// Sets the Sprites origin, texture, and rect,then resets
+	/// currentFrame and time to 0.
+	/// </summary>
 	void reset(sf::Sprite& sprite);
-	/// <summary>
-	/// Starts the animation. Sets the current frame and time to 0, 
-	/// then sets the Sprite's Texture, Rect, and Origin
-	/// </summmary> 
-	void reset(float& tiem, int& curFrame, sf::Sprite& sprite);
 
-	inline int get_events() { return frames[currentFrame].eventsMask; }
-	static void setup_unit_animation_map(const nlohmann::json& unitFile, UnitAniMap& aniMap);
-	static Animation create_unit_animation(const nlohmann::json& file, const std::string_view& ani, const std::string_view& path, bool loops);
-	static bool check_for_event(AnimationEvent desiredEvent, int events);
-
+	inline AnimationEvent get_events() const { return clip->frames[currentFrame].eventsMask; }
+	inline bool onFirstFrame() const { return currentFrame == 0; }
+	inline bool onFinalFrame() const { return currentFrame == clip->frames.size() - 1; }
 };

@@ -1,0 +1,64 @@
+{
+  "unit_id": 3,
+  "gear": 1,
+  "name": "Dragon Tech Guy",
+  "team": 1,
+  "stats": {
+    "hp": 125,
+    "knockbacks": 4,
+    "speed": 9,
+    "attack_time": 3.5,
+    "sight_range": 150.0,
+    "single_target": true,
+    "hits": [
+      {
+        "dmg": 20,
+        "attack_range": [ 0, 150 ]
+      }
+    ],
+    "parts_cost": 16,
+    "recharge_timer": 6.75
+  },
+  "hurtbox": {
+    "width": 30.0,
+    "height": 30.0
+  },
+  "animations": {
+    "move": {
+      "cell_size": [ 32, 32 ],
+      "origin": [ 28, 32 ],
+      "frames": 8,
+      "fps": 4
+    },
+    "idle": {
+      "cell_size": [ 32, 32 ],
+      "origin": [ 28, 32 ],
+      "frames": 8,
+      "fps": 4
+    },
+    "knockback": {
+      "cell_size": [ 32, 32 ],
+      "origin": [ 28, 32 ],
+      "frames": 3
+    },
+    "attack": {
+      "cell_size": [ 80, 32 ],
+      "origin": [ 28, 32 ],
+      "frames": 12,
+      "fps": 8,
+      "events": [ [ "attack", 8 ] ]
+    },
+    "falling": {
+      "cell_size": [ 32, 32 ],
+      "origin": [ 28, 32 ],
+      "frames": 6
+    },
+    "death": {
+      "cell_size": [ 48, 48 ],
+      "origin": [ 24, 48 ],
+      "frames": 8,
+      "duration": 1.5
+    }
+  },
+  "types": [ "rusted" ]
+}

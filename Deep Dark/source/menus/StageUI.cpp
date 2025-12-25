@@ -2,7 +2,9 @@
 #include "StageUI.h"
 #include "StageManager.h"
 #include "UILayout.h"
+#include "UITextures.h"
 
+using namespace Textures::UI;
 using namespace UI::StageUI;
 
 StageUI::StageUI(Camera& cam) : Menu(cam), pauseMenu(cam, *this){
@@ -18,9 +20,9 @@ void StageUI::create_buttons() {
 	upgradeBagBtn().onClick = [this](bool m1) { if (m1) upgrade_bag(); };
 	fireCannonBtn().onClick = [this](bool m1) { if (m1) fire_cannon(); };
 
-	pauseBtn().setup(PAUSE_BTN_POS, PAUSE_BTN_SIZE, cam, TextureManager::t_pauseBtn);
-	upgradeBagBtn().setup(BAG_BTN_POS, BAG_BTN_SIZE, cam, TextureManager::t_upgradeWalletBtn);
-	fireCannonBtn().setup(CANNON_BTN_POS, CANNON_BTN_SIZE, cam, TextureManager::t_fireCannonBtn);
+	pauseBtn().setup(PAUSE_BTN_POS, PAUSE_BTN_SIZE, cam, t_pauseBtn);
+	upgradeBagBtn().setup(BAG_BTN_POS, BAG_BTN_SIZE, cam, t_upgradeWalletBtn);
+	fireCannonBtn().setup(CANNON_BTN_POS, CANNON_BTN_SIZE, cam, t_fireCannonBtn);
 }
 void StageUI::reset_positions() {
 	partsCountText.setPosition(cam.norm_to_pixels(PARTS_TEXT_POS));
@@ -77,13 +79,13 @@ Menu(cam), stageUI(ui) {
 	pauseText.setPosition(cam.norm_to_pixels(PAUSE_TEXT_POS));
 	pauseText.setString("game is PAUSED baby");
 
-	closeGameBtn().setup(PauseMenu::CLOSE_GAME_BTN_POS, PauseMenu::CLOSE_GAME_BTN_SIZE, cam, TextureManager::t_returnBtn);
-	closeMenuBtn().setup(PauseMenu::CLOSE_MENU_BTN_POS, PauseMenu::CLOSE_MENU_BTN_SIZE, cam, TextureManager::t_closeBtn);
+	closeGameBtn().setup(PauseMenu::CLOSE_GAME_BTN_POS, PauseMenu::CLOSE_GAME_BTN_SIZE, cam, t_returnBtn);
+	closeMenuBtn().setup(PauseMenu::CLOSE_MENU_BTN_POS, PauseMenu::CLOSE_MENU_BTN_SIZE, cam, t_closeBtn);
 
 	closeGameBtn().onClick = [this](bool m1) { if (m1) close_game(); };
 	closeMenuBtn().onClick = [this](bool m1) { if (m1) close_menu(); };
 
-	cam.setup_sprite(PauseMenu::PAUSE_MENU_POS, PauseMenu::PAUSE_MENU_SIZE, pauseMenuSprite, TextureManager::t_menuBG1);
+	cam.setup_sprite(PauseMenu::PAUSE_MENU_POS, PauseMenu::PAUSE_MENU_SIZE, pauseMenuSprite, t_menuBG1);
 }
 void StagePauseMenu::reset_positions() {
 	pauseText.setPosition(cam.norm_to_pixels(PAUSE_TEXT_POS));

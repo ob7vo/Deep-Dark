@@ -2,6 +2,7 @@
 #include "Menu.h"
 #include "Animation.h"
 #include "UnitData.h"
+#include <deque>
 
 /*
 	Workshop will be a status screen dedicated to ONE unit that is selected 
@@ -26,8 +27,11 @@ struct WorkshopMenu : public Menu<UI::Workshop::BTN_COUNT> {
 	sf::Text unitDescText = sf::Text(baseFont);
 	sf::Sprite unitSprite = sf::Sprite(defTex);
 	std::vector<sf::RectangleShape> unitHitboxes;
+
+	AnimationPlayer unitAnimPlayer;
+	std::deque<sf::Texture> unitAnimTextures;
 	UnitAniMap unitAnimations; // unordered map of Animations for the Unit
-	UnitAnimationState currentAnimation = UnitAnimationState::MOVE;
+	UnitAnimationState currentAnimState = UnitAnimationState::MOVE;
 	int unitAnimSpeedIndex = 2;
 
 	std::array<sf::Sprite, STAT_ICONS> statIcons;

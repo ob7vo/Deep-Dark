@@ -22,7 +22,10 @@ struct Pathing {
 	sf::Vector2f get_pos() const { return pos; }
 
 	virtual PathingType get_type() const = 0;
-	virtual bool moving_down() = 0;
+	virtual bool moving_down() const = 0;
+
+	inline virtual sf::Vector2f getStartingPosition() const = 0;
+
 	static PathingType string_to_type(std::string& str);
 };
 struct CirclePathing : public Pathing {
@@ -31,14 +34,17 @@ struct CirclePathing : public Pathing {
 	float angleDeg = 0;
 
 	CirclePathing(sf::Vector2f cen, float spd, float rad, float angle) : Pathing(cen, spd),
-		center(cen), radius(), angleDeg(angle) {
+		center(cen), radius(rad), angleDeg(angle) {
 		pos = { cen.x + rad, cen.y + rad };
 	}
 	~CirclePathing() override = default;
 
 	sf::Vector2f move(float deltaTime) override;
+
 	PathingType get_type() const override { return PathingType::CIRCULAR; }
-	bool moving_down() override { return true; }
+	bool moving_down() const override { return true; }
+
+	inline sf::Vector2f getStartingPosition() const override { return { center.x + radius, center.y + radius }; }
 };
 struct ProjectilePathing : public Pathing {
 	sf::Vector2f velocity = { 0.f,0.f };
@@ -49,8 +55,12 @@ struct ProjectilePathing : public Pathing {
 	~ProjectilePathing() override = default;
 
 	sf::Vector2f move(float deltaTime) override;
+
 	PathingType get_type() const override { return PathingType::PROJECTILE; }
-	bool moving_down() { return velocity.y < 0; }
+	bool moving_down() const override { return velocity.y < 0; }
+
+	// Doesnt really work for this
+	inline sf::Vector2f getStartingPosition() const override { return pos; }
 };
 struct WaypointPathing : public Pathing {
 	sf::Vector2f start = { 0.f,0.f };
@@ -68,6 +78,9 @@ struct WaypointPathing : public Pathing {
 	~WaypointPathing() override = default;
 
 	sf::Vector2f move(float deltaTime) override;
+
 	PathingType get_type() const override { return PathingType::WAYPOINTS; }
-	bool moving_down() override { return (waypoints[curWp] - start).y < 0; }
+	bool moving_down() const override { return (waypoints[curWp] - start).y < 0; }
+
+	inline sf::Vector2f getStartingPosition() const override { return start; }
 };

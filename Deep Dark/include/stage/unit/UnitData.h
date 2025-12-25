@@ -1,27 +1,32 @@
 #pragma once
 #include "UnitEnums.h" // Has Augment.h, which has json_fwd.hpp
+#include "Augment.h"
+#include <SFML/Graphics/Texture.hpp>
 #include <json_fwd.hpp>
+#include "UnitDataConstants.h"
 
 const int TEAM_PLAYER = 1;
 const int TEAM_ENEMY = -1;
 const float GUARANTEED_CHANCE = 100.0f;
 
 namespace UnitData {
-	const int TOTAL_PLAYER_UNITS = 3;
-	const int TOTAL_ENEMY_UNITS = 4;
-	const int TOTAL_UNITS = TOTAL_PLAYER_UNITS + TOTAL_ENEMY_UNITS;
-
-	const int NULL_ID = -1;
-
-	std::string get_unit_folder_path(int id, int gear = 1);
-	nlohmann::json createUnitJson(int id, int gear = 1);
+	/// <summary> Get only the general folder of the Unit </summary>
+	std::string getUnitFolderPath(int id);
+	/// <summary> Get the specific unit files. (The ID folder path + the gear folder) </summary>
+	std::string getUnitGearPath(int id, int gear, bool throwError = true);
+	nlohmann::json createUnitJson(int id, int gear);
+	nlohmann::json createSummonJson(int id);
 	sf::Texture createSlotTexture(int id, int gear);
 	/// <summary> Gets the highest gear leel Unit #id has  </summary>
 	int getMaxGear(int id);
 
-	std::string get_unit_folder_path(std::pair<int,int> unit);
+	// Overloads
+	std::string getUnitGearPath(std::pair<int,int> unit);
 	nlohmann::json createUnitJson(std::pair<int, int> unit);
 	sf::Texture createSlotTexture(std::pair<int, int> unit);
+
+	bool shouldFlipSprite(int id);
+	sf::Color getGearColor(int id, int gear);
 };
 
 struct Hit {
@@ -36,7 +41,8 @@ struct Hit {
 
 struct UnitStats {
 	// * = wont be change by core
-	int unitId = 0; // *
+	int id = -1; // *
+	int gear = 1;
 	float rechargeTime = 0.f;
 
 	/// <summary>
@@ -61,45 +67,54 @@ struct UnitStats {
 	bool singleTarget = false;
 
 	// these are all bit masks
-	int unitTypes = 0;
-	int targetTypes = 0;
-	size_t immunities = 0;
-	size_t quickAugMask = 0; 
+	UnitType unitTypes = UnitType::NONE;
+	UnitType targetTypes = UnitType::NONE;
+	AugmentType immunities = AugmentType::NONE;
+	AugmentType augmentsMask = AugmentType::NONE;
 
 	std::vector<Augment> augments = {};
 
-	static UnitType convert_string_to_type(std::string str);
+	static UnitType convert_string_to_type(std::string_view str);
 
-	static const std::unordered_map<std::string, std::function<void(UnitStats&, char, const std::string&)>> statModifiers;
 	void apply_core_modifier(const std::string& core, int gear);
 	void removeAugment(AugmentType augType);
-	void addCoreAugment(const nlohmann::json& file, const std::string& aug);
+	void addCoreAugment(const nlohmann::json& file, const std::string& aug); 
 	void modifyDmg(int hitIndex, char op, float value);
 
 	UnitStats() = default;
 
 	void setup(const nlohmann::json& file);
 
-	static UnitStats enemy(const nlohmann::json& file, float magnification);
-	static UnitStats player(const nlohmann::json& file, int core = -1);
+	static UnitStats create_enemy(const nlohmann::json& file, float magnification);
+	static UnitStats create_player(const nlohmann::json& file, int core = -1);
 	static UnitStats create_cannon(const nlohmann::json& baseFile, float magnification);
 
 	inline const Hit& get_hit_stats(int hitIndex) const { return hits[hitIndex]; }
-	inline bool rusted_tyoe() const { return unitTypes & UnitType::RUSTED; }
-	inline bool ancient_type() const { return unitTypes & UnitType::ANCIENT; }
-	inline bool floating_type() const { return unitTypes & UnitType::FLOATING; }
+	inline bool rusted_tyoe() const { return has(unitTypes, UnitType::RUSTED); }
+	inline bool ancient_type() const { return has(unitTypes, UnitType::ANCIENT); }
+	inline bool floating_type() const { return has(unitTypes, UnitType::FLOATING); }
 	inline bool has_surge() const {
-		return quickAugMask & AugmentType::ORBITAL_STRIKE ||
-			quickAugMask & AugmentType::FIRE_WALL || quickAugMask & AugmentType::SHOCK_WAVE;
+		return has(augmentsMask, AugmentType::ORBITAL_STRIKE) ||
+			has(augmentsMask, AugmentType::FIRE_WALL) || has(augmentsMask, AugmentType::SHOCK_WAVE);
 	}
-	inline bool has_augment(AugmentType aug) const { return quickAugMask & aug; }
-	inline bool surge_blocker() const { return quickAugMask & AugmentType::SURGE_BLOCKER; }
-	inline bool targeted_by_unit(int enemyTargetTypes) const { return (enemyTargetTypes & unitTypes); }
+	inline bool surge_blocker() const { return has(augmentsMask, AugmentType::SURGE_BLOCKER); }
+	inline bool is_targeted(UnitType enemyTargetTypes) const { return has(enemyTargetTypes, unitTypes); }
+	inline bool targets_unit(UnitType enemyTypes) const { return has(enemyTypes, targetTypes); }
 
 	inline bool is_player() const { return team == 1; }
 	inline float get_dir() const { return static_cast<float>(team); }
 
+	/// <summary>
+	/// Returns true if the Unit has the correct augment, is on the correct
+	/// HitIndex to use it, and successfully rolls the chance for it
+	/// </summary>
 	bool try_proc_augment(AugmentType target, int hits = 0) const;
-	Augment get_augment(AugmentType aug) const;
 	int get_parts_value(const nlohmann::json& json) const;
+
+	inline bool has_augment(AugmentType aug) const { return has(augmentsMask & aug); }
+	inline bool has_augment(AugmentType aug, UnitType enemyTypes) 
+		const { return has(augmentsMask & aug) && targets_unit(enemyTypes); }
+	const Augment* get_augment(AugmentType aug) const;
+
+	inline std::pair<float, float> IDGearPair() const { return { id, gear }; }
 };

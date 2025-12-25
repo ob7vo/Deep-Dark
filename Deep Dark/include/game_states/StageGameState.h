@@ -7,16 +7,16 @@ struct ArmorySlot;
 
 class StageState : public GameState {
 private:
-	StageManager stageManager;
-	Loadout loadout;
 	StageUI stageUI;
+	Loadout loadout;
+	StageManager stageManager;
 public:
 	int stageId = 0;
 	int curStageSet = 0;
 	int stageSetCount = 1;
 
 	explicit StageState(Camera& cam);
-	~StageState() = default;
+	~StageState() override = default;
 
 	void update(float deltaTime) override;
 	void render() override;
@@ -26,7 +26,7 @@ public:
 	void update_ui(float deltaTime) override;
 
 	void quit_stage();
-	void end_stage_set();
+	void end_current_stage_set();
 };
 
 struct StageEnterData : public OnStateEnterData {
@@ -34,9 +34,7 @@ struct StageEnterData : public OnStateEnterData {
 	int stageSet;
 	const std::array<ArmorySlot, 10>& slots;
 
-	StageEnterData(const std::string& path, int set, const ArmoryMenu& armory);
-	StageEnterData(const std::string& path, int set, const std::array<ArmorySlot, 10>& slots) :
-		OnStateEnterData(GameState::Type::STAGE), stageJsonPath(path), stageSet(set), slots(slots) {}
+	StageEnterData(const std::string& path, int set, const std::array<ArmorySlot, 10>& slots);
 
-	~StageEnterData() = default;
+	~StageEnterData() override = default;
 };

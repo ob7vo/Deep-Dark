@@ -2,17 +2,19 @@
 #include "StageSelect.h"
 #include "UILayout.h"
 #include "Camera.h"
+#include "UITextures.h"
 
 #define DEBUG_STAGE_FOCUS 1
 
+using namespace Textures::UI;
 using namespace UI::StageSelect;
 
 StageSelect::StageSelect(Camera& cam) : Menu(cam){
 	for (int i = 0; i < STAGES; i++) 
-		stageNodeBtn(i).setup(STAGE_NODE_POS_ARR[i], STAGE_NODE_SIZE, cam, TextureManager::t_stageNodeBtn);
+		stageNodeBtn(i).setup(STAGE_NODE_POS_ARR[i], STAGE_NODE_SIZE, cam, t_stageNodeBtn);
 	
-	returnBtn().setup(RETURN_BTN_POS, RETURN_BTN_SIZE, cam, TextureManager::t_returnBtn);
-	enterArmoryBtn().setup(ARMORY_BTN_POS, ARMORY_BTN_SIZE, cam, TextureManager::t_armoryBtn);
+	returnBtn().setup(RETURN_BTN_POS, RETURN_BTN_SIZE, cam, t_returnBtn);
+	enterArmoryBtn().setup(ARMORY_BTN_POS, ARMORY_BTN_SIZE, cam, t_armoryBtn);
 }
 
 void StageSelect::reset_positions() {

@@ -3,8 +3,8 @@
 
 Lane::Lane(const nlohmann::json& laneJson, int index) : laneIndex(index)
 {
-	playerXPos = laneJson["player_spawn_position"];
-	enemyXPos = laneJson["enemy_spawn_position"];
+	playerSpawnPoint = laneJson["player_spawn_position"];
+	enemySpawnPoint = laneJson["enemy_spawn_position"];
 	yPos = laneJson["y_position"];
 
 	if (laneJson.contains("gaps"))
@@ -29,10 +29,10 @@ void Lane::draw(sf::RenderWindow& window) const {
 		window.draw(shape);
 }
 void Lane::setShapes() {
-	floor = sf::RectangleShape({ enemyXPos - playerXPos, 7.5f });
+	floor = sf::RectangleShape({ enemySpawnPoint - playerSpawnPoint, 7.5f });
 	floor.setFillColor(sf::Color::Green);
-	float X1 = playerXPos + (enemyXPos - playerXPos) * .5f;
-	floor.setOrigin({ (enemyXPos - playerXPos) * .5f, 0.f });
+	float X1 = playerSpawnPoint + (enemySpawnPoint - playerSpawnPoint) * .5f;
+	floor.setOrigin({ (enemySpawnPoint - playerSpawnPoint) * .5f, 0.f });
 	floor.setPosition({ X1, yPos });
 
 	for (auto const [leftEdge, rightEdge] : gaps) {
@@ -55,7 +55,7 @@ void Lane::add_shape(std::pair<float, float> gap) {
 
 #pragma region Checks
 bool Lane::out_of_lane(float left, float right) const {
-	return right < playerXPos - EDGE_EXTENSION || left > enemyXPos + EDGE_EXTENSION;
+	return right < playerSpawnPoint - EDGE_EXTENSION || left > enemySpawnPoint + EDGE_EXTENSION;
 }
 bool Lane::within_gap(float leftHurtboxEdge, float rightHurtboxEdge) const {
 	if (out_of_lane(leftHurtboxEdge, rightHurtboxEdge))
@@ -71,13 +71,45 @@ bool Lane::within_gap(float leftHurtboxEdge, float rightHurtboxEdge) const {
 
 // Getters
 sf::Vector2f Lane::get_spawn_pos(int team) const {
-	float xPos = team == PLAYER_TEAM ? playerXPos : enemyXPos;
+	float xPos = team == PLAYER_TEAM ? playerSpawnPoint : enemySpawnPoint;
 	return { xPos, yPos };
 }
 float Lane::get_team_boundary(int team) const {
-	return team == PLAYER_TEAM ? playerXPos + WALL_PADDING : enemyXPos - WALL_PADDING;
+	return team == PLAYER_TEAM ? playerSpawnPoint + WALL_PADDING : enemySpawnPoint - WALL_PADDING;
 }
 size_t Lane::get_unit_count(int team) const {
 	if (std::abs(team) != 1) return playerUnits.size() + enemyUnits.size();
 	else return team == ENEMY_TEAM ? enemyUnits.size() : playerUnits.size();
+}
+std::pair<float, float> Lane::find_closest_gap_ahead(int team, std::pair<float, float> unitHurtboxEdges) const {
+	if (gaps.empty()) return { playerSpawnPoint, enemySpawnPoint };
+
+	// The edge of the hurtbox the unit is moving towards (Players move right, Enemies mvoe left)
+	float frontHurtboxEdge = team == 1 ? unitHurtboxEdges.second : unitHurtboxEdges.first;
+
+	if (team == 1) {
+		// Left -> Right
+		for (const auto& gap : gaps) 
+			if (gap.first >= frontHurtboxEdge)
+				return gap;
+	}
+	else {
+		// Right -> Left
+		for (size_t i = gaps.size(); i > 0; --i)
+			if (gaps[i].second <= frontHurtboxEdge)
+				return gaps[i];
+	}
+
+	// No gap ahead. Return fallback
+	return { playerSpawnPoint, enemySpawnPoint };
+}
+float Lane::get_stopping_point(float newX, float stopDist, 
+	int team, std::pair<float, float> unitHurtboxEdges) const {
+	// No gaps, so the "closest gap ahead" defaulted to the lane boundary
+	if (gaps.empty()) return std::clamp(newX, playerSpawnPoint + stopDist, enemySpawnPoint - stopDist);
+
+	const auto [stopLeft, stopRight] = find_closest_gap_ahead(team, unitHurtboxEdges);
+
+	return team == PLAYER_TEAM ? std::min(newX, stopLeft - stopDist) :
+		std::max(newX, stopRight + stopDist);
 }

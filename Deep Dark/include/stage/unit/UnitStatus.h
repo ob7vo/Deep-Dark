@@ -1,9 +1,10 @@
 #pragma once
 #include "StatusEffect.h"
-#include "UnitData.h"
+#include "AugmentTypes.h"
 
 class Unit;
 struct UnitStats;
+struct Augment;
 struct Surge;
 
 struct UnitStatus {
@@ -12,9 +13,10 @@ struct UnitStatus {
     int kbIndex = 0;
 
     std::vector<StatusEffect> activeStatuses;
-    size_t statusFlags;
+    AugmentType statusFlags;
 
     explicit UnitStatus(const UnitStats* stats);
+    ~UnitStatus() = default;
 
     float calculate_damage_reduction(const std::vector<Augment>& augments) const;
     int calculate_damage_and_effects(Unit& hitUnit, const Unit& attackingUnit);
@@ -31,18 +33,20 @@ struct UnitStatus {
 
     bool met_knockback_threshold(int oldHp, const UnitStats* stats);
     bool try_proc_survive(const UnitStats* dyingUnitStats);
-    inline bool can_phase() const { return statusFlags & PHASE; }
+
+    inline bool can_phase() const { return has(statusFlags & AugmentType::PHASE); }
+    inline bool can_transform() const { return has(statusFlags & AugmentType::TRANSFORM); }
 
     // Health
     inline bool has_shield_up() const { return shieldHp > 0; }
     inline bool dead() const { return hp <= 0; }
 
     // Status Conditions
-    inline bool slowed() const { return statusFlags & AugmentType::SLOW; }
-    inline bool overloaded() const { return statusFlags & AugmentType::OVERLOAD; }
-    inline bool weakened() const { return statusFlags & AugmentType::WEAKEN; }
-    inline bool blinded() const { return statusFlags & AugmentType::BLIND; }
-    inline bool corroded() const { return statusFlags & AugmentType::CORRODE; }
-    inline bool short_circuited() const { return statusFlags & AugmentType::SHORT_CIRCUIT; }
-    inline bool infected() const { return statusFlags & AugmentType::VIRUS; }
+    inline bool slowed() const { return has(statusFlags & AugmentType::SLOW); }
+    inline bool overloaded() const { return has(statusFlags & AugmentType::OVERLOAD); }
+    inline bool weakened() const { return has(statusFlags & AugmentType::WEAKEN); }
+    inline bool blinded() const { return has(statusFlags & AugmentType::BLIND); }
+    inline bool corroded() const { return has(statusFlags & AugmentType::CORRODE); }
+    inline bool short_circuited() const { return has(statusFlags & AugmentType::SHORT_CIRCUIT); }
+    inline bool infected() const { return has(statusFlags & AugmentType::VIRUS); }
 };

@@ -3,9 +3,7 @@
 #include "Utils.h"
 
 
-UnitType UnitStats::convert_string_to_type(std::string str) {
-    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
-
+UnitType UnitStats::convert_string_to_type(std::string_view str) {
     static const std::unordered_map<std::string, UnitType> typeMap = {
         {"typeless", UnitType::TYPELESS},
         {"steel", UnitType::STEEL},
@@ -19,24 +17,37 @@ UnitType UnitStats::convert_string_to_type(std::string str) {
         {"all", UnitType::ALL}
     };
 
-    auto it = typeMap.find(str);
+    auto it = typeMap.find((std::string)str);
     if (it == typeMap.end())
         std::cout << "Invalid UnitType String: [" << str << "]" << std::endl;
 
-    return (it != typeMap.end()) ? it->second : UnitType::NULL_TYPE;
+    return (it != typeMap.end()) ? it->second : UnitType::NONE;
 }
 
 namespace UnitData {
-    std::string get_unit_folder_path(int id, int gear) {
-        if (gear < 1 || gear > 3) {
-            std::string error = std::format("Gear must be between 1 and 3: The gear was: #{}", gear);
-            throw std::runtime_error(error);
-        }
-
+    std::string getUnitFolderPath(int id) {
+        return std::format("configs/unit_data/{}/", id);
+    }
+    std::string getUnitGearPath(int id, int gear, bool throwError) {
+        if ((gear < 1 || gear > 3) && throwError) 
+            throw InvalidGearError(gear, id);
+        
         return std::format("configs/unit_data/{}/gear{}/", id, gear);
     }
     nlohmann::json createUnitJson(int id, int gear) {
-        const std::string path = get_unit_folder_path(id, gear) + "unit_data.json";
+        const std::string path = getUnitGearPath(id, gear) + "unit_data.json";
+        std::ifstream file(path);
+
+        try {
+            return nlohmann::json::parse(file);
+        }
+        catch (const nlohmann::json::parse_error& e) {
+            std::cerr << "JSON parse error in " << path << ": " << e.what() << std::endl;
+            return nlohmann::json();
+        }
+    }
+    nlohmann::json createSummonJson(int id) {
+        const std::string path = getUnitFolderPath(id) + "summon/unit_data.json";
         std::ifstream file(path);
 
         try {
@@ -48,7 +59,7 @@ namespace UnitData {
         }
     }
     sf::Texture createSlotTexture(int id, int gear) {
-        const std::string path = id >= 0 ? get_unit_folder_path(id, gear) + "slot.png" :
+        const std::string path = id >= 0 ? getUnitGearPath(id, gear) + "slot.png" :
             "sprites/defaults/empty_slot.png";
 
         sf::Texture slotTex;
@@ -60,12 +71,16 @@ namespace UnitData {
         return slotTex;
     }
     int getMaxGear(int id) {
-        return 1 + std::filesystem::exists(get_unit_folder_path(id, 2))
-            + std::filesystem::exists(get_unit_folder_path(id, 3));
+        int gears = 1;
+        while (std::filesystem::exists(getUnitGearPath(id, gears + 1, false)))
+            gears++;
+
+        return gears;
     }
 
-    std::string get_unit_folder_path(std::pair<int, int> unit) {
-        return get_unit_folder_path(unit.first, unit.second);
+    // Overloadss
+    std::string getUnitGearPath(std::pair<int, int> unit) {
+        return getUnitGearPath(unit.first, unit.second);
     }
     nlohmann::json createUnitJson(std::pair<int, int> unit) {
         return createUnitJson(unit.first, unit.second);
@@ -74,6 +89,30 @@ namespace UnitData {
         return createSlotTexture(unit.first, unit.second);
     }
 
+    bool shouldFlipSprite(int id) {
+        switch (id) {
+        case 104: return true;
+        default: return false;
+        }
+
+        return false;
+    }
+    sf::Color getGearColor(int id, int gear) {
+        switch (id) {
+        case 103: {
+            switch (gear) {
+            case 1: return sf::Color::White;
+            case 2: return sf::Color::Red; // find the brown rgb
+            case 3: return sf::Color::Blue;
+            default: throw InvalidGearError(gear, id);
+            }
+            break;
+        }
+        default: return sf::Color::White;
+        }
+
+        return sf::Color::White;
+    }
 };
 
 static void modifyInt(int& tar, char op, float value) {
@@ -92,7 +131,8 @@ static void modifyFloat(float& target, char op, float value) {
     default: target = value; break;
     }
 }
-static void modifyBitmask(int& target, char op, int value) {
+template <typename I>
+static I modifyBitmask(I target, char op, I value) {
     switch (op) {
     case '=': target = value; break;
     case '|': target |= value; break;
@@ -101,20 +141,19 @@ static void modifyBitmask(int& target, char op, int value) {
     case '~': target &= ~value; break;
     default: target = value; break;
     }
+
+    return target;
 }
-static void modifyBitmask(size_t& target, char op, size_t value) {
-    switch (op) {
-    case '=': target = value; break;
-    case '|': target |= value; break;
-    case '&': target &= value; break;
-    case '^': target ^= value; break;
-    case '~': target &= ~value; break;
-    default: target = value; break;
-    }
+
+static void modifyBitmask(UnitType& target, char op, UnitType value) {
+    target = static_cast<UnitType>(modifyBitmask(static_cast<uint32_t>(target), op, static_cast<uint32_t>(value)));
+}
+static void modifyBitmask(AugmentType& tar, char op, AugmentType val) {
+    tar = static_cast<AugmentType>(modifyBitmask(static_cast<size_t>(tar), op, static_cast<size_t>(val)));
 }
 
 void print_test(UnitStats* stats) {
-    if (stats->unitId == 0 && stats->totalHits >= 3)
+    if (stats->id == 0 && stats->totalHits >= 3)
         std::cout << "hp: " << stats->maxHp << " - dmg: "
         << stats->hits[2].dmg << " - speed: " << stats->speed << std::endl;
 }
@@ -123,15 +162,16 @@ void UnitStats::setup(const nlohmann::json& file) {
     std::pair<int, int> baseRange = { 0,0 };
 
     rechargeTime = file["stats"].value("recharge_timer", 0.f);
-    unitId = file["unit_id"];
+    id = file["unit_id"];
+    gear = file["gear"];
     team = file["team"];
     parts = get_parts_value(file);
 
     if (file.contains("hurtbox"))
         hurtBox = { file["hurtbox"]["width"], file["hurtbox"]["height"] };
 
-    unitTypes = targetTypes = 0;
-    immunities = quickAugMask = 0;
+    unitTypes = targetTypes = UnitType::NONE;
+    immunities = augmentsMask = AugmentType::NONE;
     unitTypes |= UnitType::ALL;
     augments.reserve(3);
 
@@ -143,15 +183,16 @@ void UnitStats::setup(const nlohmann::json& file) {
     if (file.contains("immunities"))
         for (auto& immunity : file["immunities"])
             immunities |= Augment::string_to_augment_type(immunity);
-    if (file.contains("quick_augment_masks"))
-        for (auto& quick : file["quick_augment_masks"])
-            quickAugMask |= Augment::string_to_augment_type(quick);
+    if (file.contains("augments_mask"))
+        for (auto& quick : file["augments_mask"])
+            augmentsMask |= Augment::string_to_augment_type(quick);
 
     if (file.contains("augments")) {
         for (auto& augJson : file["augments"]) {
             AugmentType augType = Augment::string_to_augment_type(augJson["augment"]);
-            if (augType == NONE) continue;
-            quickAugMask |= augType;
+            if (has(augType, AugmentType::NONE)) continue;
+
+            augmentsMask |= augType;
             augments.emplace_back(Augment::from_json(augType, augJson));
         }
     }
@@ -181,8 +222,7 @@ void UnitStats::setup(const nlohmann::json& file) {
         totalHits = (int)hits.size();
     }
 }
-
-UnitStats UnitStats::enemy(const nlohmann::json& file, float magnification) {
+UnitStats UnitStats::create_enemy(const nlohmann::json& file, float magnification) {
     UnitStats stats; 
 
     stats.setup(file);
@@ -192,18 +232,14 @@ UnitStats UnitStats::enemy(const nlohmann::json& file, float magnification) {
 
     return stats;
 }
-UnitStats UnitStats::player(const nlohmann::json& file, int core) {
+UnitStats UnitStats::create_player(const nlohmann::json& file, int core) {
     UnitStats stats;
     stats.setup(file);
-
-    print_test(&stats);
 
     int gear = file.value("gear", 1);
     if (file.contains("cores") && core >= 0)
         for (const std::string& coreStr : file["cores"][core])
             stats.apply_core_modifier(coreStr, gear);
-
-    print_test(&stats);
 
     return stats;
 }
@@ -223,8 +259,7 @@ UnitStats UnitStats::create_cannon(const nlohmann::json& baseFile, float magnifi
     return stats;
 }
 
-const std::unordered_map<std::string, std::function<void(UnitStats&, char, const std::string&)>>
-UnitStats::statModifiers = {
+const std::unordered_map<std::string, std::function<void(UnitStats&, char, const std::string&)>> statModifiers = {
     {"maxHp", [](UnitStats& s, char op, const std::string& val) {
         modifyInt(s.maxHp, op, std::stof(val));
     }},
@@ -244,20 +279,20 @@ UnitStats::statModifiers = {
         s.singleTarget = (val == "true" || val == "1" || op == '+');
     }},
     {"unitTypes", [](UnitStats& s, char op, const std::string& val) {
-        int bits = UnitStats::convert_string_to_type(val);
+        UnitType bits = UnitStats::convert_string_to_type(val);
         modifyBitmask(s.unitTypes, op, bits);
     }},
     {"targetTypes", [](UnitStats& s, char op, const std::string& val) {
-        int bits = UnitStats::convert_string_to_type(val);
+        UnitType bits = UnitStats::convert_string_to_type(val);
         modifyBitmask(s.targetTypes, op, bits);
     }},
     {"immunities", [](UnitStats& s, char op, const std::string& val) {
-        size_t bits = Augment::string_to_augment_type(val);
+        AugmentType bits = Augment::string_to_augment_type(val);
         modifyBitmask(s.immunities, op, bits);
     }},
-    {"quickAugMask", [](UnitStats& s, char op, const std::string& val) {
-        size_t bits = Augment::string_to_augment_type(val);
-        modifyBitmask(s.quickAugMask, op, bits);
+    {"augmentsMask", [](UnitStats& s, char op, const std::string& val) {
+        AugmentType bits = Augment::string_to_augment_type(val);
+        modifyBitmask(s.augmentsMask, op, bits);
     }},
 };
 
@@ -277,7 +312,7 @@ void UnitStats::apply_core_modifier(const std::string& coreStr, int gear) {
         AugmentType augType = Augment::string_to_augment_type(value);
         switch (op) {
         case '-': removeAugment(augType); break;
-        case '+': addCoreAugment(UnitData::createUnitJson(unitId, gear), value); break;
+        case '+': addCoreAugment(UnitData::createUnitJson(id, gear), value); break;
         default:
             std::cout << "no operation found in this core: " << op << std::endl;
             removeAugment(augType);
@@ -303,15 +338,15 @@ void UnitStats::addCoreAugment(const nlohmann::json& file, const std::string& au
     }
 
     AugmentType coreAugType = Augment::string_to_augment_type(augStr);
-    if (coreAugType == NONE) {
+    if (coreAugType == AugmentType::NONE) {
         std::cout << "coreAugType was invalid" << std::endl;
         return;
     }
 
     for (auto& coreAug : file["core_augments"]) {
         AugmentType augType = Augment::string_to_augment_type(coreAug["augment"]);
-        if (augType == NONE || augType != coreAugType) continue;    
-        quickAugMask |= augType;
+        if (augType == AugmentType::NONE || augType != coreAugType) continue;    
+        augmentsMask |= augType;
         augments.emplace_back(Augment::from_json(augType, coreAug));
     }
 }
@@ -330,11 +365,11 @@ void UnitStats::modifyDmg(int hitIndex, char op, float value) {
     }
 }
 
-Augment UnitStats::get_augment(AugmentType aug) const {
+const Augment* UnitStats::get_augment(AugmentType aug) const {
     for (auto& augment : augments)
-        if (augment.augType == aug) return augment;
+        if (augment.augType == aug) return &augment;
 
-    return {};
+    return nullptr;
 }
 int UnitStats::get_parts_value(const nlohmann::json& json) const {
     int p = json["stats"].value("parts_dropped", 0);

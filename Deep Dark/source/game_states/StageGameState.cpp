@@ -3,15 +3,23 @@
 #include "PreparationState.h"
 #include "ArmoryMenu.h"
 
-StageState::StageState(Camera& cam) : stageUI(cam), loadout(cam),
-	GameState(cam), stageManager(cam, stageUI, loadout){
+StageState::StageState(Camera& cam) : 
+	GameState(cam), 
+	stageUI(cam), 
+	loadout(cam),
+	stageManager(cam, stageUI, loadout)
+{
 	stageUI.reset_positions();
 
 	stageUI.stageManager = &stageManager;
 	stageUI.pauseMenu.closeGameBtn().onClick = [this](bool m1) { if (m1) quit_stage(); };
 }
-StageEnterData::StageEnterData(const std::string& path, int set, const ArmoryMenu& armory) :
-	OnStateEnterData(GameState::Type::STAGE), stageJsonPath(path), stageSet(set), slots(armory.slots) {}
+StageEnterData::StageEnterData(const std::string& path, int set, 
+	const std::array<ArmorySlot, 10>& slots) :
+	OnStateEnterData(GameState::Type::STAGE), 
+	stageJsonPath(path), 
+	stageSet(set), 
+	slots(slots) {}
 
 void StageState::update_ui(float deltaTime) {
 	for (int i = 0; i < loadout.filledSlots; i++)
@@ -23,7 +31,7 @@ void StageState::update(float deltaTime) {
 	stageUI.check_mouse_hover();
 	if (stageUI.paused) return;
 
-	stageManager.update_game_ticks(deltaTime);
+	stageManager.tick(deltaTime);
 	update_ui(deltaTime);
 }
 void StageState::render() {
@@ -49,9 +57,9 @@ void StageState::quit_stage() {
 	nextStateEnterData = std::make_unique<PrepEnterData>(cur, prev);
 	readyToEndState = true;
 }
-void StageState::end_stage_set() {
-	if (++curStageSet >= stageSetCount) quit_stage();
-
+void StageState::end_current_stage_set() {
+	if (++curStageSet >= stageSetCount) quit_stage(); // no logic for winning at the moment
+			
 	/*
 	* When a stage set (phase) is completed, if there is more sets avalible, 
 	* the game will go to PrepState. In this case, PrepState needs to know 
@@ -59,6 +67,12 @@ void StageState::end_stage_set() {
 	* 
 	* StageState will handle keeping the wallet, challenges, and stageRecord intact.
 	*/
+	std::vector<int> usedUnits;
+	for (int i = 0; i < loadout.filledSlots; i++) 
+		usedUnits.push_back(loadout.slots[i].unitStats.id);
+
+	nextStateEnterData = std::make_unique<StageSetPrepEnterData>(usedUnits, stageId, curStageSet);
+	readyToEndState = true;
 }
 
 void StageState::on_enter(OnStateEnterData* enterData) {
@@ -87,66 +101,3 @@ void StageState::on_exit() {
 	for (int i = 0; i < UI::StageUI::BTN_COUNT; i++)
 		stageUI.buttonManager.buttons[i].sprite.setColor(sf::Color::White);
 }
-
-#pragma region Loadout Functions
-void Loadout::set_slot_positions(const Camera& cam) {
-	sf::Vector2f pos = cam.norm_to_pixels(FIRST_SLOT_POS);
-	sf::Vector2f inc = cam.norm_to_pixels(SLOT_INCREMENT);
-	float startX = pos.x;
-
-	for (int i = 0; i < 2; i++) {
-		for (int j = 0; j < 5; j++) {
-			int ind = i * 5 + j;
-			LoadoutSlot& slot = slots[ind];
-			slot.slotSprite.setPosition(pos);
-			slot.slotSprite.setScale({ 2.5f,2.5f });
-
-			pos.x += inc.x;
-		}
-		pos.x = startX;
-		pos.y += inc.y;
-	}
-}
-void Loadout::create_loadout(std::array<ArmorySlot, 10> armorySlots) {
-	for (int i = 0; i < 10; i++) {
-		ArmorySlot& slot = armorySlots[i];
-		if (slot.id == -1) {
-			filledSlots = i;
-			break;
-		}
-
-		set_slot(slot.id, slot.gear, slot.core, i);
-	}
-	for (int j = filledSlots; j < 10; j++)
-		slots[j] = LoadoutSlot(TextureManager::t_defaultUnitSlot);
-}
-void Loadout::set_slot(int id, int gear, int coreInd, int slot) {
-	const nlohmann::json unitJson = UnitData::createUnitJson(id, gear);
-
-	slots[slot] = LoadoutSlot(unitJson, TextureManager::getUnitSlot(id, gear), coreInd);
-}
-void Loadout::draw_slots(Camera& cam, int currentParts) {
-	for (int i = 0; i < 10; i++)
-		slots[i].draw(cam, currentParts);
-}
-
-LoadoutSlot::LoadoutSlot(const nlohmann::json& file, const sf::Texture& tex, int core)
-	: empty(false), slotSprite(tex), unitStats(UnitStats::player(file, core))
-{
-	Animation::setup_unit_animation_map(file, aniMap);
-	spawnTimer = unitStats.rechargeTime;
-}
-void LoadoutSlot::draw(Camera& cam, int curParts) {
-	cam.queue_ui_draw(&slotSprite);
-
-	float fill = 1.f;
-	if ((cooldown <= 0 && can_afford_unit(curParts)) || empty) {
-		cooldown = 0.f;
-		return;
-	}
-	else if (cooldown > 0)
-		fill = (spawnTimer - cooldown) / spawnTimer;
-
-	cam.draw_overlay(slotSprite, UI::Colors::BLACK_TRANSPARENT, fill);
-}
-#pragma endregion

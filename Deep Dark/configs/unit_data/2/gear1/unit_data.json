@@ -1,0 +1,64 @@
+{
+  "unit_id": 2,
+  "gear": 1,
+  "name": "Wall-y Fire Worm",
+  "team": 0,
+  "stats": {
+    "hp": 80,
+    "knockbacks": 1,
+    "speed": 4,
+    "attack_time": 1.0,
+    "sight_range": 40.0,
+    "single_target": false,
+    "hits": [
+      {
+        "dmg": 8,
+        "attack_range": [ 0, 40 ]
+      }
+    ],
+    "parts_cost": 8,
+    "recharge_timer": 2.75
+  },
+  "hurtbox": {
+    "width": 80.0,
+    "height": 75.0
+  },
+  "animations": {
+    "move": {
+      "cell_size": [ 90, 90 ],
+      "origin": [ 80, 90 ],
+      "frames": 9,
+      "fps": 5
+    },
+    "idle": {
+      "cell_size": [ 90, 90 ],
+      "origin": [ 80, 90 ],
+      "frames": 9,
+      "fps": 9
+    },
+    "knockback": {
+      "cell_size": [ 90, 90 ],
+      "origin": [ 80, 90 ],
+      "frames": 3
+    },
+    "attack": {
+      "cell_size": [ 90, 90 ],
+      "origin": [ 70, 90 ],
+      "frames": 16,
+      "fps": 12,
+      "events": [ [ "attack", 12 ] ]
+    },
+    "falling": {
+      "cell_size": [ 90, 90 ],
+      "origin": [ 80, 90 ],
+      "frames": 8
+    },
+    "death": {
+      "cell_size": [ 48, 48 ],
+      "origin": [ 24, 48 ],
+      "frames": 8,
+      "duration": 1.5
+    }
+  },
+  "types": [ "typeless" ]
+}

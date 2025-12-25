@@ -33,9 +33,7 @@ Augment Augment::from_json(AugmentType augType, const nlohmann::json& augJson) {
 
     return Augment(augType, val, val2, percentage, activeHits, lvl);
 }
-AugmentType Augment::string_to_augment_type(std::string str) {
-	std::transform(str.begin(), str.end(), str.begin(), ::tolower);
-
+AugmentType Augment::string_to_augment_type(std::string_view str) {
 	static const std::unordered_map<std::string, AugmentType> augmentMap = {
 		{"none", AugmentType::NONE},
 		{"slow", AugmentType::SLOW},
@@ -76,19 +74,15 @@ AugmentType Augment::string_to_augment_type(std::string str) {
 		{"heavyweight", AugmentType::HEAVYWEIGHT},
 		{"bully", AugmentType::BULLY},
 		{"salvage", AugmentType::SALVAGE},
+		{"fragile", AugmentType::FRAGILE},
 		{"self_destruct", AugmentType::SELF_DESTRUCT},
 		{"projectile", AugmentType::PROJECTILE},
 		{"deflect", AugmentType::DEFLECT},
-		{"chip", AugmentType::CHIP}
+		{"rough", AugmentType::ROUGH}
 	};
 
-	auto it = augmentMap.find(str);
+	auto it = augmentMap.find((std::string)str);
 	if (it == augmentMap.end())
 		std::cout << "Invalid Augment String: [" << str << "]" << std::endl;
 	return (it != augmentMap.end()) ? it->second : AugmentType::NONE;
-}
-
-bool Augment::is_surge() const {
-	return augType & AugmentType::ORBITAL_STRIKE ||
-		augType & AugmentType::FIRE_WALL || augType & AugmentType::SHOCK_WAVE;
 }

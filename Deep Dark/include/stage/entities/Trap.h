@@ -1,6 +1,6 @@
 #pragma once
 #include "StageEntity.h"
-#include "UnitEnums.h"
+#include "Augment.h"
 
 const float TRAP_HEIGHT = 15.0f;
 enum class TrapType {
@@ -30,6 +30,8 @@ private:
 	bool triggered = false;
 	float dmgValue = 0;
 	Augment aug = {};
+
+	AnimationClip animClip;
 public:
 
 	Trap(const nlohmann::json& json, sf::Vector2f pos, int lane);
@@ -37,7 +39,7 @@ public:
 
 	void tick(Stage& stage, float deltaTime) override;
 	void action(Stage& stage) override;
-	int update_animation(Stage& stage, float deltaTime) override;
+	AnimationEvent update_animation(Stage& stage, float deltaTime) override;
 
 	bool enemy_in_trigger_range(Stage& stage) const;
 	void trigger_launch_pad(Stage& stage) const; 
@@ -48,5 +50,5 @@ public:
 	bool valid_attack_target(const Unit& unit) const;
 	bool in_trigger_range(const Unit& unit) const;
 
-	static Animation create_trap_animation(TrapType type);
+	static AnimationClip create_trap_animation(TrapType type);
 };

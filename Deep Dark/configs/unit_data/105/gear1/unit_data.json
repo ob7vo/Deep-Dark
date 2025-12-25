@@ -1,0 +1,75 @@
+{
+  "unit_id": -1,
+  "gear": -1,
+  "name": "null",
+  "team": 0,
+  "stats": {
+    "hp": 0,
+    "knockbacks": 0,
+    "speed": 0,
+    "attack_time": 0.0,
+    "sight_range": 0.0,
+    "lane_sight": [ 0, 0, "not needed" ],
+    "single_target": null,
+    "hits": [
+      {
+        "dmg": 0,
+        "attack_range": [ 0, 0 ],
+        "lane_reach": [ 1, 1, "not needed"]
+      }
+    ],
+    "parts_cost": 1,
+    "parts_dropped": -1,
+    "recharge_timer": 0.0
+  },
+  "hurtbox": {
+    "width": 0.0,
+    "height": 0.0
+  },
+  "animations": {
+    "move": {
+      "cell_size": [ 0, 0 ],
+      "origin": [ 0, 0 ],
+      "frames": 0,
+      "fps": 0
+    },
+    "idle": {
+      "cell_size": [ 0, 0 ],
+      "origin": [ 0, 0 ],
+      "frames": 0,
+      "fps": 0
+    },
+    "knockback": {
+      "cell_size": [ 0, 0 ],
+      "origin": [ 0, 0 ],
+      "frames": 0
+    },
+    "attack": {
+      "cell_size": [ 0, 0 ],
+      "origin": [ 0, 0 ],
+      "frames": 0,
+      "fps": 0,
+      "events": [ ["attack", 0] ]
+    },
+    "falling": {
+      "cell_size": [ 0, 0 ],
+      "origin": [ 0, 0 ],
+      "frames": 0
+    },
+    "death": {
+      "cell_size": [ 48, 48 ],
+      "origin": [ 24, 48 ],
+      "frames": 8,
+      "duration": 1.5
+    }
+  },
+  "augments": [
+    {
+      "augment": "augment",
+      "value": 0.0
+    }
+  ],
+  "types": [ "type1", "type2" ],
+  "target_types": [ "target" ],
+  "augments_mask": [ "quicks" ]
+}

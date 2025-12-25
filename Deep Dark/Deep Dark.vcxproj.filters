@@ -135,6 +135,33 @@
     <ClCompile Include="source\stage\entities\StageEntity.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="source\stage\Loadout.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\stage\unit\UnitTween.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\stage\mechanics\StageRestrictions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\visuals\ArmorySlot.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\stage\mechanics\StageChallenge.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\visuals\textures\EntityTextures.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\visuals\textures\UITextures.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\visuals\textures\BaseTextures.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\visuals\textures\EffectTextures.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\game_states\GameState.h">
@@ -173,13 +200,13 @@
     <ClInclude Include="include\systems\Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\systems\Loadout.h">
+    <ClInclude Include="include\stage\Loadout.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\stage\StageManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\systems\StageRecord.h">
+    <ClInclude Include="include\stage\StageRecord.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\systems\StateManager.h">
@@ -314,6 +341,36 @@
     <ClInclude Include="include\stage\mechanics\UnitMoveRequest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\enums\AugmentTypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\stage\mechanics\StageRestrictions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\stage\mechanics\StageChallenge.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\visuals\textures\EntityTextures.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\visuals\textures\UITextures.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\visuals\textures\BaseTextures.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\visuals\textures\EffectTextures.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\stage\unit\UnitDataConstants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\enums\AnimationEvent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\enums\EnumFunctions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="configs\base _data\player_bases\p_wave_base.json" />
@@ -324,5 +381,15 @@
     <None Include="configs\base data\enemy bases\orbitral base\orbital base.json" />
     <None Include="configs\unit_data\101\gear1\unit_data.json" />
     <None Include="configs\stage data\stage 1.json" />
+    <None Include="configs\unit_data\unit_data_TEMPLATE.json" />
+    <None Include="configs\unit_data\103\gear2\unit_data.json" />
+    <None Include="configs\unit_data\103\gear1\unit_data.json" />
+    <None Include="configs\unit_data\105\gear1\unit_data.json" />
+    <None Include="configs\unit_data\104\gear1\unit_data.json" />
+    <None Include="configs\unit_data\6\gear1\unit_data.json" />
+    <None Include="configs\unit_data\5\gear1\unit_data.json" />
+    <None Include="configs\unit_data\2\gear1\unit_data.json" />
+    <None Include="configs\unit_data\4\gear1\unit_data.json" />
+    <None Include="configs\unit_data\3\gear1\unit_data.json" />
   </ItemGroup>
 </Project>

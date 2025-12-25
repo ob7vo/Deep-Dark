@@ -1,0 +1,72 @@
+{
+  "unit_id": 6,
+  "gear": 1,
+  "name": "TANKY Duck",
+  "team": 1,
+  "stats": {
+    "hp": 300,
+    "knockbacks": 1,
+    "speed": 5,
+    "attack_time": 2.13,
+    "sight_range": 70.0,
+    "single_target": false,
+    "hits": [
+      {
+        "dmg": 60,
+        "attack_range": [ 0, 70.0 ]
+      }
+    ],
+    "parts_cost": 25,
+    "recharge_timer": 11.5
+  },
+  "hurtbox": {
+    "width": 25.0,
+    "height": 20.0
+  },
+  "animations": {
+    "move": {
+      "cell_size": [ 32, 32 ],
+      "origin": [ 28, 32 ],
+      "frames": 10,
+      "fps": 5
+    },
+    "idle": {
+      "cell_size": [ 32, 32 ],
+      "origin": [ 28, 32 ],
+      "frames": 6,
+      "fps": 6
+    },
+    "knockback": {
+      "cell_size": [ 32, 32 ],
+      "origin": [ 28, 32 ],
+      "frames": 6
+    },
+    "attack": {
+      "cell_size": [ 32, 32 ],
+      "origin": [ 28, 32 ],
+      "frames": 10,
+      "fps": 7,
+      "events": [ [ "attack", 4 ] ]
+    },
+    "falling": {
+      "cell_size": [ 32, 32 ],
+      "origin": [ 28, 32 ],
+      "frames": 10
+    },
+    "death": {
+      "cell_size": [ 48, 48 ],
+      "origin": [ 24, 48 ],
+      "frames": 8,
+      "duration": 1.5
+    }
+  },
+  "augments": [
+    {
+      "augment": "shove",
+      "percentage": 30.0
+    }
+  ],
+  "types": [ "steel" ],
+  "target_types": [ "all" ],
+  "augments_mask": [ "heavyweight" ]
+}

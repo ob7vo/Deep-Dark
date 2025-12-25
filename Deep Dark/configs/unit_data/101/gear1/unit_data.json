@@ -1,5 +1,6 @@
 {
   "unit_id": 101,
+  "gear": 1,
   "level": 1,
   "name": "droid-01",
   "path": "configs/enemy_units/101/",
@@ -48,7 +49,10 @@
     "attack": {
       "cell_size": [ 48, 48 ],
       "origin": [ 12, 48 ],
-      "attack_frames": [ 5, 6 ],
+      "events": [
+        [ "attack", 5 ],
+        [ "attack", 6 ]
+      ],
       "frames": 7,
       "fps": 14
     },
@@ -62,6 +66,12 @@
       "origin": [ 12, 48 ],
       "frames": 4,
       "fps": 4
+    },
+    "death": {
+      "cell_size": [ 48, 48 ],
+      "origin": [ 24, 48 ],
+      "frames": 8,
+      "duration": 1.5
     }
   },
   "augments": [
@@ -78,5 +88,5 @@
   ],
   "types": [ "nano", "floating" ],
   "target_types": [ "typeless" ],
-  "quick_augment_masks": [ "heavyweight", "bully" ]
+  "augments_mask": [ "heavyweight", "bully" ]
 }

@@ -158,3 +158,15 @@ static const auto easeFuncArr = std::array<EasingFunc, 7>{
     Easing::easeOutBack,
     Easing::zero
 };
+
+const EasingType noEase = EasingType::COUNT;
+const std::array<std::pair<EasingType, EasingType>, 8> unitTweenEasings = { {
+    {EasingType::OUT_CUBIC, EasingType::COUNT}, // KNOCKBACK
+    {EasingType::COUNT, EasingType::IN_OUT_SINE}, // FALL
+    {EasingType::COUNT, EasingType::OUT_BOUNCE}, // SQUASH
+    {EasingType::COUNT, EasingType::OUT_QUART}, // LAUNCH
+    {EasingType::COUNT, EasingType::OUT_BOUNCE}, // DROP_FROM_LAUNCH
+    {EasingType::LINEAR, EasingType::OUT_BACK}, // JUMP
+    {EasingType::LINEAR, EasingType::COUNT}, // LEAP
+    {EasingType::LINEAR, EasingType::COUNT}
+} };

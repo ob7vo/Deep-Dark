@@ -1,18 +1,15 @@
 #include "pch.h"
 #include "game_saves/SaveSystem.h"
-#include "StageManager.h"
 #include "StateManager.h"
 #include "PreparationState.h"
-#include "ButtonManager.h"
-#include "Tween.h"
 #include "StageGameState.h"
 
 using json = nlohmann::json;
 
 const float MAX_DELTA_TIME = 0.033f;
 const unsigned int FRAMERATE_LIMIT = 60;
-const int ASPECT_WIDTH = 1728;
-const int ASPECT_HEIGHT = 972;
+const int ASPECT_WIDTH = 1000;
+const int ASPECT_HEIGHT = 850;
 const sf::Color WINDOW_COLOR(54, 2, 11);
 
 
@@ -46,7 +43,7 @@ int main()
     sf::RenderWindow window(sf::VideoMode({ ASPECT_WIDTH, ASPECT_HEIGHT }), "SFML works!",
         sf::Style::Titlebar | sf::Style::Close);
  
-    TextureManager::initialize();
+    Textures::initializeAll();
     Surge::init_animations();
     SaveSystem::Get().initialize();
 

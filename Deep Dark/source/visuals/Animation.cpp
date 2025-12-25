@@ -8,25 +8,21 @@ const float KNOCKBACK_DURATION = 1.4f;
 const float FALL_DURATION = 1.25f;
 const float JUMP_DURATION = 1.f;
 
-AnimationFrame::AnimationFrame(sf::IntRect rect, float duration, int events) :
+AnimationFrame::AnimationFrame(sf::IntRect rect, float duration, AnimationEvent events) :
     eventsMask(events){
     this->rect = rect;
     this->duration = duration;
 }
 
-Animation::Animation(const std::string_view& spritePath, int frameCount, float rate, 
-    sf::Vector2i cellSize, sf::Vector2f og, AnimationEventsList events, bool loops)
-    : loops(loops), origin(og), frameCount(frameCount)
+AnimationClip::AnimationClip(sf::Texture* pTexture, int frameCount, float rate,
+    sf::Vector2i cellSize, sf::Vector2f og, 
+    const AnimationEventsList& events, bool loops)
+    :  origin(og), 
+    loops(loops)
 {
-    if (!texture.loadFromFile(spritePath)) {
-        (void)texture.loadFromFile("sprites/defaults/defaultTexture.png");
-        std::cerr << "Failed to load texture: " << spritePath << std::endl;
-        return;
-    }
-
-    sf::Vector2u texSize = texture.getSize();
-
-    auto rects = TextureManager::createTextureRects(frameCount, texSize, cellSize);
+    texture = pTexture;
+    sf::Vector2u texSize = texture->getSize();
+    auto rects = Textures::createTextureRects(frameCount, texSize, cellSize);
 
     for (int i = 0; i < frameCount; i++) frames.emplace_back(rects[i], rate);
 
@@ -35,37 +31,36 @@ Animation::Animation(const std::string_view& spritePath, int frameCount, float r
     frames[0].eventsMask |= AnimationEvent::FIRST_FRAME;
     frames[frameCount - 1].eventsMask |= AnimationEvent::FINAL_FRAME;
 };
-int Animation::update(float deltaTime, sf::Sprite& sprite) {
-    return update(timeElapsed, currentFrame, deltaTime, sprite);
-}
-int Animation::update(float& time, int& curFrame, float deltaTime, sf::Sprite& sprite) {
+AnimationEvent AnimationPlayer::update(float deltaTime, sf::Sprite& sprite) {
     time += deltaTime;
 
-    if (time > frames[curFrame].duration) {
+    if (time > clip->frames[currentFrame].duration) {
         time = 0;
 
-        if (loops)
-            curFrame = (curFrame + 1) % frameCount;
-        else if (curFrame < frameCount - 1)
-            curFrame++;
+        if (clip->loops)
+            currentFrame = (currentFrame + 1) % clip->frames.size();
+        else if (currentFrame < clip->frames.size() - 1)
+            currentFrame++;
 
-        sprite.setTextureRect(frames[curFrame].rect);
-        return frames[curFrame].eventsMask;
+        sprite.setTextureRect(clip->frames[currentFrame].rect);
+        return clip->frames[currentFrame].eventsMask;
     }
 
-    return 0;
+    return AnimationEvent::EMPTY_EVENT;
 }
-void Animation::reset(sf::Sprite& sprite) {
-    reset(timeElapsed, currentFrame, sprite);
+void AnimationPlayer::start(const AnimationClip* newClip, sf::Sprite& sprite) {
+    clip = newClip;
+    reset(sprite);
 }
-void Animation::reset(float& time, int& curFrame, sf::Sprite& sprite) {
-    curFrame = 0;
+void AnimationPlayer::reset(sf::Sprite& sprite) {
+    currentFrame = 0;
     time = 0;
 
-    sprite.setTexture(texture);
-    sprite.setTextureRect(frames[0].rect);
-    sprite.setOrigin(origin);
+    sprite.setTexture(*clip->texture);
+    sprite.setTextureRect(clip->frames[0].rect);
+    sprite.setOrigin(clip->origin);
 }
+
 std::string eventToString(AnimationEvent event) {
     switch (event) {
     case AnimationEvent::FIRST_FRAME: return "FIRST_FRAME";
@@ -75,31 +70,7 @@ std::string eventToString(AnimationEvent event) {
     default: return "UNKNOWN_EVENT";
     }
 }
-bool Animation::check_for_event(AnimationEvent targetEvent, int events) {
-    return events & targetEvent;
-}
-
-Animation Animation::create_unit_animation(const json& file, const std::string_view& ani, const std::string_view& path, bool loops) {
-    int frames = file["frames"];
-
-    float rate = 1.f / file.value("fps", (float)frames);
-    if (ani == "knockback") rate = KNOCKBACK_DURATION / (float)frames;
-    else if (ani == "falling") rate = FALL_DURATION / (float)frames;
-    else if (ani == "jump") rate = JUMP_DURATION / (float)frames;
-
-    sf::Vector2i cellSizes = { file["cell_size"][0], file["cell_size"][1] };
-    sf::Vector2f origin = { file["origin"][0], file["origin"][1] };
-
-    AnimationEventsList events; // using AnimationEventsList = std::initializer_list<std::pair<int, int>>;
-
-    if (file.contains("attack_frames"))
-        for (const int& frame : file["attack_frames"])
-            events.emplace_back(frame, AnimationEvent::ATTACK);
-
-    return Animation(path, frames, rate, cellSizes, origin, events, loops);
-}
-
-std::pair<UnitAnimationState,bool> get_unit_ani_state(std::string str) {
+std::pair<UnitAnimationState, bool> get_unit_ani_state(std::string_view str) {
     switch (str[0]) {
     case 'm': return { UnitAnimationState::MOVE, true };
     case 'a': return { UnitAnimationState::ATTACK, false };
@@ -107,20 +78,67 @@ std::pair<UnitAnimationState,bool> get_unit_ani_state(std::string str) {
     case 'k': return { UnitAnimationState::KNOCKBACK, false };
     case 'f': return { UnitAnimationState::FALLING, false };
     case 'j': return { UnitAnimationState::JUMPING, false };
-    case 'p': return { UnitAnimationState::PHASE, false };
+    case 'p': return { UnitAnimationState::PHASE_WINDUP, false };
+    case 'd': return { UnitAnimationState::DEATH, false };
     default:
-        std::cout << "could not get pair[AniState, bool] with string: " << str << std::endl;
-        return { UnitAnimationState::MOVE, true };
+        throw std::runtime_error("could not get pair[AniState, bool(loops)] with string: ");
+        return { UnitAnimationState::WAITING, true };
     }
-
-    return { UnitAnimationState::WAITING, true };
 }
-void Animation::setup_unit_animation_map(const json& unitFile, UnitAniMap& aniMap) {
-    for (const auto& [animName, animData] : unitFile["animations"].items()) {
-        auto [aniState, loops] = get_unit_ani_state(animName);
-        std::string path = UnitData::get_unit_folder_path(unitFile["unit_id"], unitFile.value("gear", 1));
-        std::string fullPath = path + animName + ".png";
 
-        aniMap[aniState] = create_unit_animation(animData, animName, fullPath, loops);
+void AnimationClip::set_duration(float duration) {
+    float rate = duration / (int)frames.size();
+
+    for (auto& frame : frames) frame.duration = rate;
+}
+
+AnimationClip AnimationClip::create_unit_animation(const json& file, sf::Texture* pTexture, 
+    UnitAnimationState ani, bool loops) {
+    AnimationClip clip = from_json(file, pTexture, loops);
+
+    if (ani == UnitAnimationState::KNOCKBACK) clip.set_duration(KNOCKBACK_DURATION);
+    else if (ani == UnitAnimationState::FALLING) clip.set_duration(FALL_DURATION);
+    else if (ani == UnitAnimationState::JUMPING) clip.set_duration(JUMP_DURATION);
+
+    return clip;
+}
+AnimationClip AnimationClip::from_json(const nlohmann::json& file, sf::Texture* pTexture, bool loops) {
+    int frames = file["frames"];
+
+    // This is more lines, thohg it is more readable;
+    float rate = 0.1f;
+    if (file.contains("fps")) rate = 1.f / file["fps"];
+    else if (file.contains("duration")) rate = file["duration"] / frames;
+
+    sf::Vector2i cellSizes = { file["cell_size"][0], file["cell_size"][1] };
+    sf::Vector2f origin = { file["origin"][0], file["origin"][1] };
+
+    AnimationEventsList events;
+    if (file.contains("events")) {
+        for (const auto& [animEventStr, frame] : file["events"].get<std::vector<std::pair<std::string, int>>>())
+            events.emplace_back(frame, AnimationEvents::fromString(animEventStr));
+    }
+    
+    return AnimationClip(pTexture, frames, rate, cellSizes, origin, events, loops);
+}
+void AnimationClip::setup_unit_animation_map(const json& unitFile, UnitAniMap& aniMap,
+    std::deque<sf::Texture>& unitTextures) {
+    size_t anims = unitFile["animations"].size();
+
+    for (size_t i = 0; i < anims; i++) unitTextures.emplace_back();
+
+    int curAnim = 0;
+
+    for (const auto& [animName, animData] : unitFile["animations"].items()) {
+        auto [aniState, doesLoop] = get_unit_ani_state(animName);
+
+        std::string path = UnitData::getUnitGearPath(unitFile["unit_id"], unitFile.value("gear", 1));
+        std::string fullPath = path + animName + ".png";
+        Textures::loadTexture(unitTextures[curAnim], fullPath);
+
+        aniMap[aniState] = create_unit_animation(animData, 
+            &unitTextures[curAnim],aniState, doesLoop);
+
+        curAnim++;
     }
 }

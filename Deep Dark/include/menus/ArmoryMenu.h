@@ -7,7 +7,8 @@
 
 const int ARMORY_SLOTS = 10;
 
-struct ArmoryMenu : public Menu<UI::ArmoryMenu::BTN_COUNT> {
+class ArmoryMenu : public Menu<UI::ArmoryMenu::BTN_COUNT> {
+public:
     bool inStageMode = false;
     StageSetMenu stageSetMenu;
     
@@ -20,7 +21,8 @@ struct ArmoryMenu : public Menu<UI::ArmoryMenu::BTN_COUNT> {
     /// <summary> first = unit ID. second = unit form/gear </summary>
     std::pair<int, int> curHeldUnit = { -1,1 };
     bool heldUnitWasSlotted = false;
-    std::array<int, UnitData::TOTAL_PLAYER_UNITS> unitSelectionGears;
+    // The forms of the Units shown in the selector
+    std::array<int, UnitData::TOTAL_PLAYER_UNITS> displayedGears;
     
     explicit ArmoryMenu(Camera& cam);
     ~ArmoryMenu() final = default;
@@ -35,8 +37,12 @@ struct ArmoryMenu : public Menu<UI::ArmoryMenu::BTN_COUNT> {
     void drag_unit_into_slot();
     void start_dragging_unit(int id);
     void shift_empty_slots();
-    void update_selection_slot(int id, int gear);
     void remove_unusable_units();
+    /// <summary>
+    /// Called when a Units gear is changed via Workshop Menu, it can be a 
+    /// either a player or enemy unit, in the latter case it return
+    /// </summary>
+    void change_displayed_gear(int id, int gear);
 
     inline bool dragging_unit() const { return curHeldUnit.first != -1; }
     inline void release_held_unit() { curHeldUnit = { -1, 1 }; }
@@ -46,12 +52,15 @@ struct ArmoryMenu : public Menu<UI::ArmoryMenu::BTN_COUNT> {
             if (slots[i].id == id) return true;
         return false;
     } 
-    inline bool unit_is_unusable(int id) const 
-    { return stageSetMenu.usedUnits[id] || stageSetMenu.unitViolatesCondition[id]; }
+    inline bool unit_is_unusable(int id, int gear) const 
+    { return stageSetMenu.usedUnits[id] || stageSetMenu.unitRestrictions.is_allowed(id, gear); }
+    inline bool unit_is_unusable(std::pair<int, int> unit) const {
+        return unit_is_unusable(unit.first, unit.second);
+    }
 
     inline Slider& slider() { return unitSlider; }
     inline Button& returnBtn() { return buttonManager.buttons[static_cast<int>(UI::ArmoryMenu::ButtonIndex::RETURN)]; }
-    inline Button& stageSetBtn() { return buttonManager.buttons[UI::ArmoryMenu::BTN_COUNT - 1]; }
+    inline Button& openStageSetBtn() { return buttonManager.buttons[UI::ArmoryMenu::BTN_COUNT - 1]; }
     inline Button& unitSelectionBtn(int i) { return buttonManager.buttons[i]; }
 };
 // The Expression '_Param_(1)<5' is not true at this call

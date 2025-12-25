@@ -31,7 +31,7 @@ void ProjectileStats::setup(const nlohmann::json& projJson) {
 
     if (projJson.contains("augment")) {
         AugmentType augType = Augment::string_to_augment_type(projJson["augment"]["type"]);
-        if (augType == NONE) return;
-        aug = Augment::from_json(augType, projJson);
+
+        if (augType != AugmentType::NONE) aug = Augment::from_json(augType, projJson);
     }
 }

@@ -109,10 +109,11 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)\include\game_states\;$(ProjectDir)\include\visuals\;$(ProjectDir)\include\systems\;$(ProjectDir)\include\enums\;$(ProjectDir)\include\stage\entities\;$(ProjectDir)\include\stage\;$(ProjectDir)include\menus\;$(ProjectDir)\include\utilities\;$(ProjectDir)\include\stage\mechanics\;$(ProjectDir)\include\stage\unit\;$(ProjectDir)\game_saves\;C:\Users\amaec\source\SFML-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include\game_states\;$(ProjectDir)\include\visuals\;$(ProjectDir)\include\visuals\textures\;$(ProjectDir)\include\systems\;$(ProjectDir)\include\enums\;$(ProjectDir)\include\stage\entities\;$(ProjectDir)\include\stage\;$(ProjectDir)include\menus\;$(ProjectDir)\include\utilities\;$(ProjectDir)\include\stage\mechanics\;$(ProjectDir)\include\stage\unit\;$(ProjectDir)\game_saves\;C:\Users\amaec\source\SFML-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -142,6 +143,7 @@
   <ItemGroup>
     <ClCompile Include="game_saves\SaveSystem.cpp" />
     <ClCompile Include="Deep Dark.cpp" />
+    <ClCompile Include="source\stage\mechanics\StageChallenge.cpp" />
     <ClCompile Include="source\game_states\MainMenusGameState.cpp" />
     <ClCompile Include="source\game_states\PreparationState.cpp" />
     <ClCompile Include="source\game_states\StageGameState.cpp" />
@@ -158,11 +160,14 @@
     <ClCompile Include="source\stage\entities\StageEntity.cpp" />
     <ClCompile Include="source\stage\entities\Teleporter.cpp" />
     <ClCompile Include="source\stage\entities\Projectile.cpp" />
+    <ClCompile Include="source\stage\Loadout.cpp" />
     <ClCompile Include="source\stage\mechanics\Lane.cpp" />
+    <ClCompile Include="source\stage\mechanics\StageRestrictions.cpp" />
     <ClCompile Include="source\stage\Stage.cpp" />
     <ClCompile Include="source\stage\entities\Surge.cpp" />
     <ClCompile Include="source\stage\entities\Trap.cpp" />
     <ClCompile Include="source\stage\unit\Unit.cpp" />
+    <ClCompile Include="source\stage\unit\UnitTween.cpp" />
     <ClCompile Include="source\systems\Camera.cpp" />
     <ClCompile Include="source\systems\Observer.cpp" />
     <ClCompile Include="source\stage\StageManager.cpp" />
@@ -180,11 +185,19 @@
     <ClCompile Include="source\stage\unit\UnitData.cpp" />
     <ClCompile Include="source\stage\unit\UnitStatus.cpp" />
     <ClCompile Include="source\visuals\Animation.cpp" />
+    <ClCompile Include="source\visuals\ArmorySlot.cpp" />
     <ClCompile Include="source\visuals\Button.cpp" />
+    <ClCompile Include="source\visuals\textures\BaseTextures.cpp" />
+    <ClCompile Include="source\visuals\textures\EffectTextures.cpp" />
+    <ClCompile Include="source\visuals\textures\EntityTextures.cpp" />
     <ClCompile Include="source\visuals\Slider.cpp" />
+    <ClCompile Include="source\visuals\textures\UITextures.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="game_saves\SaveSystem.h" />
+    <ClInclude Include="include\enums\AnimationEvent.h" />
+    <ClInclude Include="include\enums\AugmentTypes.h" />
+    <ClInclude Include="include\enums\EnumFunctions.h" />
     <ClInclude Include="include\game_states\GameState.h" />
     <ClInclude Include="include\game_states\MainMenusGameState.h" />
     <ClInclude Include="include\game_states\PreparationState.h" />
@@ -196,7 +209,10 @@
     <ClInclude Include="include\menus\StageUI.h" />
     <ClInclude Include="include\menus\StartMenu.h" />
     <ClInclude Include="include\enums\ChallengeTypes.h" />
+    <ClInclude Include="include\stage\mechanics\StageChallenge.h" />
+    <ClInclude Include="include\stage\mechanics\StageRestrictions.h" />
     <ClInclude Include="include\stage\mechanics\UnitMoveRequest.h" />
+    <ClInclude Include="include\stage\unit\UnitDataConstants.h" />
     <ClInclude Include="include\utilities\CustomErrors.hpp" />
     <ClInclude Include="include\utilities\json.hpp" />
     <ClInclude Include="include\stage\entities\StageEntity.h" />
@@ -226,10 +242,10 @@
     <ClInclude Include="include\stage\unit\UnitData.h" />
     <ClInclude Include="include\systems\ButtonManager.h" />
     <ClInclude Include="include\systems\Camera.h" />
-    <ClInclude Include="include\systems\Loadout.h" />
+    <ClInclude Include="include\stage\Loadout.h" />
     <ClInclude Include="include\systems\Observer.h" />
     <ClInclude Include="include\stage\StageManager.h" />
-    <ClInclude Include="include\systems\StageRecord.h" />
+    <ClInclude Include="include\stage\StageRecord.h" />
     <ClInclude Include="include\systems\StateManager.h" />
     <ClInclude Include="include\systems\TextureManager.h" />
     <ClInclude Include="include\systems\Tween.h" />
@@ -240,17 +256,31 @@
     <ClInclude Include="include\utilities\Utils.h" />
     <ClInclude Include="include\visuals\Animation.h" />
     <ClInclude Include="include\visuals\Button.h" />
+    <ClInclude Include="include\visuals\textures\BaseTextures.h" />
+    <ClInclude Include="include\visuals\textures\EffectTextures.h" />
+    <ClInclude Include="include\visuals\textures\EntityTextures.h" />
     <ClInclude Include="include\visuals\MouseCursor.h" />
     <ClInclude Include="include\visuals\Slider.h" />
     <ClInclude Include="include\stage\unit\UnitTween.h" />
+    <ClInclude Include="include\visuals\textures\UITextures.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="configs\base _data\player_bases\p_wave_base.json" />
     <None Include="configs\proj_data\0\proj_data.json" />
+    <None Include="configs\unit_data\103\gear1\unit_data.json" />
+    <None Include="configs\unit_data\103\gear2\unit_data.json" />
+    <None Include="configs\unit_data\104\gear1\unit_data.json" />
+    <None Include="configs\unit_data\105\gear1\unit_data.json" />
     <None Include="configs\unit_data\1\gear1\unit_data.json" />
     <None Include="configs\base data\enemy bases\orbitral base\orbital base.json" />
     <None Include="configs\unit_data\101\gear1\unit_data.json" />
     <None Include="configs\stage data\stage 1.json" />
+    <None Include="configs\unit_data\2\gear1\unit_data.json" />
+    <None Include="configs\unit_data\3\gear1\unit_data.json" />
+    <None Include="configs\unit_data\4\gear1\unit_data.json" />
+    <None Include="configs\unit_data\5\gear1\unit_data.json" />
+    <None Include="configs\unit_data\6\gear1\unit_data.json" />
+    <None Include="configs\unit_data\unit_data_TEMPLATE.json" />
     <None Include="game_saves\stage_save.json" />
     <None Include="game_saves\unit_save.json" />
   </ItemGroup>

@@ -1,5 +1,6 @@
 #pragma once
 #include "StageRecord.h"
+#include <math.h>
 
 const int MAX_BAG_LEVEL = 5;
 const int BAG_UPGRADE_PORTION = 4;
@@ -18,17 +19,8 @@ struct StageWallet {
 
 	StageWallet() = default;
 
-	inline bool try_spend_parts(int partsToSpend, StageRecord& rec) {
-		if (parts < partsToSpend) return false;
-
-		parts = std::max(parts - partsToSpend, 0);
-		rec.add_parts_spent(partsToSpend);
-		return true;
-	}
-	inline void gain_parts(int partsToGain, StageRecord& rec) {
-		parts = std::min(parts + partsToGain, partsCap);
-		rec.add_parts_earned(partsToGain);
-	}
+	bool try_spend_parts(int partsToSpend, StageRecord& rec);
+	void gain_parts(int partsToGain, StageRecord& rec);
 	inline bool try_buy_upgrade_bag(StageRecord& rec) {
 		return curLevel < MAX_BAG_LEVEL && try_spend_parts(upgradeCost, rec);
 	}
