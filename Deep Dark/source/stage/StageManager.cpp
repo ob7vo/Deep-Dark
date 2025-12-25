@@ -1,8 +1,11 @@
 #include "pch.h"
 #include "StageManager.h"
 #include "Surge.h"
+#include "EffectTextures.h"
+#include "UITextures.h"
 
 using json = nlohmann::json;
+using namespace Textures::Effects;
 
 float random_float(float min, float max) {
 	if (min == max) return min;
@@ -11,10 +14,23 @@ float random_float(float min, float max) {
 	std::uniform_real_distribution<float> dis(min, max);
 	return dis(gen);
 }
+std::array<sf::Sprite, 8> StageManager::make_effSpriteArr() {
+	std::array<sf::Sprite, 8> effArr = {
+		sf::Sprite(t_statusIcons), sf::Sprite(t_statusIcons),
+		sf::Sprite(t_statusIcons), sf::Sprite(t_statusIcons),
+		sf::Sprite(t_statusIcons), sf::Sprite(t_statusIcons),
+		sf::Sprite(t_statusIcons), sf::Sprite(t_statusIcons),
+	};
+
+	for (int i = 0; i < 8; i++)
+		effArr[i].setTextureRect(Textures::UI::r_workshopStatsIcons[i]);
+
+	return effArr;
+}
 
 void StageManager::create_stage(const json& stageJson, int stageSet) {
 	const json& stageSetJson = stageJson["sets"][stageSet];
-	int lanes = stageSetJson["lane_count"];
+	auto lanes = static_cast<int>(stageSetJson["lanes"].size());
 
 	challenges.clear();
 	stageRecorder = StageRecord(lanes);
@@ -28,22 +44,8 @@ void StageManager::create_challenges(const json& stageSetJson) {
 	size_t challengeCount = stageSetJson["challenges"].size();
 	challenges.reserve(challengeCount);
 
-	for (auto& ch : stageSetJson["challenges"]) {
-		std::string desc = ch.value("description", "");
-		bool startState = ch.value("starting_state", false);
-
-		std::string chaTypeStr = ch.value("challenge_type", "");
-		char compChar = ch["comparison"].get<std::string>()[0];
-		int team = ch.value("team", 0);
-		int val = ch.value("value", 0);
-		int lane = ch.value("lane", -1);
-
-		if (ch.contains("banned_types"))
-			for (auto& target : ch["banned_types"])
-				val |= UnitStats::convert_string_to_type(target);
-
-		Challenge& chal = challenges.emplace_back(desc, chaTypeStr, compChar, team, val, lane);
-		chal.cleared = startState;
+	for (auto& chalJson : stageSetJson["challenges"]) {
+		StageChallenge& chal = challenges.emplace_back(chalJson);
 		chal.pTarget = chal.get_target_ptr(*this);
 	}
 }
@@ -108,8 +110,8 @@ bool StageManager::read_spawn_inputs(Key key) {
 			if (!wallet.try_spend_parts(slot.unitStats.parts, stageRecorder)) return false;
 			slot.cooldown = slot.spawnTimer;
 
-			if (slot.unitStats.has_augment(DROP_BOX)) 
-				create_drop_box(selectedLane, &slot.unitStats, &slot.aniMap);
+			if (slot.unitStats.has_augment(AugmentType::DROP_BOX)) 
+				try_create_drop_box(selectedLane, &slot.unitStats, &slot.aniMap);
 			else
 				stage.create_unit(selectedLane, &slot.unitStats, &slot.aniMap);
 
@@ -119,12 +121,16 @@ bool StageManager::read_spawn_inputs(Key key) {
 	return false;
 }
 void StageManager::handle_events(sf::Event event) {
+	// If the stage set has ended at all, don't read inputs
+	if (stage.victoriousTeam != 0) return;
+
 	if (auto keyEvent = event.getIf<sf::Event::KeyPressed>()) {
 		if (keyEvent->code == Key::Escape) {
 			pause();
 			return;
 		}
 
+		// The functions return bools to have early returns
 		if (paused()) return;
 		else if (read_spawn_inputs(keyEvent->code)) return;
 		else if (read_lane_switch_inputs(keyEvent->code)) return;
@@ -132,115 +138,174 @@ void StageManager::handle_events(sf::Event event) {
 	}
 }
 
-// Action Objects
-void StageManager::try_spawn_death_surge(const Unit& unit) {
-	if (!unit.stats->try_proc_augment(DEATH_SURGE)) return;
-	const Augment& augment = unit.stats->get_augment(DEATH_SURGE);
+// Creating Entities
+bool StageManager::try_spawn_death_surge(const Unit& unit) {
+	// Will proc if it has the augment and rolls the chance
+	if (!unit.stats->try_proc_augment(AugmentType::DEATH_SURGE)) return false;
 
-	AugmentType surgeType = FIRE_WALL; 
-	if (unit.stats->quickAugMask & SHOCK_WAVE) surgeType = SHOCK_WAVE;
-	else if (unit.stats->quickAugMask & ORBITAL_STRIKE) surgeType = ORBITAL_STRIKE; 
-
+	const Augment& augment = *unit.stats->get_augment(AugmentType::DEATH_SURGE);
 	float distance = augment.value;
-	Augment newSurge = Augment::surge(surgeType, distance, augment.surgeLevel, 0, unit.combat.hitIndex);
+
+	Augment newSurge = Augment::surge(AugmentType::FIRE_WALL, distance, augment.surgeLevel, 0, unit.combat.hitIndex);
 	stage.create_surge(unit, newSurge);
+
+	return true;
 }
-void StageManager::create_drop_box(int laneInd, const UnitStats* stats, UnitAniMap* aniMap) {
-	if (!stats->has_augment(DROP_BOX)) return;
+bool StageManager::try_create_drop_box(int laneInd, const UnitStats* stats, UnitAniMap* aniMap) {
+	if (!stats->has_augment(AugmentType::DROP_BOX)) return false;
+
 	const Lane& lane = stage.lanes[laneInd];
 
-	float percentage = stats->get_augment(DROP_BOX).value;
-	float spawnPoint = lane.playerXPos + (lane.enemyXPos - lane.playerXPos) * percentage;
+	float percentage = stats->get_augment(AugmentType::DROP_BOX)->value;
+	float spawnPoint = lane.playerSpawnPoint + (lane.enemySpawnPoint - lane.playerSpawnPoint) * percentage;
 
 	sf::Vector2f spawnPos = { spawnPoint, lane.yPos };
 	stage.entities.emplace_back(
 		std::make_unique<UnitSpawner>(stats, aniMap, spawnPos, laneInd));
+
+	return true;
 }
-void StageManager::try_create_cloner(const Unit& unit) {
-	if (!unit.stats->has_augment(CLONE) || unit.status.statusFlags & CODE_BREAKER) return;
+bool StageManager::try_create_cloner(const Unit& unit) {
+	if (!unit.stats->has_augment(AugmentType::CLONE) || has(unit.status.statusFlags & AugmentType::CODE_BREAKER)) 
+		return false;
 
 	stage.entities.emplace_back(std::make_unique<UnitSpawner>
 		(unit.stats, unit.anim.get_ani_map(), unit.get_pos(), unit.get_lane()));
+
+	return true;
 }
 
 // Parts
 void StageManager::collect_parts(const Unit& unit) {
-	int p = unit.stats->parts;
-	if (unit.status.statusFlags & PLUNDER) p *= 2;
-	wallet.gain_parts(p, stageRecorder);
+	int partsToGain = unit.stats->parts;
+	if (has(unit.status.statusFlags & AugmentType::PLUNDER)) partsToGain *= 2;
+
+	wallet.gain_parts(partsToGain, stageRecorder);
 }
 void StageManager::increment_parts_and_notify(float deltaTime) {
 	oneSecondTimer += deltaTime;
+
 	while (oneSecondTimer >= 1.0f) {
 		wallet.gain_parts(wallet.partsPerSecond, stageRecorder);
 		notify_challenges();
+
 		oneSecondTimer -= 1.0f;
 	}
 }
 
 // Handling Unit Death
+void StageManager::handle_death_augment(const Unit& unit) {
+	if (has(unit.causeOfDeath, DeathCause::FALLING) ||
+		has(unit.causeOfDeath, DeathCause::BASE_WAS_DESTROYED))
+		return;
+
+	try_spawn_death_surge(unit);
+	try_create_cloner(unit);
+}
 void StageManager::handle_enemy_unit_death(const Unit& unit) {
-	if (unit.causeOfDeath != DeathCause::FALLING) {
-		try_spawn_death_surge(unit);
-		try_create_cloner(unit);
-	}
+	handle_death_augment(unit);
+
 	collect_parts(unit);
 }
 void StageManager::handle_player_unit_death(const Unit& unit) {
-	if (unit.causeOfDeath != DeathCause::FALLING) {
-		try_spawn_death_surge(unit);
-		try_create_cloner(unit);
-	}
+	handle_death_augment(unit);
 }
 
+// Creating Enemies
 void StageManager::spawn_enemies() {
 	for (size_t i = stage.enemySpawners.size(); i--;) {
 		auto& data = stage.enemySpawners[i];
 
 		if (data.can_force_spawn(stage.timeSinceStart)) {
-			stage.create_unit(data.forcedSpawnTimes[0].second, &data.enemyStats, &data.aniArr);
+			stage.create_unit(data.forcedSpawnTimes[0].second, &data.enemyStats, &data.aniMap);
 			data.forcedSpawnTimes.erase(data.forcedSpawnTimes.begin());
 		}
 
 		int curIndex = data.currentSpawnIndex;
+		// If there are no more units to spawn or the spawn is inactive (curIndex < 0)
 		if (curIndex >= data.totalSpawns || curIndex < 0) continue;
 
+		// Spawn the Unit
 		if (stage.timeSinceStart > data.nextSpawnTime) {
 			data.nextSpawnTime += random_float(data.spawnDelays.first, data.spawnDelays.second);
 
 			int laneIndex = data.laneSpawnIndexes[curIndex];
-			stage.create_unit(laneIndex, &data.enemyStats, &data.aniArr);
+			stage.create_unit(laneIndex, &data.enemyStats, &data.aniMap);
 
 			if (++data.currentSpawnIndex >= data.totalSpawns && data.infinite)
 				data.currentSpawnIndex = 0;
 		}
 	}
 }
-void StageManager::process_move_requests() {
-	for (size_t i = stage.moveRequests.size(); i--;) {
+
+/*
+	for (size_t i = stage.moveRequests.size(); i > 0; --i) {
 		auto const& request = stage.moveRequests[i];
 		std::cout << "proccessing move request, ID = " << request.unitId << std::endl;
 
-		auto& sourceVec = stage.get_source_vector(request.currentLane, request.team);
-		auto unit = std::find_if(sourceVec.begin(), sourceVec.end(),
+		auto& originalAllyUnits = stage.lanes[request.currentLane].getAllyUnits(request.team);
+		auto unit = std::find_if(originalAllyUnits.begin(), originalAllyUnits.end(),
 			[id = request.unitId](const Unit& u) { return u.id == id; });
 
-		if (unit == sourceVec.end() || request.currentLane == request.newLane) {
+		if (unit == originalAllyUnits.end() || request.currentLane == request.newLane) {
 			stage.moveRequests.pop_back();
 			std::cout << "ignoring move request" << std::endl;
 			continue;
 		}
 
+		// Cancel Tweens to be safe.
 		unit->movement.cancel_tween();
 
-		auto& newVec = stage.get_source_vector(request.newLane, unit->stats->team);
-		Unit& movedUnit = newVec.emplace_back(std::move(*unit));
-		sourceVec.erase(unit);
+		auto& newLaneVector = stage.lanes[request.newLane].getAllyUnits(request.team);
+		Unit& movedUnit = newLaneVector.emplace_back(std::move(*unit));
+		originalAllyUnits.erase(unit);
 
 		request.move_unit_by_request(movedUnit, stage);
 
 		stage.moveRequests.pop_back();
 	}
+	*/
+// Move Requests
+void StageManager::process_all_move_requests() {
+	while (!stage.moveRequests.empty()) {
+		auto& moveRequest = stage.moveRequests.back();
+
+		if (auto index = find_unit_to_move(moveRequest))
+			process_move_request(moveRequest, *index);
+
+		stage.moveRequests.pop_back();
+	}
+}
+std::optional<size_t> StageManager::find_unit_to_move(const UnitMoveRequest& moveRequest) {
+	auto& from = stage.lanes[moveRequest.currentLane].getAllyUnits(moveRequest.team);
+
+	auto unit = std::find_if(from.begin(), from.end(),
+		[id = moveRequest.unitId](const Unit& u) { return u.id == id; });
+
+	if (unit == from.end()) {
+		std::cout << "Unit was not found in vector." << std::endl;
+		return std::nullopt;
+	}
+	else if (moveRequest.currentLane == moveRequest.newLane) {
+		std::cout << "MoveRequest moves Unit to the same lane." << std::endl;
+		return std::nullopt;
+	}
+
+	return std::distance(from.begin(), unit);
+}
+void StageManager::process_move_request(const UnitMoveRequest& moveRequest, size_t unitToMoveIndex)
+{
+	auto& from = stage.lanes[moveRequest.currentLane].getAllyUnits(moveRequest.team);
+	auto& unit = from[unitToMoveIndex];
+
+	unit.movement.cancel_tween();
+
+	auto& to = stage.lanes[moveRequest.newLane].getAllyUnits(moveRequest.team);
+	Unit& movedUnit = to.emplace_back(std::move(unit));
+
+	from.erase(from.begin() + unitToMoveIndex);
+
+	moveRequest.move_unit_by_request(movedUnit, stage);
 }
 
 // Updating GameObjects
@@ -272,11 +337,9 @@ void StageManager::update_projectiles(float deltaTime) {
 	for (auto it = stage.projectiles.begin(); it != stage.projectiles.end();) {
 		if (it->readyForRemoval) {
 			it = stage.projectiles.erase(it);
-			std::cout << "removed projectile" << std::endl;
 		}
 		else {
-			Lane& closestLane = stage.get_closest_lane(it->y_pos());
-			it->tick(closestLane, deltaTime);
+			it->tick(stage, deltaTime);
 			++it;
 		}
 	}
@@ -284,7 +347,7 @@ void StageManager::update_projectiles(float deltaTime) {
 void StageManager::update_entities(float dt) {
 	// Ticking Unique Pointers
 	for (auto const& surge : stage.surges)
-		surge->tick(dt, stage);
+		surge->tick(stage, dt);
 	for (auto const& entity : stage.entities) 
 		entity->tick(stage, dt);
 
@@ -303,8 +366,8 @@ void StageManager::update_entities(float dt) {
 		}); 
 }
 void StageManager::update_base(float deltaTime) {
-	stage.playerBase.tick(stage, deltaTime);
 	stage.enemyBase.tick(stage, deltaTime);
+	stage.playerBase.tick(stage, deltaTime);
 }
 void StageManager::update_hitbox_visualizers(float deltaTime) {
 	for (size_t i = stage.hitboxes.size(); i--;) {
@@ -320,26 +383,27 @@ void StageManager::update_hitbox_visualizers(float deltaTime) {
 void StageManager::draw(sf::RenderWindow& window) {
 	for (auto const& lane : stage.lanes) {
 		lane.draw(window);
-		for (auto const& unit : lane.enemyUnits)
+		for (const auto& unit : lane.enemyUnits)
 			unit.anim.draw(window);
-		for (auto const& unit : lane.playerUnits)
+		for (const auto& unit : lane.playerUnits)
 			unit.anim.draw(window);		
 	}
+
 	for (auto& proj : stage.projectiles)
 		window.draw(proj.get_sprite());
 
 	stage.enemyBase.draw(window);
 	stage.playerBase.draw(window);
 
-	for (auto it = stage.surges.begin(); it != stage.surges.end();) {
-		(*it)->draw(window);
-		++it;
-	}
-	for (auto const& entity : stage.entities)
+	for (const auto& surge : stage.surges)
+		surge->draw(window);
+	for (const auto& entity : stage.entities)
 		window.draw(entity->sprite);
-	for (auto const& tp : stage.teleporters)
+	for (const auto& proj : stage.projectiles)
+		proj.draw(window);
+	for (const auto& tp : stage.teleporters)
 		tp.draw(window);
-	for (auto const& trap : stage.traps)
+	for (const auto& trap : stage.traps)
 		window.draw(trap.sprite);
 
 	for (auto const& [effect, pos] : stage.effectSpritePositions) {
@@ -352,18 +416,57 @@ void StageManager::draw(sf::RenderWindow& window) {
 	for (auto const& [hitbox, time]:stage.hitboxes)
 		window.draw(hitbox);
 }
-void StageManager::update_game_ticks(float deltaTime) {
+void StageManager::tick(float deltaTime) {
 	stage.timeSinceStart += deltaTime;
 	stage.effectSpritePositions.clear();
 
-	spawn_enemies();
+	// If the stage set is ongoing or enemies won, keeps spawning them in.
+	if (!stage.reached_unit_capacity(ENEMY_TEAM) && stage.victoriousTeam != PLAYER_TEAM)
+		spawn_enemies();
 
-	update_unit(deltaTime); // This is where the erase is called
+	update_unit(deltaTime); 
 	update_projectiles(deltaTime);
 	update_entities(deltaTime);
 	update_base(deltaTime);
 	update_hitbox_visualizers(deltaTime);
 
-	process_move_requests(); // this is where the other erase is called
+	process_all_move_requests();
 	increment_parts_and_notify(deltaTime);
+}
+
+// Challenges
+void StageManager::notify_challenges() {
+	int clears = 0;
+
+	for (auto& challenge : challenges) {
+		challenge.notify(*this);
+		if (challenge.cleared) clears++;
+	}
+
+	if (clears != clearedChallenges)
+		update_challenges_text(clears);
+}
+void StageManager::update_challenges_text(int clears) {
+	clearedChallenges = clears;
+
+	if (clearedChallenges == challenges.size())
+		ui.clearedChallengesText.setFillColor(sf::Color::Green);
+	else
+		ui.clearedChallengesText.setFillColor(sf::Color::Yellow);
+
+	ui.clearedChallengesText.setString(std::format("Challenges Cleared: {}/{}",
+		clearedChallenges, challenges.size()));
+}
+
+// Wallet
+bool StageWallet::try_spend_parts(int partsToSpend, StageRecord& rec) {
+	if (parts < partsToSpend) return false;
+
+	parts = std::max(parts - partsToSpend, 0);
+	rec.add_parts_spent(partsToSpend);
+	return true;
+}
+void StageWallet::gain_parts(int partsToGain, StageRecord& rec) {
+	parts = std::min(parts + partsToGain, partsCap);
+	rec.add_parts_earned(partsToGain);
 }

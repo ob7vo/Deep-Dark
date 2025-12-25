@@ -1,45 +1,76 @@
 #include "pch.h"
 #include "Projectile.h"
-#include "Lane.h"
+#include "Stage.h"
+#include "UILayout.h"
 
 ProjectileConfig::ProjectileConfig(int id, float mag) {
 	const nlohmann::json projJson = ProjData::get_proj_json(id);
 	stats.setup(projJson);
-	stats.dmg = (int)(stats.dmg * mag);
+	stats.dmg *= mag;
 
 	int state = 0;
-	for (auto& animData : projJson["animations"]) {
-		std::string name = state == 0 ? "active" : "destroyed";
+	for (const auto& [animName, animData] : projJson["animations"].items()) {
 		std::string path = ProjData::get_proj_path(id);
-		std::string fullPath = path + name + ".png";
+		std::string fullPath = path + animName + ".png";
 		bool loops = !state;
 
 		// using (create_unit_animation) still works lmao)
-		aniArr[state] = Animation::create_unit_animation(animData, name, fullPath, loops);
+		Textures::loadTexture(textures[state], fullPath);
+		aniArr[state] = AnimationClip::from_json(animData, &textures[state], loops);
+
 		if (++state >= 2) break;
 	}
 }
-int Projectile::update_hits_and_animation(float deltaTime) {
+Projectile::Projectile(ProjectileConfig& config) : 
+	StageEntity({ -5000.f,-5000.f }, 0), // Calling pathing (made in Stage class) will get the start position
+	stats(&config.stats), 
+	aniArr(&config.aniArr) 
+{
+	animPlayer.start(&(*aniArr)[0], sprite);
+	sprite.scale({ 0.2f,0.2f });
+
+	hitsLeft = stats->hits;
+	maxLifespan = stats->maxLifespan;
+
+	pos = pathing->getStartingPosition();
+}
+
+void Projectile::enter_destroyed_state() {
+	aniState = DESTROYED_STATE;
+	animPlayer.start(&(*aniArr)[aniState], sprite);
+}
+AnimationEvent Projectile::update_hits_and_animation(float deltaTime) {
 	hitCountTime += deltaTime;
 	maxLifespan -= deltaTime;
 
 	while (hitCountTime >= 1.f) {
 		hitCountTime -= 1.f;
 		hitsLeft--;
-		//std::cout << "hit count Time ticked. HITSLEFT = " << hitsLeft << std::endl;
 	}
 
 	if (aniState == ACTIVE_STATE && (hitsLeft <= 0 || maxLifespan <= 0))
 		enter_destroyed_state();
 	
-	return (*aniArr)[aniState].update(aniTime, frame, deltaTime, sprite);
+	return animPlayer.update(deltaTime, sprite);
+}
+void Projectile::update_hit_times(float deltaTime) {
+	std::erase_if(hitUnits, [deltaTime](auto& unit) {
+			unit.second -= deltaTime;
+			return unit.second <= 0;
+		});
+}
+bool Projectile::can_unit_hit_again(int id) const {
+	return std::find_if(hitUnits.begin(), hitUnits.end(),
+		[&id](const auto& unit) {
+			return unit.first == id;
+		}) == hitUnits.end();
 }
 
-void Projectile::tick(Lane& lane, float deltaTime) {
-	int events = update_hits_and_animation(deltaTime);
+void Projectile::tick(Stage& stage, float deltaTime) {
+	auto events = update_hits_and_animation(deltaTime);
 	
 	if (aniState == DESTROYED_STATE) {
-		readyForRemoval = events & AnimationEvent::FINAL_FRAME;
+		readyForRemoval = any(events & AnimationEvent::FINAL_FRAME);
 		return;
 	}
 
@@ -47,21 +78,36 @@ void Projectile::tick(Lane& lane, float deltaTime) {
 	sprite.setPosition(pos);
 
 	update_hit_times(deltaTime);
-	attack_units(lane);
+	attack_units(stage.get_closest_lane(pos.y));
 }
-void Projectile::attack_units(Lane& lane) {
-	for (auto& unit : lane.getOpponentUnits(stats->team)) {
+void Projectile::draw(sf::RenderWindow& window) const {
+	sf::RectangleShape hitbox({stats->height, stats->width});
+
+	hitbox.setPosition(pos);
+	hitbox.setFillColor(UI::Colors::RED_TRANSPARENT);
+	hitbox.setOrigin(hitbox.getSize() * 0.5f);
+
+	window.draw(sprite);
+	window.draw(hitbox);
+}
+
+void Projectile::attack_units(Lane& closetLane) {
+	for (auto& unit : closetLane.getOpponentUnits(stats->team)) {
 		if (!valid_target(unit)) continue;
+
 		std::pair<int, float> hitTime = { unit.id,2.5f };
 		hitUnits.push_back(hitTime);
 
-		bool shove = stats->aug.augType & SHOVE;
+		// Trigger shove if the projectile has the augment
+		bool shove = has(stats->aug.augType & AugmentType::SHOVE);
+
 		unit.status.take_damage(unit, stats->dmg, shove);
 
+		// Proc any statuc effects the projectile might have
 		if (unit.status.can_proc_status(unit, stats->aug))
 			unit.status.add_status_effect(stats->aug);
 
-		hitsLeft -= 1 + unit.stats->has_augment(CHIP);
+		hitsLeft -= 1 + (int)unit.stats->has_augment(AugmentType::ROUGH);
 		if (hitsLeft <= 0) {
 			enter_destroyed_state();
 			return;
@@ -69,13 +115,13 @@ void Projectile::attack_units(Lane& lane) {
 	}
 }
 
-bool Projectile::within_bounds(sf::Vector2f p, float h, float w) const {
-    bool overlapX = pos.x < p.x + w && pos.x + stats->width > p.x;
-    bool overlapY = pos.y < p.y + h && pos.y + stats->height > p.y;
+bool Projectile::within_bounds(sf::Vector2f p) const {
+    bool overlapX = pos.x < p.x + stats->width && pos.x + stats->width > p.x;
+    bool overlapY = pos.y < p.y + stats->height && pos.y + stats->height > p.y;
 
     return overlapX && overlapY;
 }
-bool Projectile::valid_target(Unit& enemy) const {
+bool Projectile::valid_target(const Unit& enemy) const {
 	return !enemy.anim.invincible() && within_bounds(enemy.get_pos())
-		&& can_hit_again(enemy.id);
+		&& can_unit_hit_again(enemy.id);
 }

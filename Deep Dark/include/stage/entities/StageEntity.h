@@ -1,15 +1,15 @@
 #pragma once
 #include "Animation.h"
-#include <json_fwd.hpp>
 
 struct Stage;
+class Unit;
 
 struct StageEntity {
 	bool readyForRemoval = false;
 
 	bool animating = false;
-	Animation anim;
-	sf::Sprite sprite = sf::Sprite(defTex);
+	AnimationPlayer animPlayer;
+	sf::Sprite sprite;
 
 	int laneInd = 0;
 	sf::Vector2f pos;
@@ -17,7 +17,9 @@ struct StageEntity {
 	StageEntity(sf::Vector2f _pos, int _lane);
 	virtual ~StageEntity();
 
-	virtual int update_animation(Stage& stage, float dt);
+	virtual AnimationEvent update_animation(Stage& stage, float dt);
 	virtual void tick(Stage& stage, float deltaTime);
 	virtual void action(Stage& stage);
+
+	bool collides(sf::FloatRect bounds, const Unit& unit) const;
 };

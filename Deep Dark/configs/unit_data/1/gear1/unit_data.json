@@ -5,25 +5,20 @@
   "level": 1,
   "team": 1,
   "stats": {
-    "hp": 100,
+    "hp": 50,
     "knockbacks": 4,
-    "speed": 40,
-    "attack_time": 1.5,
+    "speed": 6,
+    "attack_time": 3.5,
     "sight_range": 100.0,
-    "lane_sight": [ 1, 0 ],
     "single_target": false,
     "hits": [
       {
         "dmg": 25,
-        "attack_range": [ 0, 100.0 ]
-      },
-      {
-        "dmg": 1,
-        "attack_range": [ 0, 175.0 ]
+        "attack_range": [ 0, 110.0 ]
       }
     ],
     "parts_cost": 7,
-    "recharge_timer": 2.0
+    "recharge_timer": 4.76
   },
   "hurtbox": {
     "width": 40.0,
@@ -50,7 +45,10 @@
     "attack": {
       "cell_size": [ 256, 128 ],
       "origin": [ 60, 100 ],
-      "attack_frames": [ 10, 12 ],
+      "events": [
+        [ "attack", 10 ],
+        [ "attack", 12 ]
+      ],
       "frames": 15,
       "fps": 10
     },
@@ -58,15 +56,21 @@
       "cell_size": [ 128, 128 ],
       "origin": [ 60, 100 ],
       "frames": 8
+    },
+    "death": {
+      "cell_size": [ 48, 48 ],
+      "origin": [ 24, 48 ],
+      "frames": 8,
+      "duration": 1.5
     }
   },
   "augments": [
     {
-      "augment": "terminate",
-      "value": 0.4
+      "augment": "slow",
+      "percentage": 50,
+      "value": 2.0
     }
   ],
-  "types": [ "rusted", "ancient" ],
-  "target_types": [ "all" ],
-  "quick_augment_masks": [ "bully" ]
+  "types": [ "steel" ],
+  "target_types": [ "all" ]
 }

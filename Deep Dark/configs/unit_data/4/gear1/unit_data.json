@@ -1,0 +1,70 @@
+{
+  "unit_id": 4,
+  "gear": 1,
+  "name": "Fishy Sorceror",
+  "team": 1,
+  "stats": {
+    "hp": 110,
+    "knockbacks": 3,
+    "speed": 9,
+    "attack_time": 1.35,
+    "sight_range": 80.0,
+    "single_target": true,
+    "hits": [
+      {
+        "dmg": 20,
+        "attack_range": [ 0, 80 ]
+      }
+    ],
+    "parts_cost": 10,
+    "recharge_timer": 4.0
+  },
+  "hurtbox": {
+    "width": 150.0,
+    "height": 100.0
+  },
+  "animations": {
+    "move": {
+      "cell_size": [ 160, 128 ],
+      "origin": [ 90, 128 ],
+      "frames": 8,
+      "fps": 8
+    },
+    "idle": {
+      "cell_size": [ 160, 128 ],
+      "origin": [ 90, 128 ],
+      "frames": 8,
+      "fps": 8
+    },
+    "knockback": {
+      "cell_size": [ 160, 128 ],
+      "origin": [ 90, 128 ],
+      "frames": 9
+    },
+    "attack": {
+      "cell_size": [ 160, 128 ],
+      "origin": [ 90, 128 ],
+      "frames": 13,
+      "fps": 13,
+      "events": [ [ "attack", 9 ] ]
+    },
+    "falling": {
+      "cell_size": [ 160, 128 ],
+      "origin": [ 90, 128 ],
+      "frames": 8
+    },
+    "death": {
+      "cell_size": [ 48, 48 ],
+      "origin": [ 24, 48 ],
+      "frames": 8,
+      "duration": 1.5
+    }
+  },
+  "augments": [
+    {
+      "augment": "critical",
+      "percentage": 4.0
+    }
+  ],
+  "types": [ "nano" ]
+}

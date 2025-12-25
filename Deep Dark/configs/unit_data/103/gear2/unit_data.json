@@ -1,0 +1,60 @@
+{
+  "unit_id": 103,
+  "gear": 2,
+  "name": "Rusted Ground Droid",
+  "team": -1,
+  "stats": {
+    "hp": 250,
+    "knockbacks": 2,
+    "speed": 8,
+    "attack_time": 4.0,
+    "sight_range": 150.0,
+    "single_target": true,
+    "hits": [
+      {
+        "dmg":75,
+        "attack_range": [ 0, 150 ]
+      }
+    ],
+    "parts_cost": 1,
+    "parts_dropped": -1,
+    "recharge_timer": 0.0
+  },
+  "hurtbox": {
+    "width": 30.0,
+    "height": 30.0
+  },
+  "animations": {
+    "move": {
+      "cell_size": [ 48, 48 ],
+      "origin": [ 12, 38 ],
+      "frames": 8,
+      "fps": 8
+    },
+    "idle": {
+      "cell_size": [ 48, 48 ],
+      "origin": [ 12, 38 ],
+      "frames": 4,
+      "fps": 3
+    },
+    "knockback": {
+      "cell_size": [ 48, 48 ],
+      "origin": [ 12, 38 ],
+      "frames": 4
+    },
+    "attack": {
+      "cell_size": [ 48, 48 ],
+      "origin": [ 12, 38 ],
+      "frames": 9,
+      "fps": 6,
+      "events": [ [ "attack", 7 ] ]
+    },
+    "falling": {
+      "cell_size": [ 48, 48 ],
+      "origin": [ 12, 38 ],
+      "frames": 4
+    }
+  },
+  "types": [ "rusted" ],
+  "target_types": [ "nano", "floating" ]
+}

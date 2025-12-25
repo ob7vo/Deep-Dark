@@ -1,5 +1,6 @@
 #pragma once
-#include "UnitEnums.h"
+#include "AugmentTypes.h"
+
 struct StatusEffect
 {
 	AugmentType effect;

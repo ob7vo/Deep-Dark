@@ -4,5 +4,5 @@
   "cannon_timer": 10.0,
   "sight_range": 400.0,
   "type": 3,
-  "dmg": 2000
+  "dmg": 25
 }

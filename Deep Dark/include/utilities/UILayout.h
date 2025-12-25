@@ -1,7 +1,7 @@
 #pragma once
 #include <SFML/System/Vector2.hpp>
 #include <array>
-#include <UnitData.h>
+#include <UnitDataConstants.h>
 
 namespace UI 
 {
@@ -21,7 +21,7 @@ namespace Colors {
 
 //MENUS
 namespace ArmoryMenu {
-	constexpr int BTN_COUNT = 5;
+	constexpr int BTN_COUNT = UnitData::TOTAL_PLAYER_UNITS + 2;
 
 	constexpr sf::Vector2f FIRST_SLOT_POS = { 0.225f, 0.15f };
 	constexpr sf::Vector2f SLOT_INCREMENT = { 0.15f, 0.1f };

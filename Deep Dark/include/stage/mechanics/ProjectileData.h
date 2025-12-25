@@ -1,5 +1,6 @@
 #pragma once
 #include "UnitEnums.h"
+#include "Augment.h"
 
 namespace ProjData {
 	std::string get_proj_path(int id);

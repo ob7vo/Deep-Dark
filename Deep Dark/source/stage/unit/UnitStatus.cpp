@@ -12,12 +12,17 @@ UnitStatus::UnitStatus(const UnitStats* stats) {
 	hp = stats->maxHp;
 	kbIndex = 1;
 
+
+	if (auto shield = stats->get_augment(AugmentType::SHIELD))
+		shieldHp = static_cast<int>(shield->value);
+
 	//tries to get augment to flip status mask. If it doesnt have the Augment,
 	// it will give an empty Augment with NONE, or 0
-	statusFlags = 0;
-	shieldHp = (int)stats->get_augment(SHIELD).value;
-	statusFlags |= stats->has_augment(SURVIVOR) ? SURVIVOR : 0;
-	statusFlags |= stats->has_augment(PHASE) ? PHASE : 0;
+	statusFlags = AugmentType::NONE;
+
+	statusFlags |= stats->has_augment(AugmentType::SURVIVOR) ? AugmentType::SURVIVOR : AugmentType::NONE;
+	statusFlags |= stats->has_augment(AugmentType::PHASE) ? AugmentType::PHASE : AugmentType::NONE;
+	statusFlags |= stats->has_augment(AugmentType::TRANSFORM) ? AugmentType::TRANSFORM : AugmentType::NONE;
 }
 
 #pragma region Calculations
@@ -26,12 +31,11 @@ float UnitStatus::calculate_damage_reduction(const std::vector<Augment>& augment
 	float boost = 1;
 
 	for (const Augment& augment : augments) {
-		auto aug = augment.augType;
 		if (!augment.is_damage_modifier()) continue;
 
-		if (aug & AugmentType::RESIST)
+		if (has(augment.augType & AugmentType::RESIST))
 			boost *= augment.percentage;
-		else if (aug & AugmentType::SUPERIOR)
+		else if (has(augment.augType & AugmentType::SUPERIOR))
 			boost /= augment.percentage;
 	}
 
@@ -59,8 +63,8 @@ int UnitStatus::calculate_damage_and_effects(Unit& hitUnit, const Unit& attacker
 	// These effects are based around the Unit's current HP, 
 	// so they are run after all calculations
 	if (hitUnit.targeted_by_unit(attacker)) {
-		if (attacker.stats->try_proc_augment(VOID, attacker.combat.hitIndex))
-			dmg += (int)((float)hitUnit.stats->maxHp * attacker.stats->get_augment(VOID).value);
+		if (attacker.stats->try_proc_augment(AugmentType::VOID, attacker.combat.hitIndex))
+			dmg += (int)((float)hitUnit.stats->maxHp * attacker.stats->get_augment(AugmentType::VOID)->value);
 		if (attacker.combat.try_terminate_unit(attacker, hitUnit, dmg))
 			dmg += hitUnit.stats->maxHp;
 	}
@@ -78,13 +82,14 @@ void UnitStatus::add_status_effect(const Augment& aug) {
 	}
 
 	StatusEffect newEffect(aug.augType, aug.value);
-	std::cout << "adding effect, bit mask value: " << aug.augType << std::endl;
+	std::cout << "adding effect, bit mask value: " << (uint32_t)aug.augType << std::endl;
 
+	// If the Status effect already exist, remove the old one to later replace it
 	activeStatuses.erase(
 		std::remove_if(activeStatuses.begin(), activeStatuses.end(),
 			[&](const StatusEffect& existing) {
 				if (existing.effect == newEffect.effect) {
-					statusFlags &= ~existing.effect;
+					remove(statusFlags, existing.effect);
 					return true;
 				}
 				return false;
@@ -92,11 +97,14 @@ void UnitStatus::add_status_effect(const Augment& aug) {
 		activeStatuses.end()
 	);
 
+	// If there are too many Status Effects
 	if (activeStatuses.size() >= MAX_EFFECTS) {
-		if (newEffect.effect & AugmentType::STRENGTHEN) {
-			statusFlags &= ~activeStatuses.back().effect;
-			activeStatuses.pop_back();
+		// STRENGTHEN will ALWAYS be applied, so replace the newest effect
+		if (has(newEffect.effect & AugmentType::STRENGTHEN)) {
+			remove(statusFlags, activeStatuses.back().effect);
 			statusFlags |= AugmentType::STRENGTHEN;
+
+			activeStatuses.pop_back();
 			activeStatuses.push_back(newEffect);
 		}
 		else return;
@@ -115,7 +123,7 @@ void UnitStatus::update_status_effects(Unit& unit, float deltaTime) {
 		status.update(deltaTime);
 
 		if (status.is_expired()) {
-			statusFlags &= ~status.effect;
+			remove(statusFlags, status.effect);
 
 			activeStatuses[i] = std::move(activeStatuses.back());
 			activeStatuses.pop_back();
@@ -131,12 +139,16 @@ int UnitStatus::apply_effects(const Unit& hitUnit, const std::vector<Augment>& a
 	// called from attacked Unit, parameters are from the attackING unit.
 	for (const Augment& augment : augments) {
 		if (can_proc_status(hitUnit, augment, attackersHitIndex)
-			&& Random::chance(augment.percentage)) 
+			&& Random::chance(augment.percentage)) {
 			add_status_effect(augment);
-		else if (augment.is_damage_modifier())
+		}
+		else if (augment.is_damage_modifier()) {
 			dmg = (int)((float)dmg * augment.percentage);
-		else if (augment.augType & CRITICAL && Random::chance(augment.percentage))
+		}
+		else if (has(augment.augType & AugmentType::CRITICAL) &&
+			Random::chance(augment.percentage)) {
 			dmg *= 2;
+		}
 	}
 
 	return dmg;
@@ -151,7 +163,7 @@ bool UnitStatus::can_proc_status(const Unit& unit, const Augment& augment, int h
 
 bool UnitStatus::damage_shield(int& dmg, const UnitStats* _stats) {
 	// shield pierce can instantly break shields
-	if (_stats && _stats->try_proc_augment(SHIELD_PIERCE)) {
+	if (_stats && _stats->try_proc_augment(AugmentType::SHIELD_PIERCE)) {
 		shieldHp = 0;
 		return true;
 	}
@@ -194,7 +206,7 @@ bool UnitStatus::take_damage(Unit& hitUnit, int dmg, bool shove) {
 	hp -= dmg;
 
 	if (!hitUnit.anim.in_knockback() && met_knockback_threshold(oldHp, hitUnit.stats)) {
-		shieldHp = (int)hitUnit.stats->get_augment(SHIELD).value;
+		shieldHp = (int)hitUnit.stats->get_augment(AugmentType::SHIELD)->value;
 		hitUnit.movement.knockback(hitUnit);
 	}
 	else if (shove) hitUnit.movement.knockback(hitUnit, 0.5f);
@@ -222,11 +234,13 @@ bool UnitStatus::met_knockback_threshold(int oldHp, const UnitStats* stats) {
 	return metThreshold;
 }
 bool UnitStatus::try_proc_survive(const UnitStats* dyingUnitStats) {
-	if (statusFlags & SURVIVOR && dyingUnitStats->try_proc_augment(SURVIVOR)) {
-		statusFlags &= ~SURVIVOR;
+	if (dyingUnitStats->try_proc_augment(AugmentType::SURVIVOR)) {
+		remove(statusFlags, AugmentType::SURVIVOR);
+
 		hp = 1;
 		kbIndex = dyingUnitStats->knockbacks;
 		std::cout << "SURVIVED BITCH" << std::endl;
+
 		return true;
 	}
 	return false;

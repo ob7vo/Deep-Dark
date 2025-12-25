@@ -6,17 +6,15 @@
   "team": 1,
   "stats": {
     "hp": 30,
-    "knockbacks": 1,
-    "dmg": 5,
+    "knockbacks": 3,
+    "dmg": 6,
     "speed": 30,
     "attack_time": 0.5,
-    "sight_range": 100.0,
-    "attack_range": [ -20, 250 ],
-    "lane_reach": [ -1, 0 ],
-    "lane_sight": [ 1, 0 ],
+    "sight_range": 50.0,
+    "attack_range": [ 0, 50 ],
     "single_target": true,
     "parts_cost": 5,
-    "recharge_timer": 0.5
+    "recharge_timer": 2.25
   },
   "hurtbox": {
     "width": 35.0,
@@ -43,7 +41,7 @@
     "attack": {
       "cell_size": [ 96, 84 ],
       "origin": [ 60, 84 ],
-      "attack_frames": [ 4 ],
+      "events": [ [ "attack", 4 ] ],
       "frames": 6,
       "fps": 12
     },
@@ -57,17 +55,13 @@
       "origin": [ 60, 84 ],
       "frames": 5,
       "fps": 3
+    },
+    "death": {
+      "cell_size": [ 48, 48 ],
+      "origin": [ 24, 48 ],
+      "frames": 8,
+      "duration": 1.5
     }
   },
-  "augments": [
-    {
-      "augment": "shock_wave",
-      "value": 80.0,
-      "percentage": 1.0,
-      "surge_level": 3
-    }
-  ],
-  "types": [ "typeless" ],
-  "target_types": [ "nano" ],
-  "quick_augment_masks": [ "code_breaker" ]
+  "types": [ "typeless" ]
 }

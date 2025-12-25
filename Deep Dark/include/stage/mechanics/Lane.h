@@ -7,8 +7,8 @@ const int RESERVED_UNITS = 15;
 
 struct Lane {
 	int laneIndex = 0;
-	float playerXPos = 0;
-	float enemyXPos = 0;
+	float playerSpawnPoint = 0;
+	float enemySpawnPoint = 0;
 	float yPos = 0;
 
 	std::vector<std::pair<float, float>> gaps; // two X positions
@@ -16,7 +16,9 @@ struct Lane {
 	std::vector<sf::RectangleShape> gapsShapes;
 
 	std::vector<Unit> playerUnits; // Vectors cant have references
+	int maxPlayers = RESERVED_UNITS;
 	std::vector<Unit> enemyUnits;
+	int maxEnemies = RESERVED_UNITS;
 
 	Lane(const nlohmann::json& laneJson, int index);
 
@@ -26,11 +28,14 @@ struct Lane {
 
 	inline std::vector<Unit>& getOpponentUnits(int team) { return team == PLAYER_TEAM ? enemyUnits : playerUnits; }
 	inline std::vector<Unit>& getAllyUnits(int team) { return team == ENEMY_TEAM ? enemyUnits : playerUnits; }
+
 	size_t get_unit_count(int team = 0) const;
 	sf::Vector2f get_spawn_pos(int team) const;
 	float get_team_boundary(int team) const;
-	std::pair<float, float> get_lane_boundaries() const 
+	inline std::pair<float, float> get_lane_boundaries() const 
 	{ return { get_team_boundary(1), get_team_boundary(-1) }; }
+	std::pair<float, float> find_closest_gap_ahead(int team, std::pair<float, float> unitHurtboxEdges) const;
+	float get_stopping_point(float newX, float stoppingDistance, int team, std::pair<float, float> unitHurtboxEdges) const;
 
 	bool out_of_lane(float left, float right) const;
 	bool within_gap(float leftHurtboxEdge, float rightHurtboxEdge) const;

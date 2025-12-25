@@ -1,5 +1,6 @@
 {
   "unit_id": 102,
+  "gear": 1,
   "level": 1,
   "name": "mushroom",
   "team": -1,
@@ -48,7 +49,10 @@
     "attack": {
       "cell_size": [ 80, 64 ],
       "origin": [ 20, 64 ],
-      "attack_frames": [ 3, 6 ],
+      "events": [
+        [ "attack", 3 ],
+        [ "attack", 6 ]
+      ],
       "frames": 24,
       "fps": 8
     },
@@ -56,6 +60,12 @@
       "cell_size": [ 80, 64 ],
       "origin": [ 20, 64 ],
       "frames": 7
+    },
+    "death": {
+      "cell_size": [ 48, 48 ],
+      "origin": [ 24, 48 ],
+      "frames": 8,
+      "duration": 1.5
     }
   },
   "augments": [
@@ -72,5 +82,5 @@
   ],
   "types": [ "nano", "floating" ],
   "target_types": [ "typeless" ],
-  "quick_augment_masks": [ "bully" ]
+  "augments_mask": [ "bully" ]
 }

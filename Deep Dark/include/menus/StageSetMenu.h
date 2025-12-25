@@ -1,7 +1,9 @@
 #pragma once
 #include "Menu.h"
 #include "UnitData.h"
-#include "ArmorySlot.h"
+#include "StageRestrictions.h"
+#include <bitset>
+#include <array>
 
 // Will be owned by the Armroy Menu as a big overlay/draw.
 // IT will comprise of the background to show the enemys, the small sprites
@@ -14,11 +16,12 @@ const int STAGE_SET_BUTTONS = 3;
 
 struct StageSetMenu : public Menu<STAGE_SET_BUTTONS> {
     std::bitset<UnitData::TOTAL_PLAYER_UNITS> usedUnits;
-    std::bitset<UnitData::TOTAL_PLAYER_UNITS> unitViolatesCondition;
+    // First index is the specific Unit Id, the bitset is its gear (form)
+    UnitRestrictions unitRestrictions;
 
     int stageId = 0;
     int stageSet = 0;
-
+    
     sf::Sprite backgroundSprite = sf::Sprite(defTex);
 
     sf::Text startStageSetText = sf::Text(baseFont);
@@ -42,14 +45,7 @@ struct StageSetMenu : public Menu<STAGE_SET_BUTTONS> {
     inline Button& closeBtn() { return buttonManager.buttons[static_cast<int>(UI::StageSet::ButtonIndex::CLOSE)]; }
     inline Button& exitStageBtn() { return buttonManager.buttons[static_cast<int>(UI::StageSet::ButtonIndex::EXIT_STAGE)]; }
 
-    static std::array<sf::Sprite, 10> make_unitSlotSprites() {
-        const sf::Texture& tex = TextureManager::t_defaultUnitSlot;
-        return {
-            sf::Sprite(tex), sf::Sprite(tex),sf::Sprite(tex),sf::Sprite(tex),
-            sf::Sprite(tex),sf::Sprite(tex),sf::Sprite(tex),sf::Sprite(tex),
-            sf::Sprite(tex),sf::Sprite(tex)
-        };
-    }
+    static std::array<sf::Sprite, 10> make_unitSlotSprites();
     /// <summary> Exists so I dont get the 'Invalid Gear Value' error </summary>
     static std::array<std::pair<int, int>, 10> emptyUnits(){
         std::array<std::pair<int,int>, 10> units;

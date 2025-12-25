@@ -1,7 +1,5 @@
 #pragma once
 #include "UnitEnums.h"
-#include "Unit.h"
-#include <iostream>
 
 struct UnitRecord {
 	int laneCount = 0;
@@ -17,7 +15,7 @@ struct UnitRecord {
 	int deathsByCannons = 0;
 
 	UnitRecord() = default;
-	UnitRecord(int lanes) : laneCount(lanes) {
+	explicit UnitRecord(int lanes) : laneCount(lanes) {
 		deaths.reserve(laneCount);
 		unitsSpawned.reserve(laneCount);
 		deaths.assign(laneCount, 0);
@@ -35,12 +33,14 @@ struct UnitRecord {
 	inline void add_death(int lane, DeathCause causeOfDeath) {
 		deaths[lane]++;
 		totalDeaths++;
+
 		switch (causeOfDeath) {
 		case DeathCause::UNIT: deathsByUnits++; break;
 		case DeathCause::SURGE: deathsBySurges++; break;
 		case DeathCause::FALLING: deathsByFalling++; break;
 		case DeathCause::TRAP: deathsByTraps++; break;
 		case DeathCause::CANNON: deathsByCannons++; break;
+		case DeathCause::NONE: assert(false && "Unit died yet has no cause of death"); break;
 		}
 	}
 	inline void add_spawn(int lane) {
@@ -52,8 +52,8 @@ struct UnitRecord {
 struct StageRecord
 {
 	// :( = Likely wont be used for a challange
-	UnitRecord enemyRecorder;
-	UnitRecord playerRecorder;
+	mutable UnitRecord enemyRecorder;
+	mutable UnitRecord playerRecorder;
 
 	int partsEarned = 0;
 	int partsSpent = 0;
@@ -66,7 +66,7 @@ struct StageRecord
 		playerRecorder.set_new_lane_count(laneCount);
 		enemyRecorder.set_new_lane_count(laneCount);
 	}
-	inline void add_death(int team, int lane, DeathCause causeOfDeath) { 
+	inline void add_death(int team, int lane, DeathCause causeOfDeath) const { 
 		get_unit_record(team).add_death(lane, causeOfDeath);
 	}
 	inline void add_spawn(int team, int lane) {
@@ -79,7 +79,7 @@ struct StageRecord
 	inline const UnitRecord& get_const_unit_record(int team) const {
 		return team == 1 ? playerRecorder : enemyRecorder;
 	}
-	inline UnitRecord& get_unit_record(int team) {
+	UnitRecord& get_unit_record(int team) const {
 		return team == 1 ? playerRecorder : enemyRecorder;
 	}
 };

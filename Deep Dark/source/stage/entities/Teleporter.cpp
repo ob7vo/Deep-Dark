@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Teleporter.h"
 #include "Stage.h"
+#include "EntityTextures.h"
 
 Teleporter::Teleporter(const nlohmann::json& tpJson, sf::Vector2f pos, int lane) :
 	StageEntity(pos, lane) {
@@ -9,10 +10,11 @@ Teleporter::Teleporter(const nlohmann::json& tpJson, sf::Vector2f pos, int lane)
 	xDestination = tpJson["x_destination"];
 
 	create_animation();
+	bounds = { pos - animPlayer.clip->origin, TELEPORTER_HITBOX };
 }
 
 void Teleporter::tick(Stage& stage, float dt) {
-	anim.update(dt, sprite);
+	animPlayer.update(dt, sprite);
 	action(stage);
 }
 void Teleporter::check_units(std::vector<Unit>& units) const {
@@ -36,11 +38,11 @@ void Teleporter::create_animation() {
 	int frames = 6;
 	float rate = 0.15f;
 
-	anim = Animation(path, frames, rate, cellSize, origin, {}, true);
-	anim.reset(sprite);
+	animClip = AnimationClip(&Textures::Entity::t_teleporter, frames, rate, cellSize, origin, {}, true);
+	animPlayer.start(&animClip, sprite);
 }
 void Teleporter::draw(sf::RenderWindow& window) const {
-	sf::RectangleShape hitbox({ TELEPORTER_AREA, TELEPORTER_AREA });
+	sf::RectangleShape hitbox(TELEPORTER_HITBOX);
 
 	hitbox.setPosition(pos);
 	hitbox.setFillColor(HITBOX_COLOR);
@@ -54,6 +56,6 @@ bool Teleporter::found_valid_target(const Unit& unit) const{
 	auto animState = static_cast<int>(unit.anim.get_state());
 	bool validAnimation = animState >= 0 && animState <= 5;
 	
-	return within_range(unit.get_pos()) && !unit.stats->ancient_type() &&
+	return collides(bounds, unit) && !unit.stats->ancient_type() &&
 		validAnimation;
 }

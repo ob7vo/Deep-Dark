@@ -1,15 +1,17 @@
 #pragma once
 #include "StageEntity.h"
+#include <json_fwd.hpp>
 
-const float TELEPORTER_AREA = 32.f;
-const float TELEPORTER_HEIGHT = 32.f;
-
+constexpr sf::Vector2f TELEPORTER_HITBOX = { 32.f, 32.f };
 class Unit;
 
 struct Teleporter : public StageEntity{
 	float xDestination = 0;
 	int team = 0;
 	int connectedLane = 0;
+	sf::FloatRect bounds;
+
+	AnimationClip animClip;
 
 	Teleporter(const nlohmann::json& tpJson, sf::Vector2f pos, int lane);
 	~Teleporter() override = default;
@@ -21,10 +23,5 @@ struct Teleporter : public StageEntity{
 	bool found_valid_target(const Unit& unit) const;
 
 	void draw(sf::RenderWindow& window) const;
-
-	inline bool within_range(sf::Vector2f unitPos) const{
-		return (unitPos.x >= pos.x - TELEPORTER_AREA && unitPos.x <= pos.x + TELEPORTER_AREA) &&
-			(unitPos.y <= pos.y + TELEPORTER_HEIGHT && unitPos.y >= pos.y - TELEPORTER_HEIGHT);
-	}
 };
 

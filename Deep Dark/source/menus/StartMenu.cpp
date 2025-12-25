@@ -2,7 +2,9 @@
 #include "StartMenu.h"
 #include "Camera.h"
 #include "UILayout.h"
+#include "UITextures.h"
 
+using namespace Textures::UI;
 using namespace UI::StartMenu;
 
 StartMenu::StartMenu(Camera& cam) : Menu(cam) {
@@ -12,9 +14,9 @@ StartMenu::StartMenu(Camera& cam) : Menu(cam) {
 	settingsBtn().onClick = [this](bool m1) { if (m1) open_settings(); };
 	quitBtn().onClick = [this](bool m1) { if (m1) quit_game(); };
 
-	startBtn().setup(START_BTN_POS, START_BTN_SIZE, cam, TextureManager::t_startGameBtn);
-	settingsBtn().setup(SETTINGS_BTN_POS, SETTINGS_BTN_SIZE, cam, TextureManager::t_settingsBtn);
-	quitBtn().setup(QUIT_BTN_POS, QUIT_BTN_SIZE, cam, TextureManager::t_quitBtn);
+	startBtn().setup(START_BTN_POS, START_BTN_SIZE, cam, t_startGameBtn);
+	settingsBtn().setup(SETTINGS_BTN_POS, SETTINGS_BTN_SIZE, cam, t_settingsBtn);
+	quitBtn().setup(QUIT_BTN_POS, QUIT_BTN_SIZE, cam, t_quitBtn);
 }
 void StartMenu::reset_positions() {
 	startText.setPosition(cam.norm_to_pixels(START_TEXT_POS));

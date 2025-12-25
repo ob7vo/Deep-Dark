@@ -2,7 +2,8 @@
 class Unit;
 struct Stage;
 
-enum class RequestType {
+
+enum class UnitMoveRequestType {
 	NOT_DONE = -2,
 	NONE = -1,
 	KNOCKBACK = 0,
@@ -15,24 +16,25 @@ enum class RequestType {
 	PHASE,
 	TELEPORT,
 };
+
 /// <summary>
 /// Needed to move Units between vectors (Lanes), and can ONLY be called
 /// for that purpose, not just any plain old movement.
 /// </summary>
-struct MoveRequest {
+struct UnitMoveRequest {
 	int unitId;
 	int currentLane;
 	int newLane;
 	int team;
 	float axisPos;
-	RequestType type;
+	UnitMoveRequestType type;
 
-	MoveRequest(const Unit& unit, int newLane, float axisPos, RequestType type);
+	UnitMoveRequest(const Unit& unit, int newLane, float axisPos, UnitMoveRequestType type);
 
 	void move_unit_by_request(Unit& unit, Stage& stage) const;
-	inline bool fall_request() const { return type == RequestType::FALL; }
-	inline bool teleport_request() const { return type == RequestType::TELEPORT; }
-	inline bool squash_request() const { return type == RequestType::SQUASH; }
-	inline bool jump_request() const { return type == RequestType::JUMP; }
-	inline bool	launch_request() const { return type == RequestType::LAUNCH; }
+	inline bool fall_request() const { return type == UnitMoveRequestType::FALL; }
+	inline bool teleport_request() const { return type == UnitMoveRequestType::TELEPORT; }
+	inline bool squash_request() const { return type == UnitMoveRequestType::SQUASH; }
+	inline bool jump_request() const { return type == UnitMoveRequestType::JUMP; }
+	inline bool	launch_request() const { return type == UnitMoveRequestType::LAUNCH; }
 };

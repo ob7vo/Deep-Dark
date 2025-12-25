@@ -33,16 +33,16 @@ sf::VertexArray Camera::create_dark_overlay(float left, float top, float width, 
 	float darkHeight = height * fill;
 
 	darkOverlay[0].position = { left, top + height - darkHeight };
-	darkOverlay[0].color = BLACK_TRANSPARENT;
+	darkOverlay[0].color = color;
 
 	darkOverlay[1].position = { left + width, top + height - darkHeight };
-	darkOverlay[1].color = BLACK_TRANSPARENT;
+	darkOverlay[1].color = color;
 
 	darkOverlay[2].position = { left, top + height };
-	darkOverlay[2].color = BLACK_TRANSPARENT;
+	darkOverlay[2].color = color;
 
 	darkOverlay[3].position = { left + width, top + height };
-	darkOverlay[3].color = BLACK_TRANSPARENT;
+	darkOverlay[3].color = color;
 
 	return darkOverlay;
 }
@@ -123,12 +123,8 @@ void Camera::handle_events(sf::Event event) {
 		on_mouse_released(*release);
 	else if (auto scroll = event.getIf<sf::Event::MouseWheelScrolled>()) 
 		zoom(*scroll);
-	else if (auto key = event.getIf<sf::Event::KeyPressed>()) {
-		move(key->code);
-		zoom(key->code);
-	}
 }
-#pragma Events
+
 void Camera::on_mouse_press(sf::Event::MouseButtonPressed click) {
 	cursor.lastClickTime = 0.f;
 
@@ -175,7 +171,6 @@ void Camera::zoom(sf::Event::MouseWheelScrolled scroll) {
 	worldView.setSize(newSize);
 	update_pos(newPos);
 }
-#pragma endregion
 
 // Moving
 void Camera::update_pos(sf::Vector2f newPos) {
@@ -272,7 +267,7 @@ bool Camera::setup_sprite(sf::Vector2f uiPos, sf::Vector2f normScale, sf::Sprite
 	return isUI;
 }
 
-void Camera::set_cursor_ui(sf::Texture& uiTex, sf::Vector2f normOrigin, float opacity, sf::Vector2f normScale) {
+void Camera::set_cursor_ui(const sf::Texture& uiTex, sf::Vector2f normOrigin, float opacity, sf::Vector2f normScale) {
 	cursor.UITexture = uiTex;
 	cursor.ui.setTexture(cursor.UITexture, true);
 

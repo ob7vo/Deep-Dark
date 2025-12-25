@@ -39,38 +39,48 @@
   "animations": {
     "move": {
       "cell_size": [ 162, 162 ],
-      "origin": [100, 100],
+      "origin": [ 100, 100 ],
       "frames": 8,
       "fps": 8
     },
     "idle": {
       "cell_size": [ 162, 162 ],
-      "origin": [124, 100],
+      "origin": [ 124, 100 ],
       "frames": 10,
       "fps": 5
     },
     "knockback": {
       "cell_size": [ 162, 162 ],
-      "origin": [124, 100],
+      "origin": [ 124, 100 ],
       "frames": 3
     },
     "attack": {
       "cell_size": [ 162, 162 ],
-      "origin": [124, 100],
-      "attack_frames": [ 5, 10, 19 ],
+      "origin": [ 124, 100 ],
+      "events": [
+        [ "attack", 5 ],
+        [ "attack", 10 ],
+        [ "attack", 19 ]
+      ],
       "frames": 21,
       "fps": 7
     },
     "falling": {
       "cell_size": [ 162, 162 ],
-      "origin": [124, 100],
+      "origin": [ 124, 100 ],
       "frames": 3
     },
     "jump": {
       "cell_size": [ 162, 162 ],
-      "origin": [124, 100],
+      "origin": [ 124, 100 ],
       "frames": 3,
       "fps": 3
+    },
+    "death": {
+      "cell_size": [ 48, 48 ],
+      "origin": [ 24, 48 ],
+      "frames": 8,
+      "duration": 1.5
     }
   },
   "augments": [
@@ -90,7 +100,7 @@
   ],
   "types": [ "typeless" ],
   "target_types": [ "all" ],
-  "quick_augment_masks": [ "code_breaker", "heavyweight", "bully" ],
+  "augments_mask": [ "code_breaker", "heavyweight", "bully" ],
   "cores": [
     ["maxHp_*_2.5", "hit2_=_200","speed_+_30"]
   ]

@@ -1,12 +1,13 @@
 #include "pch.h"
 #include "StageSetMenu.h"
 #include "Camera.h"
-#include "Animation.h"
+#include "UITextures.h"
 
+using namespace Textures::UI;
 using namespace UI::StageSet;
 
 StageSetMenu::StageSetMenu(Camera& cam) : Menu(cam) {
-	backgroundSprite.setTexture(TextureManager::t_menuBG1);
+	backgroundSprite.setTexture(t_menuBG1);
 	backgroundSprite.setScale(cam.get_norm_sprite_scale(backgroundSprite, BACKGROUND_SIZE));
 
 	startStageSetText.setString("beebee next stage");
@@ -17,11 +18,11 @@ StageSetMenu::StageSetMenu(Camera& cam) : Menu(cam) {
 		usedUnitsSlotSprites[i].setScale(scale);
 	}
 
-	startStageBtn().setup(START_BTN_POS, START_BTN_SIZE, cam, TextureManager::t_startBtn);
-	exitStageBtn().setup(EXIT_BTN_POS, ENEMY_UNITS_SIZE, cam, TextureManager::t_returnBtn);
-	closeBtn().setup(CLOSE_MENU_BTN_POS, CLOSE_MENU_BTN_SIZE, cam, TextureManager::t_closeBtn);
+	startStageBtn().setup(START_BTN_POS, START_BTN_SIZE, cam, t_startBtn);
+	exitStageBtn().setup(EXIT_BTN_POS, ENEMY_UNITS_SIZE, cam, t_returnBtn);
+	closeBtn().setup(CLOSE_MENU_BTN_POS, CLOSE_MENU_BTN_SIZE, cam, t_closeBtn);
 }
-void StageSetMenu::setup_menu(int stage, int set, const std::array<std::pair<int, int>, 10>& units) {
+void StageSetMenu::setup_menu(int stage, int set, const std::array<std::pair<int, int>, 10>& newUsedUnits) {
 	reset_sprites();
 
 	stageId = stage;
@@ -35,9 +36,14 @@ void StageSetMenu::setup_menu(int stage, int set, const std::array<std::pair<int
 	// The positions of the Slot Sprites are already set in reset_positions()
 	// Just set the Textures to the slots of the Units used in the last Stage Set (which if none, if entering from StageSelectMenu)
 	for (int i = 0; i < 10; i++) {
-		const auto [id, gear] = units[i];
-		usedUnitsSlotSprites[i].setTexture(TextureManager::getUnitSlot(id, gear), true);
+		const auto [id, gear] = newUsedUnits[i];
+
+		usedUnitsSlotSprites[i].setTexture(getUnitSlot(id, gear), true);
+		usedUnits[id] = true;
 	}
+
+	// Will reset restrictions that check if there are any to add
+	RestrictionParser::apply_unit_restrictions(unitRestrictions, stageSetJson);
 }
 void StageSetMenu::create_enemy_sprites(const nlohmann::json& stageSetJson) {
 	// There can be multiple spawners for the same enemy type
@@ -55,22 +61,23 @@ void StageSetMenu::create_enemy_sprites(const nlohmann::json& stageSetJson) {
 	enemyUnitTextures.reserve(uniqueEnemyCount);
 	enemyUnitSprites.reserve(uniqueEnemyCount);
 
+	// Creating the enemy Sprits
 	for (const auto& enemy : stageSetJson["enemy_spawns"]) {
 		int id = enemy["unit_id"].get<int>();
+		int gear = enemy.value("unit_gear", 1);
 
-		// Enmemy ids start from 100, so subtract 100 to properly index them
-		if (includedEnemies[id - 100]) continue;
-		includedEnemies[id - 100] = true;
+		if (includedEnemies[id - UnitData::ENEMY_ID_OFFSET]) continue;
+		includedEnemies[id - UnitData::ENEMY_ID_OFFSET] = true;
 
 		sf::Texture& unitTexture = enemyUnitTextures.emplace_back();
 
 		// Get and use the json for the Enemys Idle Sprite Sheet
 		// The Sprites will be of the enemy's first Idle  frame 
-		const nlohmann::json idleAnimConfig = UnitData::createUnitJson(id)["animations"]["idle"];
-		std::string idleAnimPath = UnitData::get_unit_folder_path(id) + "idle.png";
+		const nlohmann::json idleAnimConfig = UnitData::createUnitJson(id, gear)["animations"]["idle"];
+		std::string idleAnimPath = UnitData::getUnitGearPath(id, gear) + "idle.png";
 		sf::Vector2i cellSize = { idleAnimConfig["cell_size"][0], idleAnimConfig["cell_size"][1] };
 
-		if (!unitTexture.loadFromFile(idleAnimPath)) std::cout << "FUCK: " << id << std::endl;
+		Textures::loadTexture(unitTexture, idleAnimPath);
 
 		sf::Sprite& enemySprite = enemyUnitSprites.emplace_back(unitTexture);
 		enemySprite.setTextureRect({ {0, 0}, cellSize });
@@ -78,6 +85,7 @@ void StageSetMenu::create_enemy_sprites(const nlohmann::json& stageSetJson) {
 		enemySprite.setScale(cam.get_norm_sprite_scale(enemySprite, ENEMY_UNITS_SIZE));
 	}
 
+	// Moving the enemy sprites into place
 	sf::Vector2f center = cam.norm_to_pixels(ENEMY_UNITS_CENTER);
 	sf::Vector2f spacing = cam.norm_to_pixels(ENEMY_UNITS_SPACING); // y == 0
 	sf::Vector2f left = { center.x - (spacing.x * ((float)uniqueEnemyCount - 1.f) * 0.5f), center.y};
@@ -114,14 +122,14 @@ void StageSetMenu::reset_sprites() {
 	enemyUnitTextures = {};
 	enemyUnitSprites = {};
 
-	for (int i = 0; i < 10; i++) usedUnitsSlotSprites[i].setTexture(TextureManager::t_defaultUnitSlot);
+	for (int i = 0; i < 10; i++) usedUnitsSlotSprites[i].setTexture(t_defaultUnitSlot);
 }
 void StageSetMenu::full_reset() {
 	stageId = 0;
 	stageSet = 0;
 
 	usedUnits.reset();
-	unitViolatesCondition.reset();
+	unitRestrictions.reset();
 
 	reset_sprites();
 }
@@ -136,4 +144,15 @@ void StageSetMenu::draw() {
 	// Drawing Units
 	for (int i = 0; i < 10; i++) cam.queue_ui_draw(&usedUnitsSlotSprites[i]);
 	for (auto& enemy : enemyUnitSprites) cam.queue_ui_draw(&enemy);
+}
+
+
+// Static Methods
+std::array<sf::Sprite, 10> StageSetMenu::make_unitSlotSprites() {
+	const sf::Texture& tex = t_defaultUnitSlot;
+	return {
+		sf::Sprite(tex), sf::Sprite(tex),sf::Sprite(tex),sf::Sprite(tex),
+		sf::Sprite(tex),sf::Sprite(tex),sf::Sprite(tex),sf::Sprite(tex),
+		sf::Sprite(tex),sf::Sprite(tex)
+	};
 }

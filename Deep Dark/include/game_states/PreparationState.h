@@ -3,9 +3,9 @@
 #include "StageSelect.h"
 #include "ArmoryMenu.h"
 #include "WorkshopMenu.h"
-#include "StageSetMenu.h"
+
 struct PrepEnterData;
-struct StageSetEnterData;
+struct StageSetPrepEnterData;
 
 class PreparationState : public GameState {
 private:
@@ -19,7 +19,7 @@ private:
 public:
 
 	explicit PreparationState(Camera& cam);
-	~PreparationState() = default;
+	~PreparationState() override = default;
 	void setup_button_functions();
 
 	void update(float deltaTime) override;
@@ -30,7 +30,7 @@ public:
 	void start_stage_set(int stage, int set);
 	
 	/// <summary> Spefically when clearing a stage and moving onto the next phase </summary>
-	void enter_from_stage_set_completion(const StageSetEnterData* setEnterData); 
+	void enter_from_stage_set_completion(const StageSetPrepEnterData* setEnterData);
 	/// <summary> Generic entry into Prep Phase </summary>
 	void enter_from_transition(const PrepEnterData* prepData);
 
@@ -51,12 +51,11 @@ struct PrepEnterData : public OnStateEnterData {
 	PrepEnterData(MenuType cur, MenuType prev) : OnStateEnterData(GameState::Type::PREP), 
 		prevMenuType(prev), newMenuType(cur) { }
 };
-struct StageSetEnterData : public OnStateEnterData {
+struct StageSetPrepEnterData : public OnStateEnterData {
 	std::vector<int> usedUnitIDs;
 	int stageId;
 	int nextStageSet;
 
-	StageSetEnterData(const std::vector<int>& ids, int id, int set) : OnStateEnterData(GameState::Type::PREP),
-		usedUnitIDs(ids), stageId(id), nextStageSet(set) {
-	}
+	StageSetPrepEnterData(const std::vector<int>& ids, int id, int set) : OnStateEnterData(GameState::Type::PREP),
+		usedUnitIDs(ids), stageId(id), nextStageSet(set) {}
 };

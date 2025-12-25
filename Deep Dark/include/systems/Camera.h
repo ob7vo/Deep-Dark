@@ -73,7 +73,7 @@ public:
 	bool within_camera(sf::FloatRect rect) const;
 
 	void change_lock(bool lock);
-	void set_cursor_ui(sf::Texture& uiTex, sf::Vector2f normOrigin, float opacity, sf::Vector2f normScale);
+	void set_cursor_ui(const sf::Texture& uiTex, sf::Vector2f normOrigin, float opacity, sf::Vector2f normScale);
 
 	sf::Vector2f norm_to_pixels(sf::Vector2f norm) const;
 	sf::Vector2f norm_to_pixels_size(sf::Vector2f norm) const;

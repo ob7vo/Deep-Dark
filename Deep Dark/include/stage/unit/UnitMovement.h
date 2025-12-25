@@ -7,11 +7,14 @@ class Unit;
 struct Teleporter;
 
 struct UnitMovement {
+private:
+	UnitTween tween;
+public:
 	int currentLane = 0;
 	sf::Vector2f pos;
-	UnitTween tween;
 
 	UnitMovement(sf::Vector2f pos, int lane);
+	~UnitMovement() = default;
 
 	void knockback(Unit& unit, float force = 1.f);
 	void squash(Unit& unit, float newY);
@@ -31,8 +34,8 @@ struct UnitMovement {
 
 	void finish_launch_tween(const Stage* stage);
 	void create_tween(sf::Vector2f endPos, float time,
-		RequestType tweenType, bool overwrite = true);
-	RequestType update_tween(float deltaTime);
+		UnitMoveRequestType tweenType, bool overwrite = true);
+	UnitMoveRequestType update_tween(float deltaTime);
 
 	inline void cancel_tween() { tween.active = false; };
 	inline bool tweening() const { return tween.active; }

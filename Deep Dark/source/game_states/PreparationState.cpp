@@ -40,11 +40,11 @@ void PreparationState::setup_button_functions() {
 		}
 		};
 
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < UnitData::TOTAL_PLAYER_UNITS; i++) {
 		armoryMenu.unitSelectionBtn(i).onClick = [i, this](bool isM1) {
 			if (isM1) armoryMenu.start_dragging_unit(i);
 			else {
-				workshopMenu.setup_workshop_unit(i, armoryMenu.unitSelectionGears[i]);
+				workshopMenu.setup_workshop_unit(i, armoryMenu.displayedGears[i]);
 				switch_menu(MenuType::WORKSHOP_MENU);
 			}
 			};
@@ -54,7 +54,7 @@ void PreparationState::setup_button_functions() {
 	workshopMenu.return_btn().onClick = [this](bool m1) {
 		if (m1) {
 			switch_menu(prevMenuType);
-			armoryMenu.update_selection_slot(workshopMenu.unitId, workshopMenu.unitGear);
+			armoryMenu.change_displayed_gear(workshopMenu.unitId, workshopMenu.unitGear);
 		}
 		};
 }
@@ -109,21 +109,21 @@ void PreparationState::start_stage_set(int stage, int set) {
 		return;
 	}
 
-	nextStateEnterData = std::make_unique<StageEnterData>(jsonPath, set, armoryMenu);
+	nextStateEnterData = std::make_unique<StageEnterData>(jsonPath, set, armoryMenu.slots);
 	readyToEndState = true;
 	std::cout << "starting stage #" << stage << std::endl;
 }
 void PreparationState::on_enter(OnStateEnterData* enterData) {
 	if (auto prepData = dynamic_cast<PrepEnterData*>(enterData))
 		enter_from_transition(prepData);
-	else if (auto setData = dynamic_cast<StageSetEnterData*>(enterData))
+	else if (auto setData = dynamic_cast<StageSetPrepEnterData*>(enterData))
 		enter_from_stage_set_completion(setData);
 	else {
 		std::cout << "Enter Data is not Prep Data" << std::endl;
 		return;
 	}
 }
-void PreparationState::enter_from_stage_set_completion(const StageSetEnterData* setEnterData) {
+void PreparationState::enter_from_stage_set_completion(const StageSetPrepEnterData* setEnterData) {
 	curMenuType = prevMenuType = MenuType::ARMORY_EQUIP;
 }
 void PreparationState::enter_from_transition(const PrepEnterData* prepData) {
@@ -131,6 +131,7 @@ void PreparationState::enter_from_transition(const PrepEnterData* prepData) {
 	prevMenuType = prepData->prevMenuType;
 
 	armoryMenu.inStageMode = false;
+	armoryMenu.stageSetMenu.full_reset();
 
 	menu = get_menu();
 }

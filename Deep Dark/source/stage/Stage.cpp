@@ -13,7 +13,7 @@ using json = nlohmann::json;
 Stage::Stage(const json& stageSetJson, StageRecord* rec) : recorder(rec),
 	enemyBase(stageSetJson["enemy_base"], -1), playerBase(stageSetJson["player_base"], 1)
 {
-	laneCount = stageSetJson["lane_count"];
+	laneCount = (int)stageSetJson["lanes"].size();
 	lanes.reserve(laneCount);
 	surges.reserve(MAX_SURGES);
 	projectiles.reserve(MAX_PROJECTILES);
@@ -25,43 +25,88 @@ Stage::Stage(const json& stageSetJson, StageRecord* rec) : recorder(rec),
 		return a.yPos > b.yPos;
 	});
 
-	if (stageSetJson.contains("teleporters")) 
+	if (stageSetJson.contains("teleporters")) {
 		for (auto& tp : stageSetJson["teleporters"]) {
 			int lane = tp["lane"];
 			sf::Vector2f tpPos = { tp["x_position"], lanes[lane].yPos };
 
 			teleporters.emplace_back(tp, tpPos, lane);
 		}
-	
+	}
 
-	if (stageSetJson.contains("traps")) 
+	if (stageSetJson.contains("traps")) {
 		for (auto& trap : stageSetJson["traps"]) {
 			int lane = trap["lane"];
 			sf::Vector2f trapPos = { trap["x_position"], lanes[lane].yPos };
 
 			traps.emplace_back(trap, trapPos, lane);
 		}
+	}
 	
-	for (auto& spawnData : stageSetJson["enemy_spawns"]) 
-		enemySpawners.emplace_back(spawnData, *this);
-	
+	if (!stageSetJson.contains("enemy_spawns")) {
+		std::cout << "For testing purposes, no enemy spawns are active for this set." << std::endl;
+		return;
+	}
 
+	
+	enemySpawners.reserve(stageSetJson["enemy_spawns"].size());
+	for (auto& spawnData : stageSetJson["enemy_spawns"]) {
+		enemySpawners.emplace_back(spawnData);
+	}
+	// Creat Unit Data after full vector construction to avoid
+	// dangling pointers for the UnitAniMap
+	for (size_t i = 0; i < enemySpawners.size(); i++) {
+		enemySpawners[i].create_unit_data(stageSetJson["enemy_spawns"][i]);
+
+		for (const auto& aug : enemySpawners[i].enemyStats.augments)
+			if (has(aug.augType & AugmentType::PROJECTILE))
+				projConfigMap[aug.intValue] = ProjectileConfig(aug.intValue, enemySpawners[i].unitMagnification);
+	}
+
+	
 	break_spawner_thresholds();
+	std::cout << "Finished Constructing Stage" << std::endl;
 }
-MoveRequest::MoveRequest(const Unit& unit, int newLane, float axisPos, RequestType type) :
-unitId(unit.id), currentLane(unit.get_lane()), newLane(newLane), team(unit.stats->team),
-axisPos(axisPos), type(type) {}
+UnitMoveRequest::UnitMoveRequest(const Unit& unit, int newLane, float axisPos, UnitMoveRequestType type) :
+	unitId(unit.id),
+	currentLane(unit.get_lane()),
+	newLane(newLane),
+	team(unit.stats->team),
+	axisPos(axisPos),
+	type(type) 
+	{}
 
 void Stage::break_spawner_thresholds() {
 	float percentage = enemyBase.get_hp_percentage();
 
+	std::cout << "break spawner thresholds" << std::endl;
 	for (auto& spawner : enemySpawners) {
+		// if the spawner is already active or cannot be activated, continue
 		if (spawner.currentSpawnIndex >= 0 || percentage > spawner.percentThreshold) continue;
 
 		spawner.currentSpawnIndex = 0;
-		spawner.nextSpawnTime -= (INACTIVE_SPAWNER - timeSinceStart);
+		spawner.nextSpawnTime = timeSinceStart + spawner.firstSpawnTime;
 	}
 }
+void Stage::destroy_base(int destroyedBaseTeam) {
+	victoriousTeam = -destroyedBaseTeam;
+
+	// Destory all of the losing team's units and their spawners
+	for (auto& lane : lanes) {
+		for (auto& unit : lane.getAllyUnits(destroyedBaseTeam))
+			unit.call_death_anim(DeathCause::BASE_WAS_DESTROYED);
+	}
+	std::erase_if(entities, [destroyedBaseTeam](const auto& entity) {
+		if (auto spawner = dynamic_cast<UnitSpawner*>(entity.get()))
+			return spawner->stats->team == destroyedBaseTeam;
+
+		return false;
+		});
+	std::erase_if(moveRequests, [destroyedBaseTeam](const auto& moveRequest) {
+		return moveRequest.team == destroyedBaseTeam;
+		});
+}
+
 Lane& Stage::get_closest_lane(float y) {
 	int closest = 0;
 	float minDist = abs(lanes[0].yPos - y);
@@ -77,18 +122,33 @@ Lane& Stage::get_closest_lane(float y) {
 	return lanes[closest];
 }
 
-// creation
+// Creating Units
+bool Stage::reached_unit_capacity(int team) {
+	size_t count = 0;
+	for (int i = 0; i < laneCount; i++) count += lanes[i].get_unit_count(team);
+
+	return count >= get_enemy_base(-team).maxUnits;
+}
+void Stage::lower_summons_count(int id) {
+	if (unitConfigMap.contains(id))
+		unitConfigMap[id]->count--;
+}
+
 Unit* Stage::create_unit(int laneIndex, const UnitStats* unitStats, UnitAniMap* aniMap) {
 	if (laneIndex < 0 || laneIndex >= lanes.size()) {
 		std::cout << "Lane Index " << laneIndex << " is out of range, cannot spawn Unit" << std::endl;
 		return nullptr;
 	}
+	else if (reached_unit_capacity(unitStats->team)) {
+		std::cout << "Cannot spawn Unit of team [" << unitStats->team << "], capcity was reached" << std::endl;
+		return nullptr;
+	}
 
 	nextUnitID++;
 	recorder->add_spawn(unitStats->team, laneIndex);
-	sf::Vector2f spawnPos = lanes[laneIndex].get_spawn_pos(unitStats->team);
 
-	auto& newVec = get_source_vector(laneIndex, unitStats->team);
+	sf::Vector2f spawnPos = lanes[laneIndex].get_spawn_pos(unitStats->team);
+	auto& newVec = lanes[laneIndex].getAllyUnits(unitStats->team);
 
 	return &newVec.emplace_back(this, spawnPos, laneIndex,
 		unitStats, aniMap, nextUnitID);
@@ -96,41 +156,58 @@ Unit* Stage::create_unit(int laneIndex, const UnitStats* unitStats, UnitAniMap* 
 void Stage::try_revive_unit(UnitSpawner* spawner) {
 	// if they dont have the clone ability, or have be inflicted with code breaker, return
 	Unit* newUnit = create_unit(spawner->laneInd, spawner->stats, spawner->aniMap);
+
 	if (newUnit) {
-		int maxHp = spawner->stats->maxHp;
-		auto newHp = (int)((float)maxHp * spawner->stats->get_augment(CLONE).value);
+		auto newHp = (int)((float)spawner->stats->maxHp * spawner->stats->get_augment(AugmentType::CLONE)->value);
+
 		newUnit->status.hp = newHp;
+		// Doing this will update the Units knockback index
+		newUnit->status.met_knockback_threshold(spawner->stats->maxHp, spawner->stats);
 
-		for (int i = 1; i <= spawner->stats->knockbacks; i++) {
-			int threshold = maxHp - (maxHp * i / spawner->stats->knockbacks);
-			if (newHp <= threshold)
-				newUnit->status.kbIndex = i + 1;
-		}
-		std::cout << "cloned unit, kbIndex (" << newUnit->status.kbIndex  <<
-			"/" << spawner->stats->knockbacks << ")" << std::endl;
-
-		newUnit->status.statusFlags |= CODE_BREAKER;
+		newUnit->status.statusFlags |= AugmentType::CODE_BREAKER; // Makes it so the unit can't revive again
 		newUnit->movement.pos = spawner->sprite.getPosition();
 		newUnit->anim.start(UnitAnimationState::MOVE);
 	}
 }
-void Stage::create_summon(const Unit& unit) {
-	Augment salvage = unit.stats->get_augment(SALVAGE);
-	int id = salvage.intValue;
+void Stage::transform_unit(const Unit& unit) {
+	float magnification = unit.stats->get_augment(AugmentType::TRANSFORM)->value;
+	
+	if (auto transformation = get_unit_config(unit.stats->id, magnification, UnitSpawnType::TRANSFORMATION)) {
+		Unit* transformedUnit = create_unit(unit.get_lane(), unit.stats, unit.anim.get_ani_map());
 
-	if (!can_summon(id, salvage.value2)) return;
-
-	float spawnRange = salvage.value;
-	float xPos = unit.get_pos().x;
-	float newX = Random::r_float(xPos - spawnRange, xPos + spawnRange);
-	sf::Vector2f newPos = { newX, unit.get_pos().y};
-
-	Unit* summon = create_unit(unit.get_lane(), &summonData->stats, &summonData->ani);
-	if (summon) {
-		summonData->count++;
-		summon->movement.pos = newPos;
-		summon->spawnCategory = SpawnCategory::SUMMON;
+		if (transformedUnit) {
+			transformedUnit->movement.pos = unit.get_pos();
+			transformedUnit->spawnCategory = UnitSpawnType::TRANSFORMATION;
+		}
 	}
+}
+void Stage::create_summon(const Unit& unit) {
+	const Augment& salvage = *unit.stats->get_augment(AugmentType::SALVAGE);
+
+	// value2 is the summon's magnification
+	if (auto summonData = get_unit_config(unit.stats->id, salvage.value2, UnitSpawnType::SUMMON)) {
+		float spawnRange = salvage.value;
+		float xPos = unit.get_pos().x;
+		float newX = Random::r_float(xPos - spawnRange, xPos + spawnRange);
+
+		Unit* summonedUnit = create_unit(unit.get_lane(), &summonData->stats, &summonData->ani);
+
+		if (summonedUnit) {
+			summonData->count++;
+			summonedUnit->movement.pos = { newX, unit.get_pos().y };
+			summonedUnit->spawnCategory = UnitSpawnType::SUMMON;
+		}
+	}
+}
+UnitConfig* Stage::get_unit_config(int id, float magnification, UnitSpawnType spawnType) {
+	if (unitConfigMap.contains(id))
+		return unitConfigMap[id]->count < MAX_SUMMONS ? unitConfigMap[id].get() : nullptr;
+
+	nlohmann::json unitJson = spawnType == UnitSpawnType::SUMMON ? UnitData::createSummonJson(id) 
+		 : UnitData::createUnitJson(id, 2);
+	unitConfigMap[id] = std::make_unique<UnitConfig>(unitJson, magnification);
+
+	return unitConfigMap[id] ? unitConfigMap[id].get() : nullptr;
 }
 
 Surge* Stage::create_surge(const Unit& unit, const Augment& surge) {
@@ -181,25 +258,26 @@ void Stage::create_projectile(const Unit& unit, const Augment& aug) {
 	}
 
 	int id = aug.intValue;
-	if (!projConfigs.contains(id)) projConfigs[id] = ProjectileConfig(id);
+	if (!projConfigMap.contains(id)) projConfigMap[id] = ProjectileConfig(id);
 
-	ProjectileConfig& config = projConfigs[id];
 	const nlohmann::json projJson = ProjData::get_proj_json(id);
-	Projectile& proj = projectiles.emplace_back(projConfigs[id]);
+	Projectile& proj = projectiles.emplace_back(projConfigMap[id]);
 
-	char pathingTypeChar = projJson["pathing"]["type"].get<std::string>()[0];
-	switch (pathingTypeChar) {
+	// The first character of pathing_type (string in json) decides the Projectile's PathingType
+	switch (projJson["pathing"]["type"].get<std::string>()[0]) {
 	case 'c': {
 		sf::Vector2f center = { unit.get_pos().x + (aug.value * (float)unit.stats->team), unit.get_pos().y};
 		float speed = projJson["pathing"]["speed"];
 		float radius = projJson["pathing"]["radius"];
 		float startingAngle = projJson["pathing"].value("angle", 0.f);
+
 		proj.pathing = std::make_unique<CirclePathing>(center, speed, radius, startingAngle);
 		break;
 	}
 	case 'p': {
 		sf::Vector2f velocity = { projJson["pathing"]["velocity"][0], projJson["pathing"]["velocity"][1] };
 		float mass = projJson["pathing"]["mass"];
+
 		proj.pathing = std::make_unique<ProjectilePathing>(unit.get_pos(), velocity, mass);
 		break;
 	}
@@ -216,7 +294,7 @@ void Stage::create_projectile(const Unit& unit, const Augment& aug) {
 		break;
 	}
 	default:
-		std::cout << "could not create projective. Char: " << pathingTypeChar << std::endl;
+		std::cout << "could not create projectile pathing. id: " << id << std::endl;
 		return;
 	}
 
@@ -235,7 +313,7 @@ void Stage::create_hitbox_visualizers(sf::Vector2f pos, std::pair<float, float> 
 	hitboxes.emplace_back(shape, HITBOX_TIMER );
 }
 
-std::pair<float, int> Stage::find_lane_to_fall_on(const Unit& unit) {
+std::pair<float, int> Stage::find_lane_to_fall_on(const Unit& unit) const {
 	float newY = FLOOR;
 
 	const auto& [leftHurtboxEdge, rightHurtboxEdge] = unit.getHurtboxEdges();
@@ -260,30 +338,21 @@ int Stage::find_lane_to_knock_to(const Unit& unit, int inc) const {
 
 	return unit.get_lane();
 }
-bool Stage::can_summon(int summonId, float magnification) {
-	if (summonData)
-		return summonData->count < MAX_SUMMONS ? true : false;
 
-	nlohmann::json unitJson = UnitData::createUnitJson(summonId);
-	summonData = std::make_unique<SummonData>(unitJson, magnification);
-
-	return summonData ? true : false;
-}
-
-void MoveRequest::move_unit_by_request(Unit& unit, Stage& stage) const{
+void UnitMoveRequest::move_unit_by_request(Unit& unit, Stage& stage) const {
 	unit.movement.currentLane = newLane;
 
 	switch (type) { 
-	case RequestType::FALL:
+	case UnitMoveRequestType::FALL:
 		unit.movement.fall(unit, axisPos);
 		break;
-	case RequestType::SQUASH:
+	case UnitMoveRequestType::SQUASH:
 		unit.movement.squash(unit, axisPos);
 		break;
-	case RequestType::JUMP:
+	case UnitMoveRequestType::JUMP:
 		unit.movement.jump(unit, axisPos);
 		break;
-	case RequestType::TELEPORT:
+	case UnitMoveRequestType::TELEPORT:
 		unit.movement.pos = { axisPos, stage.lanes[newLane].yPos };
 		break;
 	default:
@@ -291,4 +360,13 @@ void MoveRequest::move_unit_by_request(Unit& unit, Stage& stage) const{
 		break;
 	}
 }
+bool Stage::can_push_move_request(int id) {
+	auto it = std::find_if(moveRequests.begin(), moveRequests.end(),
+		[&](const UnitMoveRequest& req) { return req.unitId == id; });
 
+	return it == moveRequests.end();
+}
+void Stage::push_move_request(Unit& unit, int newLane, float fallTo, UnitMoveRequestType type) {
+	if (!can_push_move_request(unit.id)) return;
+	moveRequests.emplace_back(unit, newLane, fallTo, type);
+}
