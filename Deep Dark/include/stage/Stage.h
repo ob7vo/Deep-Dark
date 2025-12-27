@@ -41,7 +41,7 @@ struct Stage
 	int nextUnitID = 0;
 	// Lane Management
 	std::vector<Lane> lanes = {};
-	int selectedLane = 0;
+	int* selectedLane = 0;
 
 	std::vector<EnemySpawner> enemySpawners = {};
 	std::vector<UnitMoveRequest> moveRequests = {};

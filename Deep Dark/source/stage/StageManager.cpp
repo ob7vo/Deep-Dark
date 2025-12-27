@@ -36,9 +36,10 @@ void StageManager::create_stage(const json& stageJson, int stageSet) {
 	stageRecorder = StageRecord(lanes);
 	stage = Stage(stageSetJson, &stageRecorder);
 	wallet = {};
+	
+	stage.selectedLane = &selectedLane;
 
 	create_challenges(stageSetJson);
-	set_texts();
 }
 void StageManager::create_challenges(const json& stageSetJson) {
 	size_t challengeCount = stageSetJson["challenges"].size();
@@ -49,93 +50,11 @@ void StageManager::create_challenges(const json& stageSetJson) {
 		chal.pTarget = chal.get_target_ptr(*this);
 	}
 }
-void StageManager::set_texts() {
-	ui.partsCountText.setString(std::format("$0/{}", wallet.partsCap));
-	ui.bagUpgradeCostText.setString(std::format("${}", wallet.upgradeCost));
-	ui.clearedChallengesText.setString(
-		std::format("Challenges Cleared: 0/{}", challenges.size()));
-	ui.clearedChallengesText.setCharacterSize(16);
-	ui.clearedChallengesText.setFillColor(sf::Color::Yellow);
-}
 void StageManager::unload() {
 	challenges.clear();
 	stageRecorder = {};
 	stage = {};
 	wallet = {};
-}
-
-// Buttons
-void StageManager::upgrade_bag() {
-	wallet.curLevel++;
-
-	wallet.partsPerSecond = (int)std::round((float)wallet.partsPerSecond * 1.1f);
-	wallet.partsCap += (int)std::round((float)wallet.basePartsCap * 0.5f);
-	wallet.upgradeCost += (int)std::round((float)wallet.baseUpgradeCost * 0.25f);
-
-	ui.bagUpgradeCostText.setString(std::format("${}", wallet.upgradeCost));
-	ui.partsCountText.setString(std::format("#{}/{}", wallet.parts, wallet.partsCap));
-}
-void StageManager::pause() {
-	ui.paused = !ui.paused;
-	cam.change_lock(ui.paused);
-}
-
-// Reading Inputs
-bool StageManager::read_lane_switch_inputs(Key key) {
-	if (key == Key::Up) {
-		selectedLane = (selectedLane + 1) % stage.laneCount;
-		return true;
-	}
-	else if (key == Key::Down) {
-		selectedLane = (selectedLane - 1 + stage.laneCount) % stage.laneCount;
-		return true;
-	}
-
-	stage.selectedLane = selectedLane;
-	return false;
-}
-void StageManager::read_button_inputs(Key key) {
-	if (key == Key::F)
-		try_fire_cannon();
-	else if (key == Key::B && wallet.try_buy_upgrade_bag(stageRecorder))
-		upgrade_bag();
-}
-bool StageManager::read_spawn_inputs(Key key) {
-	for (int i = 0; i < loadout.filledSlots; i++) {
-		LoadoutSlot& slot = loadout.slots[i];
-
-		if ((key == numberKeys[i] || slot.autoDeploy) && slot.cooldown <= 0) {
-			selectedLane %= stage.laneCount;
-
-			if (!wallet.try_spend_parts(slot.unitStats.parts, stageRecorder)) return false;
-			slot.cooldown = slot.spawnTimer;
-
-			if (slot.unitStats.has_augment(AugmentType::DROP_BOX)) 
-				try_create_drop_box(selectedLane, &slot.unitStats, &slot.aniMap);
-			else
-				stage.create_unit(selectedLane, &slot.unitStats, &slot.aniMap);
-
-			return true;
-		}
-	}
-	return false;
-}
-void StageManager::handle_events(sf::Event event) {
-	// If the stage set has ended at all, don't read inputs
-	if (stage.victoriousTeam != 0) return;
-
-	if (auto keyEvent = event.getIf<sf::Event::KeyPressed>()) {
-		if (keyEvent->code == Key::Escape) {
-			pause();
-			return;
-		}
-
-		// The functions return bools to have early returns
-		if (paused()) return;
-		else if (read_spawn_inputs(keyEvent->code)) return;
-		else if (read_lane_switch_inputs(keyEvent->code)) return;
-		else read_button_inputs(keyEvent->code);
-	}
 }
 
 // Creating Entities
@@ -176,12 +95,6 @@ bool StageManager::try_create_cloner(const Unit& unit) {
 }
 
 // Parts
-void StageManager::collect_parts(const Unit& unit) {
-	int partsToGain = unit.stats->parts;
-	if (has(unit.status.statusFlags & AugmentType::PLUNDER)) partsToGain *= 2;
-
-	wallet.gain_parts(partsToGain, stageRecorder);
-}
 void StageManager::increment_parts_and_notify(float deltaTime) {
 	oneSecondTimer += deltaTime;
 
@@ -194,6 +107,64 @@ void StageManager::increment_parts_and_notify(float deltaTime) {
 }
 
 // Handling Unit Death
+void StageManager::handle_events(sf::Event event) {
+	// If the stage set has ended at all, don't read inputs
+	if (stage.victoriousTeam != 0) return;
+
+	if (auto keyEvent = event.getIf<sf::Event::KeyPressed>()) {
+		if (keyEvent->code == Key::Escape) {
+			ui.pause();
+			return;
+		}
+
+		// The functions return bools to have early returns
+		if (ui.paused) return;
+		else if (read_spawn_inputs(keyEvent->code)) return;
+		else if (read_lane_switch_inputs(keyEvent->code)) return;
+		else read_misc_button_inputs(keyEvent->code);
+	}
+}
+bool StageManager::read_lane_switch_inputs(Key key) {
+	if (key == Key::Up) {
+		selectedLane = (selectedLane + 1) % stage.laneCount;
+		return true;
+	}
+	else if (key == Key::Down) {
+		selectedLane = (selectedLane - 1 + stage.laneCount) % stage.laneCount;
+		return true;
+	}
+
+	return false;
+}
+void StageManager::read_misc_button_inputs(Key key) {
+	if (key == Key::F)
+		try_fire_cannon();
+	else if (key == Key::B && wallet.can_upgrade_bag(stageRecorder)) {
+		wallet.upgrade_bag();
+		ui.update_texts();
+	}
+}
+bool StageManager::read_spawn_inputs(Key key) {
+	for (int i = 0; i < loadout.filledSlots; i++) {
+		LoadoutSlot& slot = loadout.slots[i];
+
+		if ((key == numberKeys[i] || slot.autoDeploy) && slot.cooldown <= 0) {
+			selectedLane %= stage.laneCount;
+
+			if (!wallet.try_spend_parts(slot.unitStats.parts, stageRecorder)) return false;
+			slot.cooldown = slot.spawnTimer;
+
+			if (slot.unitStats.has_augment(AugmentType::DROP_BOX))
+				try_create_drop_box(selectedLane, &slot.unitStats, &slot.aniMap);
+			else
+				stage.create_unit(selectedLane, &slot.unitStats, &slot.aniMap);
+
+			return true;
+		}
+	}
+	return false;
+}
+
 void StageManager::handle_death_augment(const Unit& unit) {
 	if (has(unit.causeOfDeath, DeathCause::FALLING) ||
 		has(unit.causeOfDeath, DeathCause::BASE_WAS_DESTROYED))
@@ -205,7 +176,7 @@ void StageManager::handle_death_augment(const Unit& unit) {
 void StageManager::handle_enemy_unit_death(const Unit& unit) {
 	handle_death_augment(unit);
 
-	collect_parts(unit);
+	wallet.collect_parts_from_unit(unit, stageRecorder);
 }
 void StageManager::handle_player_unit_death(const Unit& unit) {
 	handle_death_augment(unit);
@@ -214,26 +185,19 @@ void StageManager::handle_player_unit_death(const Unit& unit) {
 // Creating Enemies
 void StageManager::spawn_enemies() {
 	for (size_t i = stage.enemySpawners.size(); i--;) {
-		auto& data = stage.enemySpawners[i];
+		auto& spawner = stage.enemySpawners[i];
 
-		if (data.can_force_spawn(stage.timeSinceStart)) {
-			stage.create_unit(data.forcedSpawnTimes[0].second, &data.enemyStats, &data.aniMap);
-			data.forcedSpawnTimes.erase(data.forcedSpawnTimes.begin());
+		if (spawner.can_force_spawn(stage.timeSinceStart)) {
+			spawner.forcefully_spawn_an_enemy(stage);
 		}
 
-		int curIndex = data.currentSpawnIndex;
 		// If there are no more units to spawn or the spawn is inactive (curIndex < 0)
-		if (curIndex >= data.totalSpawns || curIndex < 0) continue;
+		if (spawner.currentSpawnIndex >= spawner.totalSpawns || spawner.currentSpawnIndex < 0) 
+			continue;
 
 		// Spawn the Unit
-		if (stage.timeSinceStart > data.nextSpawnTime) {
-			data.nextSpawnTime += random_float(data.spawnDelays.first, data.spawnDelays.second);
-
-			int laneIndex = data.laneSpawnIndexes[curIndex];
-			stage.create_unit(laneIndex, &data.enemyStats, &data.aniMap);
-
-			if (++data.currentSpawnIndex >= data.totalSpawns && data.infinite)
-				data.currentSpawnIndex = 0;
+		if (stage.timeSinceStart > spawner.nextSpawnTime) {
+			spawner.spawn_an_enemy(stage);
 		}
 	}
 }
@@ -268,45 +232,15 @@ void StageManager::spawn_enemies() {
 // Move Requests
 void StageManager::process_all_move_requests() {
 	while (!stage.moveRequests.empty()) {
-		auto& moveRequest = stage.moveRequests.back();
+		const auto& moveRequest = stage.moveRequests.back();
 
-		if (auto index = find_unit_to_move(moveRequest))
-			process_move_request(moveRequest, *index);
+		if (auto unitIndex = moveRequest.find_unit_to_move(stage))
+			moveRequest.process(stage, *unitIndex);
 
 		stage.moveRequests.pop_back();
 	}
 }
-std::optional<size_t> StageManager::find_unit_to_move(const UnitMoveRequest& moveRequest) {
-	auto& from = stage.lanes[moveRequest.currentLane].getAllyUnits(moveRequest.team);
 
-	auto unit = std::find_if(from.begin(), from.end(),
-		[id = moveRequest.unitId](const Unit& u) { return u.id == id; });
-
-	if (unit == from.end()) {
-		std::cout << "Unit was not found in vector." << std::endl;
-		return std::nullopt;
-	}
-	else if (moveRequest.currentLane == moveRequest.newLane) {
-		std::cout << "MoveRequest moves Unit to the same lane." << std::endl;
-		return std::nullopt;
-	}
-
-	return std::distance(from.begin(), unit);
-}
-void StageManager::process_move_request(const UnitMoveRequest& moveRequest, size_t unitToMoveIndex)
-{
-	auto& from = stage.lanes[moveRequest.currentLane].getAllyUnits(moveRequest.team);
-	auto& unit = from[unitToMoveIndex];
-
-	unit.movement.cancel_tween();
-
-	auto& to = stage.lanes[moveRequest.newLane].getAllyUnits(moveRequest.team);
-	Unit& movedUnit = to.emplace_back(std::move(unit));
-
-	from.erase(from.begin() + unitToMoveIndex);
-
-	moveRequest.move_unit_by_request(movedUnit, stage);
-}
 
 // Updating GameObjects
 void StageManager::update_unit(float deltaTime) {
@@ -443,30 +377,8 @@ void StageManager::notify_challenges() {
 		if (challenge.cleared) clears++;
 	}
 
-	if (clears != clearedChallenges)
-		update_challenges_text(clears);
-}
-void StageManager::update_challenges_text(int clears) {
-	clearedChallenges = clears;
-
-	if (clearedChallenges == challenges.size())
-		ui.clearedChallengesText.setFillColor(sf::Color::Green);
-	else
-		ui.clearedChallengesText.setFillColor(sf::Color::Yellow);
-
-	ui.clearedChallengesText.setString(std::format("Challenges Cleared: {}/{}",
-		clearedChallenges, challenges.size()));
-}
-
-// Wallet
-bool StageWallet::try_spend_parts(int partsToSpend, StageRecord& rec) {
-	if (parts < partsToSpend) return false;
-
-	parts = std::max(parts - partsToSpend, 0);
-	rec.add_parts_spent(partsToSpend);
-	return true;
-}
-void StageWallet::gain_parts(int partsToGain, StageRecord& rec) {
-	parts = std::min(parts + partsToGain, partsCap);
-	rec.add_parts_earned(partsToGain);
+	if (clears != clearedChallenges) {
+		clearedChallenges = clears;
+		ui.update_texts();
+	}
 }

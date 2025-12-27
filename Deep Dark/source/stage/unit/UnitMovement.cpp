@@ -3,17 +3,7 @@
 #include "Unit.h"
 #include "Stage.h"
 
-const float KNOCKBACK_FORCE = 50.0f;
-const float KNOCKBACK_DURATION = 1.4f;
-const float FALL_DURATION = 1.25f;
-const float SQUASH_DURATION = 1.3f;
-const float LAUNCHING_DURATION = .65f;
-const float DROPPING_DURATION = .7f;
-const float LAUNCH_FORCE = 75.f;
-
-const float LEDGE_SNAP = 25.0f;
-const float JUMP_DURATION = 1.f;
-const float LEAP_DURATION = 0.7f;
+using namespace UnitData;
 
 UnitMovement::UnitMovement(sf::Vector2f pos, int lane) : currentLane(lane), pos(pos) {}
 
@@ -44,18 +34,20 @@ void UnitMovement::move(const Unit& unit, float deltaTime) {
 	float speed = unit.status.slowed() ? 0.1f : unit.stats->speed;
 	pos.x += speed * deltaTime * unit.get_dir();
 }
-void UnitMovement::knockback(Unit& unit, float force) {
-	if (unit.stats->has_augment(AugmentType::LIGHTWEIGHT)) force *= 1.5f;
-	if (unit.stats->has_augment(AugmentType::HEAVYWEIGHT)) force *= 0.7f;
+void UnitMovement::knockback(Unit& hitUnit, float force) {
+	if (hitUnit.stats->has_augment(AugmentType::LIGHTWEIGHT)) force *= LIGHTWEIGHT_KB_FORCE;
+	if (hitUnit.stats->has_augment(AugmentType::HEAVYWEIGHT)) force *= HEAVYWEIGHT_KB_FORCE;
 
-	float newX = pos.x - (KNOCKBACK_FORCE * force * unit.get_dir());
-	newX = unit.stage->clamp_within_lane(newX, currentLane);
+	float newX = pos.x - (KNOCKBACK_DISTANCE * force * hitUnit.get_dir());
+	newX = hitUnit.stage->clamp_within_lane(newX, currentLane);
 
-	sf::Vector2f newPos({ newX, unit.stage->lanes[currentLane].yPos });
+	sf::Vector2f newPos({ newX, hitUnit.stage->lanes[currentLane].yPos });
 
-	force = std::min(force, 1.2f);
-	create_tween(newPos, KNOCKBACK_DURATION * force, UnitMoveRequestType::KNOCKBACK);
-	unit.anim.start(UnitAnimationState::KNOCKBACK);
+	// The timer of knockback should change proportionally with the KB force
+	float timerMultiplier = std::clamp(force, MIN_KB_TIMER_MULTIPLIER, MAX_KB_TIMER_MULTIPLIER);
+
+	create_tween(newPos, KNOCKBACK_DURATION * timerMultiplier, UnitMoveRequestType::KNOCKBACK);
+	hitUnit.anim.start(UnitAnimationState::KNOCKBACK);
 }
 bool UnitMovement::try_leap(Unit& unit) {
 	float leapRange = unit.stats->get_augment(AugmentType::LEAP)->value;
@@ -94,9 +86,9 @@ void UnitMovement::squash(Unit& unit, float newY) {
 	unit.anim.start(UnitAnimationState::KNOCKBACK);
 }
 void UnitMovement::launch(Unit& unit, float newY) {
-	sf::Vector2f newPos({ pos.x, newY - LAUNCH_FORCE });
+	sf::Vector2f newPos({ pos.x, newY - LAUNCH_DISTANCE });
 
-	create_tween(newPos, LAUNCHING_DURATION, UnitMoveRequestType::LAUNCH);
+	create_tween(newPos, LAUNCH_DURATION, UnitMoveRequestType::LAUNCH);
 
 	unit.anim.start(UnitAnimationState::KNOCKBACK);
 }
@@ -205,6 +197,6 @@ void UnitMovement::finish_launch_tween(const Stage* stage) {
 	float laneYPos = stage->lanes[currentLane].yPos;
 	sf::Vector2f newPos = { pos.x, laneYPos };
 
-	create_tween(newPos, DROPPING_DURATION, UnitMoveRequestType::DROP_FROM_LAUNCH);	
+	create_tween(newPos, DROP_FROM_LAUNCH_DURATION, UnitMoveRequestType::DROP_FROM_LAUNCH);	
 }
 #pragma endregion

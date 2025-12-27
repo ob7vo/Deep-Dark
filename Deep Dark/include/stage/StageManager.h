@@ -33,15 +33,12 @@ struct StageManager
 
 	void create_stage(const nlohmann::json& stageSetJson, int stageSet = 0);
 	void create_challenges(const nlohmann::json& stageSetJson);
-	void set_texts();
 
 	void tick(float deltaTime);
 	void spawn_enemies();
 	void increment_parts_and_notify(float deltaTime);
 
 	void process_all_move_requests();
-	std::optional<size_t> find_unit_to_move(const UnitMoveRequest& moveRequest);
-	void process_move_request(const UnitMoveRequest& moveRequest, size_t unitToMoveIndex);
 
 	void update_unit(float deltaTime);
 	void update_entities(float deltaTime);
@@ -54,14 +51,12 @@ struct StageManager
 	void handle_events(sf::Event event);
 	bool read_lane_switch_inputs(Key key);
 	bool read_spawn_inputs(Key key);
-	void read_button_inputs(Key key);
-	void upgrade_bag();
-	void pause();
+	void read_misc_button_inputs(Key key);
 
 	bool try_spawn_death_surge(const Unit& unit);
 	bool try_create_drop_box(int lane, const UnitStats* stats, UnitAniMap* aniMap);
 	bool try_create_cloner(const Unit& unit);
-	void collect_parts(const Unit& unit);
+
 	void handle_death_augment(const Unit& unit);
 	void handle_enemy_unit_death(const Unit& unit);
 	void handle_player_unit_death(const Unit& unit);
@@ -69,7 +64,6 @@ struct StageManager
 	void notify_challenges();
 	void update_challenges_text(int clears);
 
-	inline bool paused() const { return ui.paused; }
 	inline bool try_fire_cannon() { return stage.playerBase.try_fire_cannon(); }
 	inline bool can_fire_cannon() const { return !stage.playerBase.on_cooldown(); }
 

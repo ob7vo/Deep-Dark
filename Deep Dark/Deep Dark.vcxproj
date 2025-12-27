@@ -163,6 +163,8 @@
     <ClCompile Include="source\stage\Loadout.cpp" />
     <ClCompile Include="source\stage\mechanics\Lane.cpp" />
     <ClCompile Include="source\stage\mechanics\StageRestrictions.cpp" />
+    <ClCompile Include="source\stage\mechanics\StageWallet.cpp" />
+    <ClCompile Include="source\stage\mechanics\UnitMoveRequest.cpp" />
     <ClCompile Include="source\stage\Stage.cpp" />
     <ClCompile Include="source\stage\entities\Surge.cpp" />
     <ClCompile Include="source\stage\entities\Trap.cpp" />
@@ -214,6 +216,7 @@
     <ClInclude Include="include\stage\mechanics\UnitMoveRequest.h" />
     <ClInclude Include="include\stage\unit\UnitDataConstants.h" />
     <ClInclude Include="include\utilities\CustomErrors.hpp" />
+    <ClInclude Include="include\utilities\EntityConfigs.h" />
     <ClInclude Include="include\utilities\json.hpp" />
     <ClInclude Include="include\stage\entities\StageEntity.h" />
     <ClInclude Include="include\stage\mechanics\StageWallet.h" />

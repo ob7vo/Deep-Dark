@@ -46,9 +46,9 @@ enum class AugmentType : size_t {
 	DROP_BOX = 1ULL << 31, // spawn at x% lane completion
 	WARP = 1ULL << 32, // x% chande to teleport struck enemies (*)
 	TERMINATE = 1ULL << 33, // Hit enemys with x% health remaining will die 
-	LIGHTWEIGHT = 1ULL << 34, // Gets knockedback 1.5x farther
-	HEAVYWEIGHT = 1ULL << 35, // Gets knockedback .7x farther (or SHORTER i guess, can't be launched
-	BULLY = 1ULL << 36, // Knocksback enemies 1.5x farther (*)
+	LIGHTWEIGHT = 1ULL << 34, // Recieved knockback force is 50% greater
+	HEAVYWEIGHT = 1ULL << 35, // Recieved knockback force is 30% less
+	BULLY = 1ULL << 36, // Unit will Knockback enemies 50% father (*)
 	SALVAGE = 1ULL << 37, // Killing an enemy will summon a Unit
 	TRANSFORM = 1ULL << 38, // When an enemy(boss) dies, they transoform into their next gear.
 	SELF_DESTRUCT = 1ULL << 39, // Units releases a damaging explosion after death

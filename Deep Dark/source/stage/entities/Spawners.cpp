@@ -2,10 +2,12 @@
 #include "Spawners.h"
 #include "Stage.h"
 #include "EntityTextures.h"
+#include "Utils.h"
 
 #pragma region Constructors
 EnemySpawner::EnemySpawner(const nlohmann::json& spawnerData) 
 	: unitMagnification(spawnerData["magnification"])
+	, spawnsABoss(spawnerData.value("is_a_boss", false))
 	, firstSpawnTime(spawnerData["first_spawn_time"])
 	, nextSpawnTime(INACTIVE_SPAWNER_TIMER)
 	, percentThreshold(spawnerData.value("percent_threshold", 101.0f))
@@ -34,6 +36,27 @@ SurgeSpawner::SurgeSpawner(const UnitStats* stats, const Augment& surge, sf::Vec
 	create_animation();
 }
 #pragma endregion
+
+void EnemySpawner::forcefully_spawn_an_enemy(Stage& stage) {
+	stage.create_unit(forcedSpawnTimes[0].second, &enemyStats, &aniMap);
+	forcedSpawnTimes.erase(forcedSpawnTimes.begin());
+}
+void EnemySpawner::spawn_an_enemy(Stage& stage) {
+	nextSpawnTime += Random::r_float(spawnDelays.first, spawnDelays.second);
+
+	stage.create_unit(laneSpawnIndexes[currentSpawnIndex], &enemyStats, &aniMap);
+
+	currentSpawnIndex++;
+	if (currentSpawnIndex >= totalSpawns && infinite)
+		currentSpawnIndex = 0;
+}
+void EnemySpawner::unleash_boss_shockwave(Stage& stage) const {
+	for (auto& lane : stage.lanes) {
+		for (auto& unit : lane.getOpponentUnits(ENEMY_TEAM))
+			if (!unit.anim.invincible())
+				unit.movement.knockback(unit, UnitData::BOSS_SHOCKWAVE_KB_FORCE);
+	}
+}
 
 void UnitSpawner::action(Stage& stage) {
 	if (stats->has_augment(AugmentType::CLONE)) stage.try_revive_unit(this);
