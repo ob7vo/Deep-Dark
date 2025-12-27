@@ -55,17 +55,22 @@ void Unit::try_knockback(int oldHp, int enemyHitIndex, const UnitStats* enemySta
 
 	if (status.met_knockback_threshold(oldHp, stats)) {
 		if (auto shield = stats->get_augment(AugmentType::SHIELD)) status.shieldHp = shield->intValue;
-		float force = enemyStats->has_augment(AugmentType::BULLY) ? 1.5f : 1;
 
-		if (enemyStats->has_augment(AugmentType::SQUASH))
+		// If the Enemy both has the Bully Augment and targets this Unit's
+		// typings, increase the force to 1.5f
+		float kbForce = enemyStats->has_augment(AugmentType::BULLY) && is_targeted(enemyStats->targetTypes) 
+			? UnitData::BULLY_KB_FORCE : UnitData::BASE_KB_FORCE;
+
+		if (enemyStats->has_augment(AugmentType::SQUASH)) {
 			movement.push_squash_request(*this);
-		else if (enemyStats->has_augment(AugmentType::LAUNCH))
+		}
+		else if (enemyStats->has_augment(AugmentType::LAUNCH)) {
 			movement.push_launch_request(*this);
-		else
-			movement.knockback(*this, force);
+		}
+		else movement.knockback(*this, kbForce);
 	}
 	else if (enemyStats->try_proc_augment(AugmentType::SHOVE, enemyHitIndex))
-		movement.knockback(*this, 0.5f);
+		movement.knockback(*this, UnitData::SHOVE_KB_FORCE);
 	else if (enemyStats->try_proc_augment(AugmentType::WARP, enemyHitIndex))
 		movement.warp(*this, enemyStats);
 }

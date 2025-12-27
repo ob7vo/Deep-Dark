@@ -39,7 +39,8 @@ struct EnemySpawner {
 	std::deque<sf::Texture> unitTextures;
 	UnitAniMap aniMap;
 
-	float unitMagnification;
+	float unitMagnification = 1.f;
+	bool spawnsABoss = false;
 
 	float firstSpawnTime = 0;
 	float nextSpawnTime = 10000.f;
@@ -63,6 +64,10 @@ struct EnemySpawner {
 
 	// Must only be called AFTER UnitStats is created in teh constructor
 	void create_unit_data(const nlohmann::json& spawnerData);
+
+	void forcefully_spawn_an_enemy(Stage& stage);
+	void spawn_an_enemy(Stage& stage);
+	void unleash_boss_shockwave(Stage& stage) const;
 
 	inline bool can_force_spawn(float time) { return !forcedSpawnTimes.empty() && time > forcedSpawnTimes[0].first; }
 };

@@ -2,6 +2,7 @@
 #include "Teleporter.h"
 #include "Stage.h"
 #include "EntityTextures.h"
+#include "EntityConfigs.h"
 
 Teleporter::Teleporter(const nlohmann::json& tpJson, sf::Vector2f pos, int lane) :
 	StageEntity(pos, lane) {
@@ -10,7 +11,7 @@ Teleporter::Teleporter(const nlohmann::json& tpJson, sf::Vector2f pos, int lane)
 	xDestination = tpJson["x_destination"];
 
 	create_animation();
-	bounds = { pos - animPlayer.clip->origin, TELEPORTER_HITBOX };
+	bounds = { pos - animPlayer.clip->origin, EntityConfigs::Traps::TELEPORTER_HITBOX };
 }
 
 void Teleporter::tick(Stage& stage, float dt) {
@@ -42,7 +43,7 @@ void Teleporter::create_animation() {
 	animPlayer.start(&animClip, sprite);
 }
 void Teleporter::draw(sf::RenderWindow& window) const {
-	sf::RectangleShape hitbox(TELEPORTER_HITBOX);
+	sf::RectangleShape hitbox(EntityConfigs::Traps::TELEPORTER_HITBOX);
 
 	hitbox.setPosition(pos);
 	hitbox.setFillColor(HITBOX_COLOR);

@@ -12,17 +12,6 @@ enum class SurgeAnimationStates {
 	ENDING = 2
 };
 
-const float SW_WIDTH = 25.f;
-const float SW_BASE_DISTANCE = 75.f;
-const float SW_DISTANCE_PER_LEVEL = 50.f;
-const float SW_TWEEN_TIMER = .75f;
-const float SW_TWEEN_TIME_PER_LEVEL = .50f;
-
-const float FW_WIDTH = 30.f;
-const float FW_TIMER = .66f;
-
-const float OS_WIDTH = 40.f;
-
 class Unit;
 struct Stage;
 struct Lane;

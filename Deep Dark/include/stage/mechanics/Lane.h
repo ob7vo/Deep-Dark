@@ -28,6 +28,8 @@ struct Lane {
 
 	inline std::vector<Unit>& getOpponentUnits(int team) { return team == PLAYER_TEAM ? enemyUnits : playerUnits; }
 	inline std::vector<Unit>& getAllyUnits(int team) { return team == ENEMY_TEAM ? enemyUnits : playerUnits; }
+	inline const std::vector<Unit>& getOpponentUnits(int team) const { return team == PLAYER_TEAM ? enemyUnits : playerUnits; }
+	inline const std::vector<Unit>& getAllyUnits(int team) const { return team == ENEMY_TEAM ? enemyUnits : playerUnits; }
 
 	size_t get_unit_count(int team = 0) const;
 	sf::Vector2f get_spawn_pos(int team) const;

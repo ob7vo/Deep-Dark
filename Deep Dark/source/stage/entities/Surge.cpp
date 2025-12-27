@@ -5,10 +5,13 @@
 #include "Unit.h"
 #include "UnitData.h"
 #include "EntityTextures.h"
+#include "EntityConfigs.h"
 
 std::array<AnimationClip, 2> ShockWave::shockWaveAni;
 std::array<AnimationClip, 3> FireWall::fireWallAni;
 AnimationClip OrbitalStrike::orbitalStrikeAni;
+
+using namespace EntityConfigs::Surges;
 
 #pragma region Constructors
 Surge::Surge(const UnitStats* stats, int curLane, sf::Vector2f pos) :
@@ -23,14 +26,14 @@ Surge::Surge(const UnitStats* stats, int curLane, sf::Vector2f pos) :
 ShockWave::ShockWave(const UnitStats* stats, int curLane, int level, sf::Vector2f pos, Stage& stage) :
 	Surge(stats, curLane, pos), id(stage.nextUnitID++) 
 {
-	halfWidth = SW_WIDTH * 0.5f;
-	hitbox.setSize({ SW_WIDTH, 25.f });
+	halfWidth = SHOCK_WAVE_WIDTH * 0.5f;
+	hitbox.setSize({ SHOCK_WAVE_WIDTH, 25.f });
 	hitbox.setOrigin({ halfWidth, 25.f });
 
 	// creating the Tween
 	sf::Vector2f endPos = pos;
-	endPos.x += (SW_BASE_DISTANCE + (SW_DISTANCE_PER_LEVEL * (float)level - 1)) * (float)stats->team;
-	float timeLeft = SW_TWEEN_TIMER + (SW_TWEEN_TIME_PER_LEVEL * (float)level - 1);
+	endPos.x += (SHOCK_WAVE_Lv1_DISTANCE + (SHOCK_WAVE_DISTANCE_PER_LEVEL * (float)level - 1)) * (float)stats->team;
+	float timeLeft = SHOCK_WAVE_Lv1_TIMER + (SHOCK_WAVE_TIME_PER_LEVEL * (float)level - 1);
 
 	tween.start(pos, endPos, timeLeft);
 
@@ -41,10 +44,12 @@ FireWall::FireWall(const UnitStats* stats, int curLane, int level, sf::Vector2f 
 	Surge(stats, curLane, pos), level(level)
 {
 	permanentHitUnits.reserve(15);
-	halfWidth = FW_WIDTH * 0.5f;
-	hitbox.setSize({ FW_WIDTH, 30.f });
+
+	halfWidth = FIREWALL_WIDTH * 0.5f;
+	hitbox.setSize({ FIREWALL_WIDTH, 30.f });
 	hitbox.setOrigin({ halfWidth, 30.f });
-	timeLeft = FW_TIMER;
+
+	timeLeft = FIREWALL_TIMER_PER_LEVEL;
 
 	animationState = SurgeAnimationStates::START_UP;
 	animPlayer.start(&fireWallAni[0], sprite);
@@ -52,9 +57,9 @@ FireWall::FireWall(const UnitStats* stats, int curLane, int level, sf::Vector2f 
 OrbitalStrike::OrbitalStrike(const UnitStats* stats, int curLane, sf::Vector2f pos) :
 	Surge(stats, curLane, pos)
 {
-	halfWidth = OS_WIDTH * 0.5f;
-	hitbox.setSize({ OS_WIDTH, 150.f });
-	hitbox.setOrigin({ halfWidth, 75.f });
+	halfWidth = ORBITAL_STRIKE_WIDTH * 0.5f;
+	hitbox.setSize({ ORBITAL_STRIKE_WIDTH, 150.f });
+	hitbox.setOrigin({ ORBITAL_STRIKE_WIDTH, 75.f });
 
 	animationState = SurgeAnimationStates::ACTIVE;
 	animPlayer.start(&orbitalStrikeAni, sprite);
@@ -181,7 +186,7 @@ void FireWall::tick(Stage& stage, float deltaTime) {
 		attack_units(stage.lanes[laneInd]);
 
 		if (timeLeft < 0) {
-			timeLeft = FW_TIMER;
+			timeLeft = FIREWALL_TIMER_PER_LEVEL;
 			if (--level > 0) {
 				permanentHitUnits.insert(permanentHitUnits.end(), hitUnits.begin(), hitUnits.end());
 				hitUnits.clear();

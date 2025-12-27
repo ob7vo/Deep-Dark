@@ -2,7 +2,6 @@
 #include "StageEntity.h"
 #include <json_fwd.hpp>
 
-constexpr sf::Vector2f TELEPORTER_HITBOX = { 32.f, 32.f };
 class Unit;
 
 struct Teleporter : public StageEntity{

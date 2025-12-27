@@ -2,20 +2,13 @@
 #include "Base.h"
 #include "Stage.h"
 #include "BaseTextures.h"
+#include "EntityConfigs.h"
 
 using json = nlohmann::json;
 
 static AnimationClip waveCannonAni;
 
-const float MAX_FIRE_WALL_DIST = 10000.f;
-const float FIRE_WALL_SPAWN_PADDING = 7.5f;
-
-const float ORBITAL_CANNON_SPACING = 45.f;
-const int ORBITAL_STRIKES = 6;
-const int BOTTOM_LANE = 0;
-
-const float SHORT_CIRCUIT_CANNON_RANGE = 300.f;
-const int zero = 0;
+const int ZERO = 0;
 
 #pragma region Constructos
 BaseCannon::BaseCannon(const json& baseJson, float magnification) :
@@ -46,8 +39,8 @@ void FireWallCannon::fire(Stage& stage) {
 		for (auto it = playerUnits.begin(); it != playerUnits.end();) {
 			float distance = std::abs(pos.x - it->get_pos().x);
 			
-			if (distance < MAX_FIRE_WALL_DIST) {
-				stage.create_surge(this, fireWall, i, distance + FIRE_WALL_SPAWN_PADDING);
+			if (distance < EntityConfigs::Bases::MAX_FIRE_WALL_DIST) {
+				stage.create_surge(this, fireWall, i, distance + EntityConfigs::Bases::FIRE_WALL_SPAWN_PADDING);
 				break;
 			}
 		}
@@ -55,10 +48,10 @@ void FireWallCannon::fire(Stage& stage) {
 }
 
 void OrbitalCannon::fire(Stage& stage) {
-	for (int i = 1; i <= ORBITAL_STRIKES; i++) {
-		float dist = ORBITAL_CANNON_SPACING * (float)i;
+	for (int i = 1; i <= EntityConfigs::Bases::ORBITAL_STRIKES; i++) {
+		float dist = EntityConfigs::Bases::ORBITAL_CANNON_SPACING * (float)i;
 
-		stage.create_surge(this, orbitalStrike, BOTTOM_LANE, dist);
+		stage.create_surge(this, orbitalStrike, EntityConfigs::Bases::BOTTOM_LANE, dist);
 	}
 }
 

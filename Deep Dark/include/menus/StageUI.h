@@ -34,6 +34,8 @@ struct StageUI : public Menu<UI::StageUI::BTN_COUNT> {
 	explicit StageUI(Camera& cam);
 	~StageUI() final = default;
 
+	void set_texts();
+	void update_texts();
 	void create_buttons();
 
 	void draw() final;

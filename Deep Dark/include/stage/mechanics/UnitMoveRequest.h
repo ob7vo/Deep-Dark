@@ -17,13 +17,15 @@ enum class UnitMoveRequestType {
 	TELEPORT,
 };
 
+struct Stage;
+
 /// <summary>
 /// Needed to move Units between vectors (Lanes), and can ONLY be called
 /// for that purpose, not just any plain old movement.
 /// </summary>
 struct UnitMoveRequest {
 	int unitId;
-	int currentLane;
+	int unitsCurrentLane;
 	int newLane;
 	int team;
 	float axisPos;
@@ -31,7 +33,10 @@ struct UnitMoveRequest {
 
 	UnitMoveRequest(const Unit& unit, int newLane, float axisPos, UnitMoveRequestType type);
 
+	std::optional<size_t> find_unit_to_move(const Stage& stage) const;
+	void process(Stage& stage, size_t unitToMoveIndex) const; 
 	void move_unit_by_request(Unit& unit, Stage& stage) const;
+
 	inline bool fall_request() const { return type == UnitMoveRequestType::FALL; }
 	inline bool teleport_request() const { return type == UnitMoveRequestType::TELEPORT; }
 	inline bool squash_request() const { return type == UnitMoveRequestType::SQUASH; }

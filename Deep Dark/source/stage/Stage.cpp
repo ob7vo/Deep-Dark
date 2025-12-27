@@ -62,14 +62,13 @@ Stage::Stage(const json& stageSetJson, StageRecord* rec) : recorder(rec),
 			if (has(aug.augType & AugmentType::PROJECTILE))
 				projConfigMap[aug.intValue] = ProjectileConfig(aug.intValue, enemySpawners[i].unitMagnification);
 	}
-
 	
 	break_spawner_thresholds();
 	std::cout << "Finished Constructing Stage" << std::endl;
 }
 UnitMoveRequest::UnitMoveRequest(const Unit& unit, int newLane, float axisPos, UnitMoveRequestType type) :
 	unitId(unit.id),
-	currentLane(unit.get_lane()),
+	unitsCurrentLane(unit.get_lane()),
 	newLane(newLane),
 	team(unit.stats->team),
 	axisPos(axisPos),
@@ -93,8 +92,12 @@ void Stage::destroy_base(int destroyedBaseTeam) {
 
 	// Destory all of the losing team's units and their spawners
 	for (auto& lane : lanes) {
-		for (auto& unit : lane.getAllyUnits(destroyedBaseTeam))
-			unit.call_death_anim(DeathCause::BASE_WAS_DESTROYED);
+		for (auto& unit : lane.getAllyUnits(destroyedBaseTeam)) {
+			if (unit.anim.invincible())
+				unit.destroy_unit(DeathCause::BASE_WAS_DESTROYED);
+			else
+				unit.call_death_anim(DeathCause::BASE_WAS_DESTROYED);
+		}
 	}
 	std::erase_if(entities, [destroyedBaseTeam](const auto& entity) {
 		if (auto spawner = dynamic_cast<UnitSpawner*>(entity.get()))
@@ -226,7 +229,7 @@ Surge* Stage::create_surge(const Unit& unit, const Augment& surge) {
 	return surges.back().get();
 }
 void Stage::create_surge(const BaseCannon* cannon, const Augment& surge) {
-	Surge* pSurge = create_surge(&cannon->cannonStats, selectedLane, surge.surgeLevel, cannon->pos, surge.augType);
+	Surge* pSurge = create_surge(&cannon->cannonStats, *selectedLane, surge.surgeLevel, cannon->pos, surge.augType);
 	if (pSurge) pSurge->set_as_cannon_creation();
 }
 void Stage::create_surge(const BaseCannon* cannon, const Augment& surge, int lane, float distance) {

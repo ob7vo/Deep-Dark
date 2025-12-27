@@ -6,6 +6,7 @@
 
 using namespace Textures::Entity;
 const float PROC_CHANCE = 100.f;
+
 Trap::Trap(const nlohmann::json& trap, sf::Vector2f pos, int lane) : StageEntity(pos, lane){
 	int type = trap["trap_type"];
 	trapType = static_cast<TrapType>(type);

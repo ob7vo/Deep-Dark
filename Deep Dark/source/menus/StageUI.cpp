@@ -24,6 +24,7 @@ void StageUI::create_buttons() {
 	upgradeBagBtn().setup(BAG_BTN_POS, BAG_BTN_SIZE, cam, t_upgradeWalletBtn);
 	fireCannonBtn().setup(CANNON_BTN_POS, CANNON_BTN_SIZE, cam, t_fireCannonBtn);
 }
+
 void StageUI::reset_positions() {
 	partsCountText.setPosition(cam.norm_to_pixels(PARTS_TEXT_POS));
 	bagUpgradeCostText.setPosition(cam.norm_to_pixels(BAG_COST_TEXT_POS));
@@ -35,6 +36,33 @@ void StageUI::reset_positions() {
 
 	pauseMenu.reset_positions();
 }
+
+ // Texts
+void StageUI::set_texts() {
+	partsCountText.setString(std::format("$0/{}", stageManager->wallet.partsCap));
+	bagUpgradeCostText.setString(std::format("${}", stageManager->wallet.upgradeCost));
+
+	clearedChallengesText.setString(
+		std::format("Challenges Cleared: 0/{}", stageManager->challenges.size()));
+	clearedChallengesText.setCharacterSize(16);
+	clearedChallengesText.setFillColor(sf::Color::Yellow);
+}
+void StageUI::update_texts() {
+	bagUpgradeCostText.setString(std::format("${}", stageManager->wallet.upgradeCost));
+	partsCountText.setString(std::format("#{}/{}", stageManager->wallet.parts, stageManager->wallet.partsCap));
+
+
+	// Challenges Text
+	if (stageManager->clearedChallenges == stageManager->challenges.size())
+		clearedChallengesText.setFillColor(sf::Color::Green);
+	else 
+		clearedChallengesText.setFillColor(sf::Color::Yellow);
+
+	clearedChallengesText.setString(std::format("Challenges Cleared: {}/{}",
+		stageManager->clearedChallenges, stageManager->challenges.size()));
+}
+
+
 void StageUI::draw() {
 	cam.queue_ui_draw(&partsCountText);
 	cam.queue_ui_draw(&bagUpgradeCostText);
@@ -61,14 +89,20 @@ void StageUI::check_mouse_hover() {
 	else
 		buttonManager.check_mouse_hover(cam.getMouseScreenPos());
 }
+
+// Button Function
 void StageUI::pause() {
-	stageManager->pause();
+	paused = paused;
+	cam.change_lock(paused);
+
 	for (int i = 0; i < BTN_COUNT; i++) 
 		buttonManager.buttons[i].sprite.setColor(sf::Color::White);
 }
 void StageUI::upgrade_bag() {
-	if (stageManager->wallet.try_buy_upgrade_bag(stageManager->stageRecorder))
-		stageManager->upgrade_bag();
+	if (stageManager->wallet.can_upgrade_bag(stageManager->stageRecorder))
+		stageManager->wallet.upgrade_bag();
+
+	update_texts();
 }
 void StageUI::fire_cannon() {
 	stageManager->try_fire_cannon();

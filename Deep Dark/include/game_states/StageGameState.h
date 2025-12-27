@@ -20,10 +20,11 @@ public:
 
 	void update(float deltaTime) override;
 	void render() override;
-	void handle_events(sf::Event event) override;
 	void on_enter(OnStateEnterData* enterData) override;
 	void on_exit() override;
 	void update_ui(float deltaTime) override;
+
+	void handle_events(sf::Event event) override;
 
 	void quit_stage();
 	void end_current_stage_set();
