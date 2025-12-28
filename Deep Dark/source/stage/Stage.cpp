@@ -67,7 +67,7 @@ Stage::Stage(const json& stageSetJson, StageRecord* rec) : recorder(rec),
 	std::cout << "Finished Constructing Stage" << std::endl;
 }
 UnitMoveRequest::UnitMoveRequest(const Unit& unit, int newLane, float axisPos, UnitMoveRequestType type) :
-	unitId(unit.id),
+	unitId(unit.spawnID),
 	unitsCurrentLane(unit.get_lane()),
 	newLane(newLane),
 	team(unit.stats->team),
@@ -92,7 +92,9 @@ void Stage::destroy_base(int destroyedBaseTeam) {
 
 	// Destory all of the losing team's units and their spawners
 	for (auto& lane : lanes) {
-		for (auto& unit : lane.getAllyUnits(destroyedBaseTeam)) {
+		for (const auto& index : lane.getAllyUnits(destroyedBaseTeam)) {
+			auto& unit = getUnit(index);
+
 			if (unit.anim.invincible())
 				unit.destroy_unit(DeathCause::BASE_WAS_DESTROYED);
 			else
@@ -137,6 +139,23 @@ void Stage::lower_summons_count(int id) {
 		unitConfigMap[id]->count--;
 }
 
+void checker(Stage& stage) {
+	for (int i = 0; i < stage.laneCount; i++) {
+		const auto& l = stage.lanes[i];
+		std::cout << "Lane #" << 0 << " has [" << l.enemyUnitIndexes.size() <<
+			"] ENEMY Units: [ ";
+		for (int i = 0; i < l.enemyUnitIndexes.size(); i++)
+			std::cout << l.enemyUnitIndexes[i] << ", ";
+		std::cout << "]" << std::endl;
+
+		std::cout << "Lane #" << 0 << " has [" << l.playerUnitIndexes.size() <<
+			"] PLAYER Units: [ ";
+		for (int i = 0; i < l.playerUnitIndexes.size(); i++)
+			std::cout << l.playerUnitIndexes[i] << ", ";
+		std::cout << "]" << std::endl;
+	}
+}
+
 Unit* Stage::create_unit(int laneIndex, const UnitStats* unitStats, UnitAniMap* aniMap) {
 	if (laneIndex < 0 || laneIndex >= lanes.size()) {
 		std::cout << "Lane Index " << laneIndex << " is out of range, cannot spawn Unit" << std::endl;
@@ -147,14 +166,19 @@ Unit* Stage::create_unit(int laneIndex, const UnitStats* unitStats, UnitAniMap* 
 		return nullptr;
 	}
 
+	// Update the Spawn ID
 	nextUnitID++;
 	recorder->add_spawn(unitStats->team, laneIndex);
 
 	sf::Vector2f spawnPos = lanes[laneIndex].get_spawn_pos(unitStats->team);
-	auto& newVec = lanes[laneIndex].getAllyUnits(unitStats->team);
 
-	return &newVec.emplace_back(this, spawnPos, laneIndex,
-		unitStats, aniMap, nextUnitID);
+	if (auto index = unitPool.spawn_unit()) {
+		lanes[laneIndex].getAllyUnits(unitStats->team).emplace_back(*index);
+
+		getUnit(*index).setup(this, spawnPos, laneIndex, unitStats, aniMap, nextUnitID);
+		return &unitPool.pool[*index];
+	}
+	else return nullptr;
 }
 void Stage::try_revive_unit(UnitSpawner* spawner) {
 	// if they dont have the clone ability, or have be inflicted with code breaker, return
@@ -307,7 +331,7 @@ void Stage::create_hitbox_visualizers(sf::Vector2f pos, std::pair<float, float> 
 	float width = range.second - range.first;
 	sf::RectangleShape shape({ width, HITBOX_HEIGHT });
 
-	float originX = team == PLAYER_TEAM ? 0 : width;
+	float originX = team == UnitData::PLAYER_TEAM ? 0 : width;
 	float posX = pos.x + (range.first * static_cast<float>(team));
 	shape.setOrigin({ originX, HITBOX_HEIGHT });
 	shape.setFillColor(HITBOX_COLOR);
@@ -342,27 +366,6 @@ int Stage::find_lane_to_knock_to(const Unit& unit, int inc) const {
 	return unit.get_lane();
 }
 
-void UnitMoveRequest::move_unit_by_request(Unit& unit, Stage& stage) const {
-	unit.movement.currentLane = newLane;
-
-	switch (type) { 
-	case UnitMoveRequestType::FALL:
-		unit.movement.fall(unit, axisPos);
-		break;
-	case UnitMoveRequestType::SQUASH:
-		unit.movement.squash(unit, axisPos);
-		break;
-	case UnitMoveRequestType::JUMP:
-		unit.movement.jump(unit, axisPos);
-		break;
-	case UnitMoveRequestType::TELEPORT:
-		unit.movement.pos = { axisPos, stage.lanes[newLane].yPos };
-		break;
-	default:
-		unit.movement.launch(unit, axisPos);
-		break;
-	}
-}
 bool Stage::can_push_move_request(int id) {
 	auto it = std::find_if(moveRequests.begin(), moveRequests.end(),
 		[&](const UnitMoveRequest& req) { return req.unitId == id; });
@@ -370,6 +373,11 @@ bool Stage::can_push_move_request(int id) {
 	return it == moveRequests.end();
 }
 void Stage::push_move_request(Unit& unit, int newLane, float fallTo, UnitMoveRequestType type) {
-	if (!can_push_move_request(unit.id)) return;
+	if (unit.movement.laneInd == newLane) {
+		std::cout << "MoveRequest moves Unit to the same lane." << std::endl;
+		return;
+	}
+	if (!can_push_move_request(unit.spawnID)) return;
+
 	moveRequests.emplace_back(unit, newLane, fallTo, type);
 }

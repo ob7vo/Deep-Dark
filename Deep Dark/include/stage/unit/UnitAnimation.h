@@ -9,7 +9,7 @@ struct UnitAnimation {
 private:
 	UnitAnimationState state = UnitAnimationState::MOVE;
 
-	AnimationPlayer player;
+	AnimationPlayer player = {};
 	UnitAniMap* aniMap; // Owned by Enemy Spawners and Loadout slots
 
 	sf::Sprite sprite = sf::Sprite(defTex);
@@ -17,9 +17,12 @@ private:
 public:
 	bool drawable = true;
 
-	UnitAnimation(UnitAniMap* map, const UnitStats* stats);
+	UnitAnimation() = default;
 	~UnitAnimation() = default;
 
+	void setup(UnitAniMap* map, const UnitStats* stats);
+
+	// Sets the new state and changes the AnimationClip
 	void start(UnitAnimationState newState);
 	void draw(sf::RenderWindow& window) const;
 	void start_idle_or_attack_animation(Unit& unit);
@@ -45,4 +48,6 @@ public:
 	inline UnitAniMap* get_ani_map() const { return aniMap; }
 	inline const sf::Sprite& get_sprite() const { return sprite; }
 	inline UnitAnimationState get_state() const { return state; }
+
+	static std::string stateToString(UnitAnimationState state);
 };

@@ -13,7 +13,7 @@ struct StageManager
 	Camera& cam;
 	StageUI& ui;
 	Loadout& loadout;
-	Stage stage = {};
+	std::unique_ptr<Stage> stage = nullptr;;
 	StageRecord stageRecorder = {};
 
 	std::vector<StageChallenge> challenges = {};
@@ -40,7 +40,9 @@ struct StageManager
 
 	void process_all_move_requests();
 
-	void update_unit(float deltaTime);
+	void update_units(std::vector<size_t>& unitIndexes, float deltaTime);
+	void update_lanes(float deltaTime);
+
 	void update_entities(float deltaTime);
 	void update_base(float deltaTime);
 	void update_projectiles(float deltaTime);
@@ -58,14 +60,13 @@ struct StageManager
 	bool try_create_cloner(const Unit& unit);
 
 	void handle_death_augment(const Unit& unit);
-	void handle_enemy_unit_death(const Unit& unit);
-	void handle_player_unit_death(const Unit& unit);
+	void handle_unit_death(const Unit& unit);
 
 	void notify_challenges();
 	void update_challenges_text(int clears);
 
-	inline bool try_fire_cannon() { return stage.playerBase.try_fire_cannon(); }
-	inline bool can_fire_cannon() const { return !stage.playerBase.on_cooldown(); }
+	inline bool try_fire_cannon() { return stage->playerBase.try_fire_cannon(); }
+	inline bool can_fire_cannon() const { return !stage->playerBase.on_cooldown(); }
 
 	const std::array<Key, 10> numberKeys = {
 		Key::Num1,

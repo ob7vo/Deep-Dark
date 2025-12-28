@@ -7,14 +7,16 @@
 
 const float STATUS_ICON_SPACING = 40.f;
 
-UnitStatus::UnitStatus(const UnitStats* stats) {
+void UnitStatus::setup(const UnitStats* stats) {
+	activeStatuses.clear();
 	activeStatuses.reserve(MAX_EFFECTS);
+
 	hp = stats->maxHp;
 	kbIndex = 1;
 
-
 	if (auto shield = stats->get_augment(AugmentType::SHIELD))
 		shieldHp = static_cast<int>(shield->value);
+	else shieldHp = 0;
 
 	//tries to get augment to flip status mask. If it doesnt have the Augment,
 	// it will give an empty Augment with NONE, or 0
@@ -207,9 +209,9 @@ bool UnitStatus::take_damage(Unit& hitUnit, int dmg, bool shove) {
 
 	if (!hitUnit.anim.in_knockback() && met_knockback_threshold(oldHp, hitUnit.stats)) {
 		shieldHp = (int)hitUnit.stats->get_augment(AugmentType::SHIELD)->value;
-		hitUnit.movement.knockback(hitUnit);
+		hitUnit.movement.knockback(hitUnit.stage, hitUnit);
 	}
-	else if (shove) hitUnit.movement.knockback(hitUnit, 0.5f);
+	else if (shove) hitUnit.movement.knockback(hitUnit.stage, hitUnit, 0.5f);
 
 	return hp <= 0 && !try_proc_survive(hitUnit.stats);
 }

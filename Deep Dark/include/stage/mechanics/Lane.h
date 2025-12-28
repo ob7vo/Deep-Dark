@@ -1,5 +1,5 @@
 #pragma once
-#include "Unit.h"
+#include "UnitDataConstants.h"
 
 const float EDGE_EXTENSION = 7.5f;
 const float WALL_PADDING = 5.f;
@@ -15,9 +15,9 @@ struct Lane {
 	sf::RectangleShape floor;
 	std::vector<sf::RectangleShape> gapsShapes;
 
-	std::vector<Unit> playerUnits; // Vectors cant have references
+	std::vector<size_t> playerUnitIndexes; // Vectors cant have references
 	int maxPlayers = RESERVED_UNITS;
-	std::vector<Unit> enemyUnits;
+	std::vector<size_t> enemyUnitIndexes;
 	int maxEnemies = RESERVED_UNITS;
 
 	Lane(const nlohmann::json& laneJson, int index);
@@ -26,10 +26,10 @@ struct Lane {
 	void setShapes();
 	void add_shape(std::pair<float, float> gap);
 
-	inline std::vector<Unit>& getOpponentUnits(int team) { return team == PLAYER_TEAM ? enemyUnits : playerUnits; }
-	inline std::vector<Unit>& getAllyUnits(int team) { return team == ENEMY_TEAM ? enemyUnits : playerUnits; }
-	inline const std::vector<Unit>& getOpponentUnits(int team) const { return team == PLAYER_TEAM ? enemyUnits : playerUnits; }
-	inline const std::vector<Unit>& getAllyUnits(int team) const { return team == ENEMY_TEAM ? enemyUnits : playerUnits; }
+	inline std::vector<size_t>& getOpponentUnits(int team) { return team == UnitData::PLAYER_TEAM ? enemyUnitIndexes : playerUnitIndexes; }
+	inline std::vector<size_t>& getAllyUnits(int team) { return team == UnitData::ENEMY_TEAM ? enemyUnitIndexes : playerUnitIndexes; }
+	inline const std::vector<size_t>& getOpponentUnits(int team) const { return team == UnitData::PLAYER_TEAM ? enemyUnitIndexes : playerUnitIndexes; }
+	inline const std::vector<size_t>& getAllyUnits(int team) const { return team == UnitData::ENEMY_TEAM ? enemyUnitIndexes : playerUnitIndexes; }
 
 	size_t get_unit_count(int team = 0) const;
 	sf::Vector2f get_spawn_pos(int team) const;

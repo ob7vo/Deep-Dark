@@ -2,13 +2,13 @@
 #include "Animation.h"
 #include "UnitMoveRequest.h"
 #include "Lane.h"
-#include "UnitData.h"
 #include "Base.h"
 #include "Spawners.h"
 #include "Trap.h"
 #include "Teleporter.h"
 #include "Projectile.h"
 #include "Surge.h"
+#include "UnitPool.h"
 #include <iostream>
 
 const int p_team = 1;
@@ -17,6 +17,7 @@ const float FLOOR = 900;
 const float HITBOX_TIMER = 0.5f;
 const float HITBOX_HEIGHT = 60.f;
 const sf::Color HITBOX_COLOR(235, 24, 9, 128);
+
 
 class Unit;
 struct Stage;
@@ -35,10 +36,12 @@ struct UnitConfig {
 
 struct Stage
 {
+	UnitPool unitPool;
+
 	StageRecord* recorder = nullptr;
 	float timeSinceStart = 0.f;
 	int laneCount = 0;
-	int nextUnitID = 0;
+	int nextUnitID = -1;
 	// Lane Management
 	std::vector<Lane> lanes = {};
 	int* selectedLane = 0;
@@ -104,8 +107,11 @@ struct Stage
 	bool reached_unit_capacity(int team);
 	void lower_summons_count(int id);
 
-	inline float clamp_within_lane(float newX, int laneInd) {
+	inline float clamp_within_lane(float newX, int laneInd) const {
 		auto [minBound, maxBound] = lanes[laneInd].get_lane_boundaries();
 		return std::clamp(newX, minBound, maxBound);
 	}
+
+	inline Unit& getUnit(size_t i) { return unitPool.pool[i]; }
+	inline const Unit& getUnit(size_t i) const { return unitPool.pool[i]; }
 };

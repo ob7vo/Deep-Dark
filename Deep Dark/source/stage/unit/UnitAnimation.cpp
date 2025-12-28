@@ -3,7 +3,10 @@
 #include "Unit.h"
 
 constexpr sf::Color HURTBOX_COLOR = { 0, 255, 255, static_cast<uint8_t>(255 * 0.2f) };
-UnitAnimation::UnitAnimation(UnitAniMap* map, const UnitStats* stats) : aniMap(map) {
+
+void UnitAnimation::setup(UnitAniMap* map, const UnitStats* stats) {
+	aniMap = map;
+
 	hurtbox.setSize(stats->hurtBox);
 	hurtbox.setFillColor(HURTBOX_COLOR);
 
@@ -11,6 +14,7 @@ UnitAnimation::UnitAnimation(UnitAniMap* map, const UnitStats* stats) : aniMap(m
 	if (!stats->is_player()) origin.x = 0.f;
 	hurtbox.setOrigin(origin);
 
+	player.restart();
 	start(UnitAnimationState::MOVE);
 
 	// These are for the debuging/creation process to make configing
@@ -24,7 +28,7 @@ void UnitAnimation::draw(sf::RenderWindow& window) const {
 	window.draw(hurtbox);
 }
 void UnitAnimation::start(UnitAnimationState newState) {
-	std::cout << "staritng Unit animation" << std::endl;
+	std::cout << "staritng Unit animation: [" << stateToString(newState) << "]" << std::endl;
 	state = newState;
 	player.start(&(*aniMap)[newState], sprite);
 
@@ -34,15 +38,10 @@ void UnitAnimation::start(UnitAnimationState newState) {
 void UnitAnimation::update_visual_state() {
 	sf::Color newColor = sprite.getColor();
 
-	switch (state) {
-	case UnitAnimationState::PHASE_ACTIVE:
-		// I decided I actually want phasing units to be slightly visible
+	if (state == UnitAnimationState::PHASE_ACTIVE)
 		newColor.a = static_cast<uint8_t>(255 * 0.2f);
-		break;
-	default:
+	else
 		newColor.a = 255;
-		break;
-	}
 
 	sprite.setColor(newColor);
 }
@@ -69,4 +68,25 @@ void UnitAnimation::start_move_idle_or_attack(Unit& unit) {
 void UnitAnimation::set_position(sf::Vector2f pos) {
 	sprite.setPosition(pos);
 	hurtbox.setPosition(pos);
+}
+
+std::string UnitAnimation::stateToString(UnitAnimationState state) {
+	switch (state) {
+	case UnitAnimationState::FALLING: return "falling";
+	case UnitAnimationState::WAITING: return "waiting";
+	case UnitAnimationState::MOVE: return "move";
+	case UnitAnimationState::JUMPING: return "jump";
+	case UnitAnimationState::PHASE_WINDDOWN: return "phase_windown";
+	case UnitAnimationState::PHASE_WINDUP: return "phase_windup";
+	case UnitAnimationState::PHASE_ACTIVE: return "phase_active";
+	case UnitAnimationState::SUMMON: return "summon";
+	case UnitAnimationState::ATTACK: return "attack";
+	case UnitAnimationState::TRANSFORM: return "transform";
+	case UnitAnimationState::KNOCKBACK: return "knockback";
+	case UnitAnimationState::IDLE: return "idle";
+	case UnitAnimationState::DEATH: return "death";
+	default :
+		std::cout << "state not accounted fro to turn to string" << std::endl;
+		return "move";
+	}
 }

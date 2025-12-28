@@ -17,7 +17,7 @@ struct Teleporter : public StageEntity{
 
 	void tick(Stage& stage, float dt) override;
 	void action(Stage& stage) override;
-	void check_units(std::vector<Unit>& units) const;
+	void check_units(Stage& stage, const std::vector<size_t>& units) const;
 	void create_animation();
 	bool found_valid_target(const Unit& unit) const;
 

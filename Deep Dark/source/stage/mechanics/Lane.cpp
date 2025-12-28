@@ -17,8 +17,8 @@ Lane::Lane(const nlohmann::json& laneJson, int index) : laneIndex(index)
 	gaps.reserve(gaps.size() + 1);
 	setShapes();
 
-	playerUnits.reserve(RESERVED_UNITS);
-	enemyUnits.reserve(RESERVED_UNITS);
+	playerUnitIndexes.reserve(RESERVED_UNITS);
+	enemyUnitIndexes.reserve(RESERVED_UNITS);
 }
 
 #pragma region Drawing
@@ -71,15 +71,15 @@ bool Lane::within_gap(float leftHurtboxEdge, float rightHurtboxEdge) const {
 
 // Getters
 sf::Vector2f Lane::get_spawn_pos(int team) const {
-	float xPos = team == PLAYER_TEAM ? playerSpawnPoint : enemySpawnPoint;
+	float xPos = team == UnitData::PLAYER_TEAM ? playerSpawnPoint : enemySpawnPoint;
 	return { xPos, yPos };
 }
 float Lane::get_team_boundary(int team) const {
-	return team == PLAYER_TEAM ? playerSpawnPoint + WALL_PADDING : enemySpawnPoint - WALL_PADDING;
+	return team == UnitData::PLAYER_TEAM ? playerSpawnPoint + WALL_PADDING : enemySpawnPoint - WALL_PADDING;
 }
 size_t Lane::get_unit_count(int team) const {
-	if (std::abs(team) != 1) return playerUnits.size() + enemyUnits.size();
-	else return team == ENEMY_TEAM ? enemyUnits.size() : playerUnits.size();
+	if (std::abs(team) != 1) return playerUnitIndexes.size() + enemyUnitIndexes.size();
+	else return team == UnitData::ENEMY_TEAM ? enemyUnitIndexes.size() : playerUnitIndexes.size();
 }
 std::pair<float, float> Lane::find_closest_gap_ahead(int team, std::pair<float, float> unitHurtboxEdges) const {
 	if (gaps.empty()) return { playerSpawnPoint, enemySpawnPoint };
@@ -110,6 +110,6 @@ float Lane::get_stopping_point(float newX, float stopDist,
 
 	const auto [stopLeft, stopRight] = find_closest_gap_ahead(team, unitHurtboxEdges);
 
-	return team == PLAYER_TEAM ? std::min(newX, stopLeft - stopDist) :
+	return team == UnitData::PLAYER_TEAM ? std::min(newX, stopLeft - stopDist) :
 		std::max(newX, stopRight + stopDist);
 }

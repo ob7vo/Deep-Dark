@@ -4,8 +4,7 @@
 #include "UnitEnums.h"
 #include "AnimationEvent.h"
 #include <deque>
-
-struct AnimationState;
+#include <unordered_map>
 
 struct AnimationClip;
 
@@ -56,7 +55,9 @@ struct AnimationPlayer {
 	/// currentFrame and time to 0.
 	/// </summary>
 	void reset(sf::Sprite& sprite);
-
+	
+	// Sets only the TIME and CURFFRAME to 0
+	inline void restart() { time = currentFrame = 0; }
 	inline AnimationEvent get_events() const { return clip->frames[currentFrame].eventsMask; }
 	inline bool onFirstFrame() const { return currentFrame == 0; }
 	inline bool onFinalFrame() const { return currentFrame == clip->frames.size() - 1; }

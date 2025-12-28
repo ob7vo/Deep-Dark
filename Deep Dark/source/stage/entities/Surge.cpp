@@ -88,7 +88,7 @@ AnimationEvent Surge::update_animation(Stage& stage, float deltaTime) {
 
 //Check
 bool Surge::valid_target(const Unit& unit) const {
-	return !already_hit_unit(unit.id) && !unit.anim.invincible()
+	return !already_hit_unit(unit.spawnID) && !unit.anim.invincible()
 		&& in_range(unit.get_pos().x);
 }
 
@@ -109,22 +109,26 @@ void Surge::on_kill(Unit& unit) const {
 
 	unit.causeOfDeath |= createdByCannon ? DeathCause::CANNON : DeathCause::SURGE;
 };
-void Surge::attack_units(Lane& lanes) {
-	std::vector<Unit>& enemyUnits = lanes.getOpponentUnits(stats->team);
+void Surge::attack_units(Stage& stage) {
+	// lane is froms tage (passed in)
+	const auto& enemyUnitIndexes = stage.lanes[laneInd].getOpponentUnits(stats->team);
 
-	for (auto it = enemyUnits.begin(); it != enemyUnits.end(); ++it) {
-		if (!valid_target(*it)) continue;
+	for (const auto& index : enemyUnitIndexes) {
+		auto& enemyUnit = stage.getUnit(index); // dont have stage
 
-		if (it->immune(surgeType)) {
-			if (it->stats->surge_blocker()) {
+		if (!valid_target(enemyUnit)) continue;
+
+		if (enemyUnit.immune(surgeType)) {
+			if (enemyUnit.stats->surge_blocker()) {
 				readyForRemoval = true;
 				return;
 			}
 			else continue;
 		}
 
-		hitUnits.push_back(it->id);
-		if (it->status.take_damage(*it, *this)) on_kill(*it);
+		hitUnits.push_back(enemyUnit.spawnID);
+		if (enemyUnit.status.take_damage(enemyUnit, *this)) 
+			on_kill(enemyUnit);
 	}
 }
 int Surge::calculate_damage_and_effects(Unit& unit) const {
@@ -159,7 +163,7 @@ int Surge::calculate_damage_and_effects(Unit& unit) const {
 #pragma region Tick Functions
 void ShockWave::tick(Stage& stage, float deltaTime) {
 	auto events = update_animation(stage, deltaTime);
-	attack_units(stage.lanes[laneInd]);
+	attack_units(stage);
 
 	if (animationState == SurgeAnimationStates::ACTIVE) {
 		if (tweening())
@@ -183,7 +187,7 @@ void FireWall::tick(Stage& stage, float deltaTime) {
 		break;
 	case SurgeAnimationStates::ACTIVE:
 		timeLeft -= deltaTime;
-		attack_units(stage.lanes[laneInd]);
+		attack_units(stage);
 
 		if (timeLeft < 0) {
 			timeLeft = FIREWALL_TIMER_PER_LEVEL;
@@ -204,7 +208,7 @@ void OrbitalStrike::tick(Stage& stage, float deltaTime){
 
 	if (any(events & AnimationEvent::ATTACK))
 		for (int i = 0; i < stage.laneCount; i++)
-			attack_units(stage.lanes[i]);
+			attack_units(stage);
 	else if (any(events & AnimationEvent::FINAL_FRAME))
 		readyForRemoval = true;
 }

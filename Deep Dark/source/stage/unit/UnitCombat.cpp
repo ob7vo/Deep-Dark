@@ -11,8 +11,8 @@ void UnitCombat::attack(Unit& attacker) {
 	attacker.stage->create_hitbox_visualizers(
 		attacker.get_pos(), attacker.get_attack_range(), attacker.stats->team);
 
-	bool hitEnemy = process_attack_on_lanes(attacker);
-	handle_post_attack_effects(attacker, hitEnemy);
+	bool didHitEnemy = process_attack_on_lanes(attacker);
+	handle_post_attack_effects(attacker, didHitEnemy);
 
 	hitIndex = (hitIndex + 1) % attacker.stats->totalHits;
 }
@@ -26,48 +26,53 @@ bool UnitCombat::process_attack_on_lanes(Unit& attacker) const{
 	return hitEnemy;
 }
 bool UnitCombat::attack_lane(Unit& attacker, int laneIndex) const{
-	std::vector<Unit>& enemies = attacker.stage->lanes[laneIndex].getOpponentUnits(attacker.stats->team);
+	std::vector<size_t>& enemyIndexes = stage->lanes[laneIndex].getOpponentUnits(attacker.stats->team);
 
 	if (attacker.stats->singleTarget)
-		return attack_single_target(attacker, enemies);
+		return attack_single_target(attacker, enemyIndexes);
 	else
-		return attack_all_targets(attacker, enemies);
+		return attack_all_targets(attacker, enemyIndexes);
 }
-bool UnitCombat::attack_single_target(Unit& attacker, std::vector<Unit>& enemies) const{
-	Stage& stage = *attacker.stage;
-	Unit* singleTargetedUnit = nullptr;
+bool UnitCombat::attack_single_target(Unit& attacker, const std::vector<size_t>& enemyIndexes) const{
+	size_t targetIndex = NULL_UNIT_INDEX;
 
 	auto [minAttackRange, maxAttackRange] = attacker.get_attack_range();
-	float minDist = abs(attacker.get_pos().x - stage.get_enemy_base(attacker.stats->team).xPos());
+	float minDist = abs(attacker.get_pos().x - stage->get_enemy_base(attacker.stats->team).xPos());
 
-	for (auto it = enemies.begin(); it != enemies.end(); ++it) {
-		if (attacker.found_valid_target(*it, minAttackRange, maxAttackRange)) {
-			float dist = abs(attacker.get_pos().x - it->get_pos().x);
+	for (const auto& index : enemyIndexes) {
+		auto& enemyUnit = stage->getUnit(index);
+
+		if (attacker.found_valid_target(enemyUnit, minAttackRange, maxAttackRange)) {
+			float dist = abs(attacker.get_pos().x - enemyUnit.get_pos().x);
 			if (dist < minDist) {
 				minDist = dist;
-				singleTargetedUnit = std::to_address(it);
+				targetIndex = enemyUnit.spawnID;
 			}
 		}
 	}
 
-	if (singleTargetedUnit && attacker.stats->singleTarget) {
-		bool killed = singleTargetedUnit->status.take_damage(*singleTargetedUnit, attacker);
-		if (killed) {
-			on_kill(attacker, *singleTargetedUnit);
+	if (targetIndex != NULL_UNIT_INDEX) {
+		auto& hitUnit = stage->getUnit(targetIndex);
+
+		if (hitUnit.status.take_damage(hitUnit, attacker)) {
+			on_kill(attacker, hitUnit);
 			return true;
 		}
 	}
 
 	return false;
 }
-bool UnitCombat::attack_all_targets(Unit& attacker, std::vector<Unit>& enemies) const{
+bool UnitCombat::attack_all_targets(Unit& attacker, const std::vector<size_t>& enemyIndexes) const{
 	bool hitEnemy = false;
 	auto [minAttackRange, maxAttackRange] = attacker.get_attack_range();
 
-	for (auto it = enemies.begin(); it != enemies.end(); ++it) {
-		if (attacker.found_valid_target(*it, minAttackRange, maxAttackRange)) {
+	for (const auto& index : enemyIndexes) {
+		auto& enemyUnit = stage->getUnit(index);
+
+		if (attacker.found_valid_target(enemyUnit, minAttackRange, maxAttackRange)) {
 			hitEnemy = true;
-			if (it->status.take_damage(*it, attacker)) on_kill(attacker, *it);
+			if (enemyUnit.status.take_damage(enemyUnit, attacker)) 
+				on_kill(attacker, enemyUnit);
 		}
 	}
 
@@ -86,7 +91,7 @@ void UnitCombat::try_create_surge(Unit& attacker, bool hitEnemy) const{
 
 	for (auto& augment : attacker.stats->augments) {
 		if (attacker.can_make_surge(augment)) {
-			bool surgeExist = attacker.stage->create_surge(attacker, augment); // returns pointer
+			bool surgeExist = stage->create_surge(attacker, augment); // returns pointer
 
 			if (!surgeExist || augment.augType != AugmentType::ORBITAL_STRIKE) continue;
 
@@ -96,7 +101,7 @@ void UnitCombat::try_create_surge(Unit& attacker, bool hitEnemy) const{
 			float currentOffset = strikeSpacing;
 
 			for (int i = 0; i < additionalStrikes; i++) {
-				Surge* strike = attacker.stage->create_surge(attacker, augment);
+				Surge* strike = stage->create_surge(attacker, augment);
 
 				strike->pos.x += currentOffset;
 				currentOffset += strikeSpacing;
@@ -126,7 +131,7 @@ void UnitCombat::try_create_projectile(Unit& attacker) const{
 
 	for (auto& aug : attacker.stats->augments)
 		if (has(aug.augType & AugmentType::PROJECTILE) && aug.can_hit(hitIndex))
-			attacker.stage->create_projectile(attacker, aug);
+			stage->create_projectile(attacker, aug);
 }
 
 bool UnitCombat::try_terminate_unit(const Unit& attacker, const Unit& hitUnit, int dmg) const {
@@ -141,18 +146,21 @@ bool UnitCombat::try_terminate_unit(const Unit& attacker, const Unit& hitUnit, i
 #pragma endregion
 
 void UnitCombat::self_destruct(Unit& explodingUnit, const Augment& selfDestruct) const {
-	int minLane = std::max(0, explodingUnit.movement.currentLane - selfDestruct.intValue);
+	int minLane = std::max(0, explodingUnit.movement.laneInd - selfDestruct.intValue);
 	int maxLane = std::min(explodingUnit.stage->laneCount - 1,
-		explodingUnit.movement.currentLane + selfDestruct.intValue);
+		explodingUnit.movement.laneInd + selfDestruct.intValue);
 
 	for (int i = minLane; i <= maxLane; i++) {
 		auto& lane = explodingUnit.stage->lanes[i];
-		auto& enemies = lane.getOpponentUnits(explodingUnit.stats->team);
+		auto& enemyIndexes = lane.getOpponentUnits(explodingUnit.stats->team);
 
-		for (auto it = enemies.begin(); it != enemies.end(); ++it) {
-			if (explodingUnit.found_valid_target(*it, selfDestruct.value2, selfDestruct.value2)
-				&& it->status.take_damage(*it, (int)selfDestruct.value))  {
-				on_kill(explodingUnit, *it);
+		for (const auto& index : enemyIndexes) {
+			auto& enemyUnit = stage->getUnit(index);
+
+			if (explodingUnit.found_valid_target(enemyUnit, selfDestruct.value2, selfDestruct.value2)
+				&& enemyUnit.status.take_damage(enemyUnit, (int)selfDestruct.value))
+			{
+				on_kill(explodingUnit, enemyUnit);
 			}
 		}
 	}

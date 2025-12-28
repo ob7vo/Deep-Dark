@@ -5,6 +5,7 @@
 #include "StageEntity.h"
 
 struct Stage;
+struct UnitPool;
 struct Lane;
 class Unit;
 
@@ -51,7 +52,7 @@ public:
 	void draw(sf::RenderWindow& window) const;
 
 	AnimationEvent update_hits_and_animation(float deltaTime);
-	void attack_units(Lane& lane);
+	void attack_units(Stage& stage);
 	bool within_bounds(sf::Vector2f p) const;
 	bool valid_target(const Unit& enemy) const;
 

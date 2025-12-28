@@ -12,11 +12,13 @@ struct UnitStatus {
     int shieldHp = 0;
     int kbIndex = 0;
 
-    std::vector<StatusEffect> activeStatuses;
-    AugmentType statusFlags;
+    std::vector<StatusEffect> activeStatuses = {};
+    AugmentType statusFlags = AugmentType::NONE;
 
-    explicit UnitStatus(const UnitStats* stats);
+    UnitStatus() = default;
     ~UnitStatus() = default;
+
+    void setup(const UnitStats* stats);
 
     float calculate_damage_reduction(const std::vector<Augment>& augments) const;
     int calculate_damage_and_effects(Unit& hitUnit, const Unit& attackingUnit);
