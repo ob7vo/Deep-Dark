@@ -34,10 +34,9 @@ void WaveCannon::fire(Stage& stage) {
 
 void FireWallCannon::fire(Stage& stage) {
 	for (int i = 0; stage.laneCount; i++) {
-		auto& playerUnits = stage.lanes[i].getOpponentUnits(-1);
-
-		for (auto it = playerUnits.begin(); it != playerUnits.end();) {
-			float distance = std::abs(pos.x - it->get_pos().x);
+		// Attack players only
+		for (const auto& index : stage.lanes[i].getOpponentUnits(-1)) {
+			float distance = std::abs(pos.x - stage.getUnit(index).get_pos().x);
 			
 			if (distance < EntityConfigs::Bases::MAX_FIRE_WALL_DIST) {
 				stage.create_surge(this, fireWall, i, distance + EntityConfigs::Bases::FIRE_WALL_SPAWN_PADDING);
@@ -56,12 +55,14 @@ void OrbitalCannon::fire(Stage& stage) {
 }
 
 void AreaCannon::fire(Stage& stage) {
-	for (int i = 0; i < stage.laneCount; i++) {
-		std::vector<Unit>& enemyUnits = stage.lanes[i].getOpponentUnits(cannonStats.team);
+	for (const auto& lane : stage.lanes) {
+		const std::vector<size_t>& enemyUnitIndexes = lane.getOpponentUnits(cannonStats.team);
 
-		for (auto it = enemyUnits.begin(); it != enemyUnits.end();) {
-			if (is_valid_target(*it))
-				it->status.apply_effects(*it, cannonStats.augments, 0);
+		for (const auto& index : enemyUnitIndexes) {
+			auto& enemyUnit = stage.getUnit(index);
+
+			if (is_valid_target(enemyUnit))
+				enemyUnit.status.apply_effects(enemyUnit, cannonStats.augments, 0);
 		}
 	}
 }

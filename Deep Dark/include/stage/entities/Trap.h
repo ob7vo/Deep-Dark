@@ -1,6 +1,7 @@
 #pragma once
 #include "StageEntity.h"
 #include "Augment.h"
+#include "UnitDataConstants.h"
 
 const float TRAP_HEIGHT = 15.0f;
 enum class TrapType {
@@ -46,7 +47,7 @@ public:
 	void trigger_trap_door(Stage& stage);
 
 	void trigger_attack(Stage& stage) const;
-	void attack_lane(std::vector<Unit>& units) const;
+	void attack_lane(Stage& stage, const std::vector<size_t>& units) const;
 	bool valid_attack_target(const Unit& unit) const;
 	bool in_trigger_range(const Unit& unit) const;
 

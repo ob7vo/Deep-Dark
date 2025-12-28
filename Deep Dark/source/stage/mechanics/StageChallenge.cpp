@@ -6,7 +6,7 @@ StageChallenge::StageChallenge(const nlohmann::json& chalJson) :
 	description(chalJson.value("description", "")),
 	cleared(chalJson.value("clear_state_at_start", false)),
 	value(chalJson.value("value", 0)),
-	lane(chalJson.value("lane", -1)),
+	laneInd(chalJson.value("lane", -1)),
 	challengeType(get_challenge_type(chalJson["challenge_type"])),
 	comparison(get_comparison_type(chalJson["comparison"].get<std::string>()[0])),
 	team(chalJson.value("team", 0))
@@ -25,7 +25,7 @@ bool StageChallenge::notify(const StageManager& manager) {
 	// handled by the pointer above
 	switch (challengeType) {
 	case ChallengeType::CLEAR_TIME:
-		return cleared = compare((int)manager.stage.timeSinceStart, value);
+		return cleared = compare((int)manager.stage->timeSinceStart, value);
 	case ChallengeType::UNITS_AT_ONCE: {
 		return cleared = compare((int)get_current_unit_count(manager), value);
 	}
@@ -63,11 +63,11 @@ const int* StageChallenge::get_target_ptr(const StageManager& manager) const {
 
 	switch (challengeType) {
 	case ChallengeType::UNIT_DEATHS:
-		if (lane <= 0 || lane >= rec.deaths.size()) return &rec.totalDeaths;
-		else return &rec.deaths[lane];
+		if (laneInd <= 0 || laneInd >= rec.deaths.size()) return &rec.totalDeaths;
+		else return &rec.deaths[laneInd];
 	case ChallengeType::UNITS_SPAWNED:
-		if (lane <= 0 || lane >= rec.deaths.size()) return &rec.totalSpawns;
-		else return &rec.unitsSpawned[lane];
+		if (laneInd <= 0 || laneInd >= rec.deaths.size()) return &rec.totalSpawns;
+		else return &rec.unitsSpawned[laneInd];
 	case ChallengeType::DEATHS_VIA_FALLING:
 		return &rec.deathsByFalling;
 	case ChallengeType::DEATHS_VIA_SURGES:
@@ -88,12 +88,12 @@ const int* StageChallenge::get_target_ptr(const StageManager& manager) const {
 size_t StageChallenge::get_current_unit_count(const StageManager& manager) const {
 	size_t total = 0;
 
-	if (lane < 0 || lane > manager.stage.laneCount) {
-		for (auto& l : manager.stage.lanes)
-			total += l.get_unit_count(team);
+	if (laneInd < 0 || laneInd > manager.stage->laneCount) {
+		for (const auto& lane : manager.stage->lanes)
+			total += lane.get_unit_count(team);
 	}
 	else
-		total = manager.stage.lanes[lane].get_unit_count(team);
+		total = manager.stage->lanes[laneInd].get_unit_count(team);
 
 	return total;
 }

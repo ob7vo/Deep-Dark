@@ -168,6 +168,9 @@
     <ClCompile Include="source\stage\mechanics\UnitMoveRequest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="source\stage\UnitPool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\game_states\GameState.h">
@@ -380,25 +383,27 @@
     <ClInclude Include="include\utilities\EntityConfigs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\stage\UnitPool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="configs\base _data\player_bases\p_wave_base.json" />
-    <None Include="configs\unit_data\1\gear1\unit_data.json" />
+    <None Include="configs\stage_data\unit_data\1\gear1\unit_data.json" />
     <None Include="game_saves\stage_save.json" />
     <None Include="game_saves\unit_save.json" />
     <None Include="configs\proj_data\0\proj_data.json" />
     <None Include="configs\base data\enemy bases\orbitral base\orbital base.json" />
-    <None Include="configs\unit_data\101\gear1\unit_data.json" />
+    <None Include="configs\stage_data\unit_data\101\gear1\unit_data.json" />
     <None Include="configs\stage data\stage 1.json" />
-    <None Include="configs\unit_data\unit_data_TEMPLATE.json" />
-    <None Include="configs\unit_data\103\gear2\unit_data.json" />
-    <None Include="configs\unit_data\103\gear1\unit_data.json" />
-    <None Include="configs\unit_data\105\gear1\unit_data.json" />
-    <None Include="configs\unit_data\104\gear1\unit_data.json" />
-    <None Include="configs\unit_data\6\gear1\unit_data.json" />
-    <None Include="configs\unit_data\5\gear1\unit_data.json" />
-    <None Include="configs\unit_data\2\gear1\unit_data.json" />
-    <None Include="configs\unit_data\4\gear1\unit_data.json" />
-    <None Include="configs\unit_data\3\gear1\unit_data.json" />
+    <None Include="configs\stage_data\unit_data\103\gear2\unit_data.json" />
+    <None Include="configs\stage_data\unit_data\103\gear1\unit_data.json" />
+    <None Include="configs\stage_data\unit_data\105\gear1\unit_data.json" />
+    <None Include="configs\stage_data\unit_data\104\gear1\unit_data.json" />
+    <None Include="configs\stage_data\unit_data\6\gear1\unit_data.json" />
+    <None Include="configs\stage_data\unit_data\5\gear1\unit_data.json" />
+    <None Include="configs\stage_data\unit_data\2\gear1\unit_data.json" />
+    <None Include="configs\stage_data\unit_data\4\gear1\unit_data.json" />
+    <None Include="configs\stage_data\unit_data\3\gear1\unit_data.json" />
   </ItemGroup>
 </Project>

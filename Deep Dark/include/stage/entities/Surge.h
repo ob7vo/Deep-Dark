@@ -35,7 +35,7 @@ struct Surge : public StageEntity
 	Surge(const UnitStats* stats, int curLane, sf::Vector2f pos);
 	~Surge() override = default;
 
-	void attack_units(Lane& enemyUnits);
+	void attack_units(Stage& stage);
 	void on_kill(Unit& enemyUnit) const;
 	int calculate_damage_and_effects(Unit& unit) const;
 	bool try_terminate_unit(const Unit& enemyUnit, int dmg = 0) const;

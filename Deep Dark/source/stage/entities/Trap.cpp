@@ -41,11 +41,11 @@ bool Trap::valid_attack_target(const Unit& unit) const {
 		!unit.anim.invincible();
 }
 bool Trap::enemy_in_trigger_range(Stage& stage) const{
-	for (const auto& unit : stage.lanes[laneInd].enemyUnits)
-		if (in_trigger_range(unit))
+	for (const auto& index : stage.lanes[laneInd].enemyUnitIndexes)
+		if (in_trigger_range(stage.getUnit(index)))
 			return true;
-	for (const auto& unit : stage.lanes[laneInd].playerUnits)
-		if (in_trigger_range(unit))
+	for (const auto& index : stage.lanes[laneInd].playerUnitIndexes)
+		if (in_trigger_range(stage.getUnit(index)))
 			return true;
 	return false;
 }
@@ -91,14 +91,18 @@ void Trap::action(Stage& stage) {
 
 #pragma region Trap Actions
 void Trap::trigger_launch_pad(Stage& stage) const {
-	Lane& lane = stage.lanes[laneInd];
+	const Lane& lane = stage.lanes[laneInd];
 
-	for (auto& unit : lane.enemyUnits)
+	for (const auto& index : lane.enemyUnitIndexes) {
+		auto& unit = stage.getUnit(index);
 		if (valid_attack_target(unit))
-			unit.movement.push_launch_request(unit);
-	for (auto& unit : lane.playerUnits)
+			unit.movement.push_launch_request(&stage, unit);
+	}
+	for (const auto& index : lane.playerUnitIndexes) {
+		auto& unit = stage.getUnit(index);
 		if (valid_attack_target(unit))
-			unit.movement.push_launch_request(unit);
+			unit.movement.push_launch_request(&stage, unit);
+	}
 }
 void Trap::trigger_trap_door(Stage& stage) {
 	Lane& lane = stage.lanes[laneInd];
@@ -114,11 +118,13 @@ void Trap::trigger_trap_door(Stage& stage) {
 	triggered = !triggered;
 }
 void Trap::trigger_attack(Stage& stage) const {
-	attack_lane(stage.lanes[laneInd].enemyUnits);
-	attack_lane(stage.lanes[laneInd].playerUnits);
+	attack_lane(stage, stage.lanes[laneInd].enemyUnitIndexes);
+	attack_lane(stage, stage.lanes[laneInd].playerUnitIndexes);
 }
-void Trap::attack_lane(std::vector<Unit>& units) const {
-	for (auto& unit : units) {
+void Trap::attack_lane(Stage& stage, const std::vector<size_t>& unitIndexes) const {
+	for (const auto& index : unitIndexes) {
+		auto& unit = stage.getUnit(index);
+
 		if (!valid_attack_target(unit)) continue;
 		if (dmgValue > 0.f) {
 			int dmg = trapType == TrapType::PERCENT_DMG ?

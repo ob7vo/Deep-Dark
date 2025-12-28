@@ -29,8 +29,8 @@
         "attack_range": [ -75, 300 ]
       }
     ],
-    "parts_cost": 5,
-    "recharge_timer": 2.5
+    "parts_cost": 0,
+    "recharge_timer": 0.1
   },
   "hurtbox": {
     "width": 50.0,

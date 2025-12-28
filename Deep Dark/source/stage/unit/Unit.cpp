@@ -8,18 +8,20 @@ const float RUST_TYPE_LEDGE_RANGE = 10.f;
 const float BASE_PHASING_TIMER = 1.f; // over 50 distance
 const float PHASE_GAP_PADDING = 25; // Distance from gaps to assure Units dont immediately fall
 
-Unit::Unit(Stage* curStage, sf::Vector2f startPos, int startingLane, const UnitStats* data,
-	UnitAniMap* aniMap, int id) : 
-	stage(curStage), 
-	stats(data), 
-	status(data),
-	anim(aniMap, data), 
-	movement(startPos, startingLane), 
-	id(id)
-{}
+void Unit::setup(Stage* curStage, sf::Vector2f startPos, int startingLane, const UnitStats* unitStats,
+	UnitAniMap* aniMap, int newSpawnID) {
+	stage = combat.stage = curStage;
+	stats = unitStats;
+
+	status.setup(unitStats);
+	anim.setup(aniMap, unitStats);
+	movement.setup(startPos, startingLane);
+
+	spawnID = newSpawnID;
+}
 
 void Unit::destroy_unit(DeathCause deathCauue) {
-	std::cout << "destroying Unit with id #" << id << std::endl;
+	std::cout << "destroying Unit with spawnID #" << spawnID << std::endl;
 	causeOfDeath |= deathCauue;
 
 	movement.cancel_tween();
@@ -27,7 +29,7 @@ void Unit::destroy_unit(DeathCause deathCauue) {
 	// THe base being destroyed means all units should die unconditionally 
 	// (no tranforming or reviving), and the death counter should not increment
 	if (deathCauue != DeathCause::BASE_WAS_DESTROYED) {
-		stage->recorder->add_death(stats->team, movement.currentLane, causeOfDeath);
+		stage->recorder->add_death(stats->team, movement.laneInd, causeOfDeath);
 
 		if (spawnCategory == UnitSpawnType::SUMMON)
 			stage->lower_summons_count(stats->id);
@@ -45,7 +47,7 @@ void Unit::call_death_anim(DeathCause deathCause) {
 	causeOfDeath |= deathCause;
 	anim.start(UnitAnimationState::DEATH);
 }
-bool Unit::move_req_check() { return !stage->can_push_move_request(id); }
+bool Unit::move_req_check() { return !stage->can_push_move_request(spawnID); }
 
 float calc_phase_timer(float distance, float speed) {
 	return (distance / speed);
@@ -62,17 +64,17 @@ void Unit::try_knockback(int oldHp, int enemyHitIndex, const UnitStats* enemySta
 			? UnitData::BULLY_KB_FORCE : UnitData::BASE_KB_FORCE;
 
 		if (enemyStats->has_augment(AugmentType::SQUASH)) {
-			movement.push_squash_request(*this);
+			movement.push_squash_request(stage, *this);
 		}
 		else if (enemyStats->has_augment(AugmentType::LAUNCH)) {
-			movement.push_launch_request(*this);
+			movement.push_launch_request(stage, *this);
 		}
-		else movement.knockback(*this, kbForce);
+		else movement.knockback(stage, *this, kbForce);
 	}
 	else if (enemyStats->try_proc_augment(AugmentType::SHOVE, enemyHitIndex))
-		movement.knockback(*this, UnitData::SHOVE_KB_FORCE);
+		movement.knockback(stage, *this, UnitData::SHOVE_KB_FORCE);
 	else if (enemyStats->try_proc_augment(AugmentType::WARP, enemyHitIndex))
-		movement.warp(*this, enemyStats);
+		movement.warp(stage, *this, enemyStats);
 }
 
 // Checks
@@ -91,10 +93,13 @@ bool Unit::enemy_is_in_sight_range() const{
 	auto [minLane, maxLane] = get_lane_sight_range();
 	
 	for (int i = minLane; i < maxLane; i++) {
-		std::vector<Unit>& enemyUnits = stage->lanes[i].getOpponentUnits(stats->team);
+		const auto& enemyUnitIndexes = stage->lanes[i].getOpponentUnits(stats->team);
 
-		for (auto it = enemyUnits.begin(); it != enemyUnits.end(); ++it) 
-			if (found_valid_target(*it, 0, sightDist)) return true;
+		for (const auto& index : enemyUnitIndexes)  
+			if (found_valid_target(stage->getUnit(index), 0, sightDist)) {
+				std::cout << "found unit" << std::endl;
+				return true;
+			}
 	}
 
 	return false;
@@ -105,7 +110,7 @@ bool Unit::found_valid_target(const Unit& enemy, float minRange, float maxRange)
 bool Unit::over_gap() const { 
 	// Check if the front of the hurtbox, as well as the back are BOTH off the lane
 	const auto& [left, right] = getHurtboxEdges();
-	return stage->lanes[movement.currentLane].within_gap(left, right);
+	return stage->lanes[movement.laneInd].within_gap(left, right);
 }
 
 bool Unit::can_make_surge(const Augment& aug) const {
@@ -162,7 +167,9 @@ void Unit::tick(float deltaTime) {
 		transform_state(deltaTime);
 		break;
 	default:
-		throw std::runtime_error("The Unit's current state has no");
+		if (status.hp > 0) {
+			throw std::runtime_error("The Unit's current state has no");
+		}
 		break;
 	}
 }
@@ -174,7 +181,7 @@ void Unit::moving_state(float deltaTime) {
 	anim.set_position(movement.pos);
 
 	if (can_fall())
-		movement.push_fall_request(*this);
+		movement.push_fall_request(stage, *this);
 	else if (enemy_is_in_sight_range()) {
 		if (status.can_phase()) anim.start(UnitAnimationState::PHASE_WINDUP);
 		else anim.start_idle_or_attack_animation(*this);
@@ -182,9 +189,9 @@ void Unit::moving_state(float deltaTime) {
 	else {
 		// in case Unit has both JUMP and LEAP, return if they succeed in jumping
 		if (stats->has_augment(AugmentType::JUMP) && get_lane() < stage->laneCount - 1 && 
-			movement.try_push_jump_request(*this)) 
+			movement.try_push_jump_request(stage, *this)) 
 			return; 
-		if (stats->has_augment(AugmentType::LEAP) && movement.try_leap(*this)) return;
+		if (stats->has_augment(AugmentType::LEAP) && movement.try_leap(stage, *this)) return;
 		if (rust_type_and_near_gap())
 			anim.start(UnitAnimationState::IDLE);
 	}
@@ -219,7 +226,7 @@ void Unit::knockback_state(float deltaTime) {
 	anim.update(deltaTime);
 	anim.set_position(movement.pos);
 
-	if (can_fall()) movement.push_fall_request(*this);
+	if (can_fall()) movement.push_fall_request(stage, *this);
 	else if (!movement.tweening()) {
 		if (status.dead()) anim.start(UnitAnimationState::DEATH);
 		else anim.start_move_idle_or_attack(*this);
@@ -254,7 +261,7 @@ void Unit::phase_windup_state(float deltaTime) {
 	else if (any(events & AnimationEvent::TRIGGER)) {
 		if (auto phaseAugment = stats->get_augment(AugmentType::PHASE)) {
 			float newX = get_pos().x + phaseAugment->value * static_cast<float>(stats->team);
-			newX = stage->lanes[movement.currentLane].get_stopping_point
+			newX = stage->lanes[movement.laneInd].get_stopping_point
 			(newX, stats->sightRange, stats->team, getHurtboxEdges());
 			float dist = std::abs(movement.pos.y - newX);
 

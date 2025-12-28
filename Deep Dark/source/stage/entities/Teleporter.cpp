@@ -18,18 +18,21 @@ void Teleporter::tick(Stage& stage, float dt) {
 	animPlayer.update(dt, sprite);
 	action(stage);
 }
-void Teleporter::check_units(std::vector<Unit>& units) const {
-	for (auto& unit : units) 
-		if (found_valid_target(unit)) 
-			unit.movement.push_teleport_request(unit, *this);
+void Teleporter::check_units(Stage& stage, const std::vector<size_t>& unitIndexes) const {
+	for (const auto& index : unitIndexes) {
+		auto& unit = stage.getUnit(index);
+
+		if (found_valid_target(unit))
+			unit.movement.push_teleport_request(&stage, unit, *this);
+	}
 }
 void Teleporter::action(Stage& stage) {
 	// input the units to check for
 	if (team == 0) {
-		check_units(stage.lanes[laneInd].getAllyUnits(-1));
-		check_units(stage.lanes[laneInd].getAllyUnits(1));
+		check_units(stage, stage.lanes[laneInd].getAllyUnits(UnitData::ENEMY_TEAM));
+		check_units(stage, stage.lanes[laneInd].getAllyUnits(UnitData::PLAYER_TEAM));
 	}
-	else check_units(stage.lanes[laneInd].getAllyUnits(team));
+	else check_units(stage,stage.lanes[laneInd].getAllyUnits(team));
 }
 
 void Teleporter::create_animation() {

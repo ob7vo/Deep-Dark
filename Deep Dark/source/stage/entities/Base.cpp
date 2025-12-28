@@ -61,7 +61,7 @@ void Base::create_cannon(const std::string& path, float magnification) {
 void Base::take_damage(Stage* stage, int dmg) {
 	hp -= dmg;
 
-	if (team == ENEMY_TEAM)
+	if (team == UnitData::ENEMY_TEAM)
 		stage->break_spawner_thresholds();
 
 	if (hp <= 0) stage->destroy_base(team);
@@ -94,8 +94,8 @@ void Base::tick(Stage& stage, float deltaTime) {
 	if (team == PLAYER_BASE || on_cooldown()) return;
 
 	for (const auto& lane : stage.lanes) {
-		for (const auto& unit : lane.playerUnits)
-			if (enemy_in_range(unit.get_pos().x)) {
+		for (const auto& index : lane.playerUnitIndexes)
+			if (enemy_in_range(stage.getUnit(index).get_pos().x)) {
 				try_fire_cannon();
 				return;
 			};

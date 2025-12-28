@@ -34,8 +34,9 @@ struct UnitMoveRequest {
 	UnitMoveRequest(const Unit& unit, int newLane, float axisPos, UnitMoveRequestType type);
 
 	std::optional<size_t> find_unit_to_move(const Stage& stage) const;
-	void process(Stage& stage, size_t unitToMoveIndex) const; 
-	void move_unit_by_request(Unit& unit, Stage& stage) const;
+	// Takes in the inex of the Unit inside of Lane's vector, not the pool
+	void process(Stage* stage, size_t fromIndex) const; 
+	void move_unit_by_request(Stage* stage, size_t unitIndex) const;
 
 	inline bool fall_request() const { return type == UnitMoveRequestType::FALL; }
 	inline bool teleport_request() const { return type == UnitMoveRequestType::TELEPORT; }

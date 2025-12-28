@@ -78,7 +78,7 @@ void Projectile::tick(Stage& stage, float deltaTime) {
 	sprite.setPosition(pos);
 
 	update_hit_times(deltaTime);
-	attack_units(stage.get_closest_lane(pos.y));
+	attack_units(stage);
 }
 void Projectile::draw(sf::RenderWindow& window) const {
 	sf::RectangleShape hitbox({stats->height, stats->width});
@@ -91,11 +91,15 @@ void Projectile::draw(sf::RenderWindow& window) const {
 	window.draw(hitbox);
 }
 
-void Projectile::attack_units(Lane& closetLane) {
-	for (auto& unit : closetLane.getOpponentUnits(stats->team)) {
+void Projectile::attack_units(Stage& stage) {
+	Lane& closetLane = stage.get_closest_lane(pos.y);
+
+	for (const auto& index : closetLane.getOpponentUnits(stats->team)) {
+		auto& unit = stage.getUnit(index);
+
 		if (!valid_target(unit)) continue;
 
-		std::pair<int, float> hitTime = { unit.id,2.5f };
+		std::pair<int, float> hitTime = { unit.spawnID, 2.5f };
 		hitUnits.push_back(hitTime);
 
 		// Trigger shove if the projectile has the augment
@@ -123,5 +127,5 @@ bool Projectile::within_bounds(sf::Vector2f p) const {
 }
 bool Projectile::valid_target(const Unit& enemy) const {
 	return !enemy.anim.invincible() && within_bounds(enemy.get_pos())
-		&& can_unit_hit_again(enemy.id);
+		&& can_unit_hit_again(enemy.spawnID);
 }

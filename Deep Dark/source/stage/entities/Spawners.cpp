@@ -51,10 +51,12 @@ void EnemySpawner::spawn_an_enemy(Stage& stage) {
 		currentSpawnIndex = 0;
 }
 void EnemySpawner::unleash_boss_shockwave(Stage& stage) const {
-	for (auto& lane : stage.lanes) {
-		for (auto& unit : lane.getOpponentUnits(ENEMY_TEAM))
-			if (!unit.anim.invincible())
-				unit.movement.knockback(unit, UnitData::BOSS_SHOCKWAVE_KB_FORCE);
+	for (const auto& lane : stage.lanes) {
+		for (const auto& index : lane.getOpponentUnits(UnitData::ENEMY_TEAM)){
+			auto& playerUnit = stage.getUnit(index);
+			if (!playerUnit.anim.invincible())
+				playerUnit.movement.knockback(&stage, playerUnit, UnitData::BOSS_SHOCKWAVE_KB_FORCE);
+		}
 	}
 }
 

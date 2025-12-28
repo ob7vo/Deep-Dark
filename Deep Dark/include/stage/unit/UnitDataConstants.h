@@ -1,11 +1,17 @@
 #pragma once
+#include <vcruntime.h>
+
+constexpr size_t NULL_UNIT_INDEX = -1;
 
 namespace UnitData {
-	inline const int TOTAL_PLAYER_UNITS = 7;
-	inline const int TOTAL_ENEMY_UNITS = 6;
-	inline const int TOTAL_UNITS = TOTAL_PLAYER_UNITS + TOTAL_ENEMY_UNITS;
+	inline constexpr int PLAYER_TEAM = 1;
+	inline constexpr int ENEMY_TEAM = -1;
 
-	inline const int NULL_ID = -1;
+	inline constexpr int TOTAL_PLAYER_UNITS = 7;
+	inline constexpr int TOTAL_ENEMY_UNITS = 6;
+	inline constexpr int TOTAL_UNITS = TOTAL_PLAYER_UNITS + TOTAL_ENEMY_UNITS;
+
+	inline constexpr int NULL_ID = -1;
 	inline constexpr int ENEMY_ID_OFFSET = 100;
 
 	inline constexpr int GEAR1 = 1;
