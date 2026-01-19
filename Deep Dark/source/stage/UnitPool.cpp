@@ -1,7 +1,10 @@
 #include "pch.h"
 #include "UnitPool.h"
 
-UnitPool::UnitPool() {
+UnitPool::UnitPool(Stage* stage) {
+	for (int i = 0; i < MAX_UNITS; i++)
+		pool[i].stage = pool[i].combat.stage = stage;
+
 	available.set();
 }
 

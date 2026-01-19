@@ -2,6 +2,7 @@
 #include "Stage.h"
 #include "Unit.h"
 #include "StageRecord.h"
+#include "UnitConfig.h"
 #include "Utils.h"
 
 const int MAX_SUMMONS = 10;
@@ -10,7 +11,7 @@ const int MAX_PROJECTILES = 10;
 
 using json = nlohmann::json;
 
-Stage::Stage(const json& stageSetJson, StageRecord* rec) : recorder(rec),
+Stage::Stage(const json& stageSetJson, StageRecord* rec) : unitPool(this), recorder(rec),
 	enemyBase(stageSetJson["enemy_base"], -1), playerBase(stageSetJson["player_base"], 1)
 {
 	laneCount = (int)stageSetJson["lanes"].size();
@@ -60,7 +61,7 @@ Stage::Stage(const json& stageSetJson, StageRecord* rec) : recorder(rec),
 
 		for (const auto& aug : enemySpawners[i].enemyStats.augments)
 			if (has(aug.augType & AugmentType::PROJECTILE))
-				projConfigMap[aug.intValue] = ProjectileConfig(aug.intValue, enemySpawners[i].unitMagnification);
+				projDataMap[aug.intValue] = ProjectileData(aug.intValue, enemySpawners[i].unitMagnification);
 	}
 	
 	break_spawner_thresholds();
@@ -135,8 +136,8 @@ bool Stage::reached_unit_capacity(int team) {
 	return count >= get_enemy_base(-team).maxUnits;
 }
 void Stage::lower_summons_count(int id) {
-	if (unitConfigMap.contains(id))
-		unitConfigMap[id]->count--;
+	if (unitDataMap.contains(id))
+		unitDataMap[id]->count--;
 }
 
 void checker(Stage& stage) {
@@ -144,14 +145,15 @@ void checker(Stage& stage) {
 		const auto& l = stage.lanes[i];
 		std::cout << "Lane #" << 0 << " has [" << l.enemyUnitIndexes.size() <<
 			"] ENEMY Units: [ ";
-		for (int i = 0; i < l.enemyUnitIndexes.size(); i++)
-			std::cout << l.enemyUnitIndexes[i] << ", ";
+		for (const auto& index : l.enemyUnitIndexes)
+			std::cout << index << ", ";
 		std::cout << "]" << std::endl;
 
+		// Print  the same but for players
 		std::cout << "Lane #" << 0 << " has [" << l.playerUnitIndexes.size() <<
 			"] PLAYER Units: [ ";
-		for (int i = 0; i < l.playerUnitIndexes.size(); i++)
-			std::cout << l.playerUnitIndexes[i] << ", ";
+		for (const auto& index : l.playerUnitIndexes)
+			std::cout << index << ", ";
 		std::cout << "]" << std::endl;
 	}
 }
@@ -175,7 +177,7 @@ Unit* Stage::create_unit(int laneIndex, const UnitStats* unitStats, UnitAniMap* 
 	if (auto index = unitPool.spawn_unit()) {
 		lanes[laneIndex].getAllyUnits(unitStats->team).emplace_back(*index);
 
-		getUnit(*index).setup(this, spawnPos, laneIndex, unitStats, aniMap, nextUnitID);
+		getUnit(*index).setup(spawnPos, laneIndex, unitStats, aniMap, nextUnitID);
 		return &unitPool.pool[*index];
 	}
 	else return nullptr;
@@ -226,15 +228,15 @@ void Stage::create_summon(const Unit& unit) {
 		}
 	}
 }
-UnitConfig* Stage::get_unit_config(int id, float magnification, UnitSpawnType spawnType) {
-	if (unitConfigMap.contains(id))
-		return unitConfigMap[id]->count < MAX_SUMMONS ? unitConfigMap[id].get() : nullptr;
+UnitData* Stage::get_unit_config(int id, float magnification, UnitSpawnType spawnType) {
+	if (unitDataMap.contains(id))
+		return unitDataMap[id]->count < MAX_SUMMONS ? unitDataMap[id].get() : nullptr;
 
-	nlohmann::json unitJson = spawnType == UnitSpawnType::SUMMON ? UnitData::createSummonJson(id) 
-		 : UnitData::createUnitJson(id, 2);
-	unitConfigMap[id] = std::make_unique<UnitConfig>(unitJson, magnification);
+	nlohmann::json unitJson = spawnType == UnitSpawnType::SUMMON ? UnitConfig::createSummonJson(id) 
+		 : UnitConfig::createUnitJson(id, 2);
+	unitDataMap[id] = std::make_unique<UnitData>(unitJson, magnification);
 
-	return unitConfigMap[id] ? unitConfigMap[id].get() : nullptr;
+	return unitDataMap[id] ? unitDataMap[id].get() : nullptr;
 }
 
 Surge* Stage::create_surge(const Unit& unit, const Augment& surge) {
@@ -285,10 +287,10 @@ void Stage::create_projectile(const Unit& unit, const Augment& aug) {
 	}
 
 	int id = aug.intValue;
-	if (!projConfigMap.contains(id)) projConfigMap[id] = ProjectileConfig(id);
+	if (!projDataMap.contains(id)) projDataMap[id] = ProjectileData(id);
 
 	const nlohmann::json projJson = ProjData::get_proj_json(id);
-	Projectile& proj = projectiles.emplace_back(projConfigMap[id]);
+	Projectile& proj = projectiles.emplace_back(projDataMap[id]);
 
 	// The first character of pathing_type (string in json) decides the Projectile's PathingType
 	switch (projJson["pathing"]["type"].get<std::string>()[0]) {
@@ -331,7 +333,7 @@ void Stage::create_hitbox_visualizers(sf::Vector2f pos, std::pair<float, float> 
 	float width = range.second - range.first;
 	sf::RectangleShape shape({ width, HITBOX_HEIGHT });
 
-	float originX = team == UnitData::PLAYER_TEAM ? 0 : width;
+	float originX = team == UnitConfig::PLAYER_TEAM ? 0 : width;
 	float posX = pos.x + (range.first * static_cast<float>(team));
 	shape.setOrigin({ originX, HITBOX_HEIGHT });
 	shape.setFillColor(HITBOX_COLOR);

@@ -2,6 +2,7 @@
 #include "Loadout.h"
 #include "Camera.h"
 #include "ArmorySlot.h"
+#include "UnitConfig.h"
 #include "UITextures.h"
 
 LoadoutSlot::LoadoutSlot(const nlohmann::json& file, const ArmorySlot& unit)
@@ -30,7 +31,7 @@ void Loadout::create_loadout(const std::array<ArmorySlot, 10>& armorySlots) {
 		slots[j] = LoadoutSlot(Textures::UI::t_defaultUnitSlot);
 }
 void Loadout::set_slot(const ArmorySlot& unit, int loadoutSlotInd) {
-	const nlohmann::json unitJson = UnitData::createUnitJson(unit.id, unit.gear);
+	const nlohmann::json unitJson = UnitConfig::createUnitJson(unit.id, unit.gear);
 
 	slots[loadoutSlotInd] = LoadoutSlot(unitJson, unit);
 }

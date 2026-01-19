@@ -22,7 +22,7 @@ public:
     std::pair<int, int> curHeldUnit = { -1,1 };
     bool heldUnitWasSlotted = false;
     // The forms of the Units shown in the selector
-    std::array<int, UnitData::TOTAL_PLAYER_UNITS> displayedGears;
+    std::array<int, UnitConfig::TOTAL_PLAYER_UNITS> displayedGears;
     
     explicit ArmoryMenu(Camera& cam);
     ~ArmoryMenu() final = default;

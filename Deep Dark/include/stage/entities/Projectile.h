@@ -12,13 +12,13 @@ class Unit;
 const int ACTIVE_STATE = 0;
 const int DESTROYED_STATE = 1;
 
-struct ProjectileConfig {
+struct ProjectileData {
 	ProjectileStats stats = {};
 	std::array<sf::Texture, 2> textures;
 	std::array<AnimationClip, 2> aniArr;
 
-	ProjectileConfig() = default;
-	explicit ProjectileConfig(int id, float magnification = 1.f);
+	ProjectileData() = default;
+	explicit ProjectileData(int id, float magnification = 1.f);
 };
 
 class Projectile : public StageEntity {
@@ -39,7 +39,7 @@ public:
 	std::unique_ptr<Pathing> pathing = nullptr;
 
 	Projectile() = default;
-	explicit Projectile(ProjectileConfig& config);
+	explicit Projectile(ProjectileData& config);
 	~Projectile() = default;
 	Projectile(Projectile&&) = default;
 	Projectile& operator=(Projectile&&) = default;

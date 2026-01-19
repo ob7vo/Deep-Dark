@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "ArmoryMenu.h"
-#include "UnitData.h"
 #include "UILayout.h"
 #include "ArmorySlot.h"
 #include "Camera.h"
@@ -9,7 +8,7 @@
 
 using namespace UI::ArmoryMenu;
 using namespace UI::Colors;
-using namespace UnitData;
+using namespace UnitConfig;
 
 ArmoryMenu::ArmoryMenu(Camera& cam) : Menu(cam), stageSetMenu(cam) {
 	std::vector<Button*> btns = {};
@@ -207,7 +206,7 @@ void ArmoryMenu::shift_empty_slots() {
 	}
 }
 void ArmoryMenu::change_displayed_gear(int id, int gear) {
-	if (id >= UnitData::ENEMY_ID_OFFSET) return; // IDs >= 100 belong to enemies
+	if (id >= UnitConfig::ENEMY_ID_OFFSET) return; // IDs >= 100 belong to enemies
 
 	for (int i = 0; i < filledUnitSlots; i++)
 		if (slots[i].id == id) {

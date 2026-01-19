@@ -8,9 +8,8 @@ const float RUST_TYPE_LEDGE_RANGE = 10.f;
 const float BASE_PHASING_TIMER = 1.f; // over 50 distance
 const float PHASE_GAP_PADDING = 25; // Distance from gaps to assure Units dont immediately fall
 
-void Unit::setup(Stage* curStage, sf::Vector2f startPos, int startingLane, const UnitStats* unitStats,
+void Unit::setup(sf::Vector2f startPos, int startingLane, const UnitStats* unitStats,
 	UnitAniMap* aniMap, int newSpawnID) {
-	stage = combat.stage = curStage;
 	stats = unitStats;
 
 	status.setup(unitStats);
@@ -61,7 +60,7 @@ void Unit::try_knockback(int oldHp, int enemyHitIndex, const UnitStats* enemySta
 		// If the Enemy both has the Bully Augment and targets this Unit's
 		// typings, increase the force to 1.5f
 		float kbForce = enemyStats->has_augment(AugmentType::BULLY) && is_targeted(enemyStats->targetTypes) 
-			? UnitData::BULLY_KB_FORCE : UnitData::BASE_KB_FORCE;
+			? UnitConfig::BULLY_KB_FORCE : UnitConfig::BASE_KB_FORCE;
 
 		if (enemyStats->has_augment(AugmentType::SQUASH)) {
 			movement.push_squash_request(stage, *this);
@@ -72,7 +71,7 @@ void Unit::try_knockback(int oldHp, int enemyHitIndex, const UnitStats* enemySta
 		else movement.knockback(stage, *this, kbForce);
 	}
 	else if (enemyStats->try_proc_augment(AugmentType::SHOVE, enemyHitIndex))
-		movement.knockback(stage, *this, UnitData::SHOVE_KB_FORCE);
+		movement.knockback(stage, *this, UnitConfig::SHOVE_KB_FORCE);
 	else if (enemyStats->try_proc_augment(AugmentType::WARP, enemyHitIndex))
 		movement.warp(stage, *this, enemyStats);
 }
@@ -81,6 +80,25 @@ void Unit::try_knockback(int oldHp, int enemyHitIndex, const UnitStats* enemySta
 bool Unit::enemy_in_range(float xPos, float minRange, float maxRange) const {
 	float dist = (xPos - get_pos().x) * (float)stats->team;
 	return dist >= minRange && dist <= maxRange;
+}
+std::pair<int, int> Unit::get_lane_reach() const {
+	const auto& [minLane, maxLane] = stats->get_hit_stats(combat.hitIndex).laneReach;
+
+	// minLane.might be negative, so do std::abs
+	int min = std::max(get_lane() - std::abs(minLane), 0);
+	int max = std::min(get_lane() + maxLane, stage->laneCount - 1);
+
+	return { min, max };
+}
+std::pair<int, int> Unit::get_lane_sight_range() const {
+	int min = std::max(get_lane() - stats->laneSight.first, 0);
+	int max = std::min(get_lane() + stats->laneSight.second, stage->laneCount - 1);
+
+	return { min, max };
+}
+std::pair<float, float> Unit::getHurtboxEdges() const {
+	float edge = movement.pos.x - (stats->hurtBox.x * (float)stats->team);
+	return std::minmax(movement.pos.x, edge);
 }
 bool Unit::enemy_is_in_sight_range() const{
 	float sightMultiplier = status.blinded() ? 0.5f : 1;
@@ -91,15 +109,13 @@ bool Unit::enemy_is_in_sight_range() const{
 		return true;
 
 	auto [minLane, maxLane] = get_lane_sight_range();
-	
-	for (int i = minLane; i < maxLane; i++) {
-		const auto& enemyUnitIndexes = stage->lanes[i].getOpponentUnits(stats->team);
 
-		for (const auto& index : enemyUnitIndexes)  
-			if (found_valid_target(stage->getUnit(index), 0, sightDist)) {
-				std::cout << "found unit" << std::endl;
-				return true;
-			}
+	for (int i = minLane; i <= maxLane; i++) {
+		const auto& enemyUnitIndexes = stage->lanes[i].getOpponentUnits(stats->team);
+		
+		for (const auto& index : enemyUnitIndexes) 
+			if (found_valid_target(stage->getUnit(index), 0, sightDist)) 
+				return true;		
 	}
 
 	return false;
@@ -166,7 +182,11 @@ void Unit::tick(float deltaTime) {
 	case UnitAnimationState::TRANSFORM:
 		transform_state(deltaTime);
 		break;
+	case UnitAnimationState::DEATH:
+		death_state(deltaTime);
+		break;
 	default:
+		// The only case it should be here is if its dead and waiting to be removed
 		if (status.hp > 0) {
 			throw std::runtime_error("The Unit's current state has no");
 		}
@@ -217,8 +237,16 @@ void Unit::attack_state(float deltaTime) {
 void Unit::idling_state(float deltaTime) {
 	anim.update(deltaTime);
 
-	if (enemy_is_in_sight_range())
-		anim.start_idle_or_attack_animation(*this);
+	if (enemy_is_in_sight_range()) {
+		// I cant just call anim.start_idle_or_attack() because Idle Animation 
+		// Would just be constantly started over and over when an enemy is found
+		// but the Unit can't attack. The nested "if" is needed so Move isn't started
+		if (combat.cooldown <= 0.f) {
+			combat.hitIndex = 0;
+			anim.start(UnitAnimationState::ATTACK);
+		}
+		else return;
+	}
 	else if (!rust_type_and_near_gap())
 		anim.start(UnitAnimationState::MOVE);
 }
@@ -290,7 +318,8 @@ void Unit::death_state(float deltaTime) {
 		if (auto selfDestruct = stats->get_augment(AugmentType::SELF_DESTRUCT))
 			combat.self_destruct(*this, *selfDestruct);
 	}
-	else if (any(events & AnimationEvent::FINAL_FRAME)) destroy_unit();
+	else if (any(events & AnimationEvent::FINAL_FRAME)) 
+		destroy_unit();
 }
 void Unit::transform_state(float deltaTime) {
 	auto events = anim.update(deltaTime);
@@ -309,23 +338,3 @@ void Unit::transform_state(float deltaTime) {
 	}
 }
 #pragma endregion
-
-std::pair<int, int> Unit::get_lane_reach() const {
-	const auto& [minLane, maxLane] = stats->get_hit_stats(combat.hitIndex).laneReach;
-
-	// minLane.might be negative, s do std::abs
-	int min = std::max(get_lane() - std::abs(minLane), 0);
-	int max = std::min(get_lane() + maxLane, stage->laneCount-1);
-
-	return { min, max };
-}
-std::pair<int, int> Unit::get_lane_sight_range() const {
-	int min = std::max(get_lane() - stats->laneSight.first, 0);
-	int max = std::min(get_lane() + stats->laneSight.second, stage->laneCount-1);
-
-	return { min, max };
-}
-std::pair<float, float> Unit::getHurtboxEdges() const {
-	float edge = movement.pos.x - (stats->hurtBox.x * (float)stats->team);
-	return std::minmax(movement.pos.x, edge);
-}

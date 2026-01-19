@@ -1,5 +1,6 @@
 #pragma once
 #include "TextureManager.h"
+#include <SFML/Graphics/Sprite.hpp>
 
 class ArmoryMenu;
 

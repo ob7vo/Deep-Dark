@@ -49,7 +49,7 @@ void StageSetMenu::create_enemy_sprites(const nlohmann::json& stageSetJson) {
 	// There can be multiple spawners for the same enemy type
 	// SO keep track of the ones include to not duplicate sprites
 
-	std::bitset<UnitData::TOTAL_ENEMY_UNITS> includedEnemies;
+	std::bitset<UnitConfig::TOTAL_ENEMY_UNITS> includedEnemies;
 
 	// Get the Number of Unique Enemies
 	std::unordered_set<int> uniqueEnemyIds = {};
@@ -66,15 +66,15 @@ void StageSetMenu::create_enemy_sprites(const nlohmann::json& stageSetJson) {
 		int id = enemy["unit_id"].get<int>();
 		int gear = enemy.value("unit_gear", 1);
 
-		if (includedEnemies[id - UnitData::ENEMY_ID_OFFSET]) continue;
-		includedEnemies[id - UnitData::ENEMY_ID_OFFSET] = true;
+		if (includedEnemies[id - UnitConfig::ENEMY_ID_OFFSET]) continue;
+		includedEnemies[id - UnitConfig::ENEMY_ID_OFFSET] = true;
 
 		sf::Texture& unitTexture = enemyUnitTextures.emplace_back();
 
 		// Get and use the json for the Enemys Idle Sprite Sheet
 		// The Sprites will be of the enemy's first Idle  frame 
-		const nlohmann::json idleAnimConfig = UnitData::createUnitJson(id, gear)["animations"]["idle"];
-		std::string idleAnimPath = UnitData::getUnitGearPath(id, gear) + "idle.png";
+		const nlohmann::json idleAnimConfig = UnitConfig::createUnitJson(id, gear)["animations"]["idle"];
+		std::string idleAnimPath = UnitConfig::getUnitGearPath(id, gear) + "idle.png";
 		sf::Vector2i cellSize = { idleAnimConfig["cell_size"][0], idleAnimConfig["cell_size"][1] };
 
 		Textures::loadTexture(unitTexture, idleAnimPath);

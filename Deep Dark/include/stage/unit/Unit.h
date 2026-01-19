@@ -3,7 +3,7 @@
 #include "UnitStatus.h"
 #include "UnitAnimation.h"
 #include "UnitCombat.h"
-#include "UnitData.h"
+#include "UnitStats.h"
 
 const int MAX_EFFECTS = 4;
 
@@ -36,7 +36,7 @@ public:
 	Unit(const Unit&) = delete;
 	Unit& operator=(const Unit&) = delete;
 	
-	void setup(Stage* stage, sf::Vector2f startPos, int startingLane, const UnitStats* data,
+	void setup(sf::Vector2f startPos, int startingLane, const UnitStats* data,
 		UnitAniMap* p_aniMap, int spawnID = -1);
 
 	bool move_req_check();
@@ -65,11 +65,15 @@ public:
 
 	void try_knockback(int oldHp, int enemyHitIndex, const UnitStats* enemyStats);
 
+	// Gives the lowest and highest lane index that the unit can attack.
+	// Will be inbounds, so loops must run by <= maxLane
 	std::pair<int, int> get_lane_reach() const;
+	// Gives the lowest and highest lane index that the unit can see.
+	// Will be inbounds, so loops must run by <= maxLane
 	std::pair<int, int> get_lane_sight_range() const;
 	std::pair<float, float> getHurtboxEdges() const;
 
-	inline bool player_team() const { return stats->team == UnitData::PLAYER_TEAM; }
+	inline bool player_team() const { return stats->team == UnitConfig::PLAYER_TEAM; }
 	inline bool dead() const { return status.hp <= 0 && anim.dead(); }
 	inline bool can_fall() const { return !stats->floating_type() && over_gap(); }
 

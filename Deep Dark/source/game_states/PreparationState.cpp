@@ -40,7 +40,7 @@ void PreparationState::setup_button_functions() {
 		}
 		};
 
-	for (int i = 0; i < UnitData::TOTAL_PLAYER_UNITS; i++) {
+	for (int i = 0; i < UnitConfig::TOTAL_PLAYER_UNITS; i++) {
 		armoryMenu.unitSelectionBtn(i).onClick = [i, this](bool isM1) {
 			if (isM1) armoryMenu.start_dragging_unit(i);
 			else {

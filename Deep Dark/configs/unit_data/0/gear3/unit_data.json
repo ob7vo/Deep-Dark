@@ -33,7 +33,7 @@
     "recharge_timer": 0.1
   },
   "hurtbox": {
-    "width": 50.0,
+    "width": 225.0,
     "height": 65.0
   },
   "animations": {
@@ -100,7 +100,7 @@
   ],
   "types": [ "typeless" ],
   "target_types": [ "all" ],
-  "augments_mask": [ "code_breaker", "heavyweight", "bully" ],
+  "augments_mask": [ "code_breaker", "heavyweight"],
   "cores": [
     ["maxHp_*_2.5", "hit2_=_200","speed_+_30"]
   ]

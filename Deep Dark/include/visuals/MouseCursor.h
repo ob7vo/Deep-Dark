@@ -1,5 +1,6 @@
 #pragma once
 #include "TextureManager.h"
+#include <SFML/Graphics/Sprite.hpp>
 
 const float DOUBLE_CLICK_WINDOW = 0.3f;
 

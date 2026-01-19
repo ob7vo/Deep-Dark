@@ -17,7 +17,7 @@
           "player_spawn_position": 200,
           "enemy_spawn_position": 800,
           "y_position": 400.0,
-          "gaps": [ [ 450.0, 470.0 ] ]
+          "gaps": [ [ 250.0, 470.0 ] ]
         },
         {
           "player_spawn_position": 200,

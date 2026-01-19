@@ -45,7 +45,7 @@ int main()
  
     Textures::initializeAll();
     Surge::init_animations();
-    SaveSystem::Get().initialize();
+    SaveSystem::initialize();
 
     fpsText.setCharacterSize(20);
     fpsText.setFillColor(sf::Color::White);

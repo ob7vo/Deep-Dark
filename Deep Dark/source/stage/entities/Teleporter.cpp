@@ -29,8 +29,8 @@ void Teleporter::check_units(Stage& stage, const std::vector<size_t>& unitIndexe
 void Teleporter::action(Stage& stage) {
 	// input the units to check for
 	if (team == 0) {
-		check_units(stage, stage.lanes[laneInd].getAllyUnits(UnitData::ENEMY_TEAM));
-		check_units(stage, stage.lanes[laneInd].getAllyUnits(UnitData::PLAYER_TEAM));
+		check_units(stage, stage.lanes[laneInd].getAllyUnits(UnitConfig::ENEMY_TEAM));
+		check_units(stage, stage.lanes[laneInd].getAllyUnits(UnitConfig::PLAYER_TEAM));
 	}
 	else check_units(stage,stage.lanes[laneInd].getAllyUnits(team));
 }

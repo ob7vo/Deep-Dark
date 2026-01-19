@@ -1,5 +1,5 @@
 #pragma once
-#include "UnitDataConstants.h"
+#include "UnitConfigConstants.h"
 
 const float EDGE_EXTENSION = 7.5f;
 const float WALL_PADDING = 5.f;
@@ -26,10 +26,10 @@ struct Lane {
 	void setShapes();
 	void add_shape(std::pair<float, float> gap);
 
-	inline std::vector<size_t>& getOpponentUnits(int team) { return team == UnitData::PLAYER_TEAM ? enemyUnitIndexes : playerUnitIndexes; }
-	inline std::vector<size_t>& getAllyUnits(int team) { return team == UnitData::ENEMY_TEAM ? enemyUnitIndexes : playerUnitIndexes; }
-	inline const std::vector<size_t>& getOpponentUnits(int team) const { return team == UnitData::PLAYER_TEAM ? enemyUnitIndexes : playerUnitIndexes; }
-	inline const std::vector<size_t>& getAllyUnits(int team) const { return team == UnitData::ENEMY_TEAM ? enemyUnitIndexes : playerUnitIndexes; }
+	inline std::vector<size_t>& getOpponentUnits(int team) { return team == UnitConfig::PLAYER_TEAM ? enemyUnitIndexes : playerUnitIndexes; }
+	inline std::vector<size_t>& getAllyUnits(int team) { return team == UnitConfig::ENEMY_TEAM ? enemyUnitIndexes : playerUnitIndexes; }
+	inline const std::vector<size_t>& getOpponentUnits(int team) const { return team == UnitConfig::PLAYER_TEAM ? enemyUnitIndexes : playerUnitIndexes; }
+	inline const std::vector<size_t>& getAllyUnits(int team) const { return team == UnitConfig::ENEMY_TEAM ? enemyUnitIndexes : playerUnitIndexes; }
 
 	size_t get_unit_count(int team = 0) const;
 	sf::Vector2f get_spawn_pos(int team) const;

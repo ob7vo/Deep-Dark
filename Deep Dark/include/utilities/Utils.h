@@ -34,8 +34,13 @@ namespace Converting {
     }
 }
 namespace Printing {
-    inline std::string wrapString(std::string_view str) {
+    // Wrap a string in square brakets []
+    inline std::string wrap(std::string_view str) {
         return std::format("[{}]", str);
+    }
+    // Wrap a string in Parenthesis ()
+    inline std::string wrapP(std::string_view str) {
+        return std::format("({})", str);
     }
     template<typename T>
     inline std::string vec2(sf::Vector2<T> v2) {

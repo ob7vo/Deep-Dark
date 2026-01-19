@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "Animation.h"
-#include "UnitData.h"
+#include "UnitConfig.h"
 #include "Utils.h"
 
 using json = nlohmann::json;
@@ -82,12 +82,12 @@ std::pair<UnitAnimationState, bool> get_unit_ani_state(std::string_view str) {
     case 'd': return { UnitAnimationState::DEATH, false };
     default:
         throw std::runtime_error("could not get pair[AniState, bool(loops)] with string: ");
-        return { UnitAnimationState::WAITING, true };
+        return { UnitAnimationState::WAITING_TO_DELETE, true };
     }
 }
 
 void AnimationClip::set_duration(float duration) {
-    float rate = duration / (int)frames.size();
+    float rate = duration / (float)frames.size();
 
     for (auto& frame : frames) frame.duration = rate;
 }
@@ -108,8 +108,8 @@ AnimationClip AnimationClip::from_json(const nlohmann::json& file, sf::Texture* 
     // This is more lines, thohg it is more readable;
     float rate = 0.1f;
     if (file.contains("fps")) rate = 1.f / file["fps"];
-    else if (file.contains("duration")) rate = file["duration"] / frames;
-
+    else if (file.contains("duration")) rate = file["duration"] / (float)frames;
+    
     sf::Vector2i cellSizes = { file["cell_size"][0], file["cell_size"][1] };
     sf::Vector2f origin = { file["origin"][0], file["origin"][1] };
 
@@ -132,7 +132,7 @@ void AnimationClip::setup_unit_animation_map(const json& unitFile, UnitAniMap& a
     for (const auto& [animName, animData] : unitFile["animations"].items()) {
         auto [aniState, doesLoop] = get_unit_ani_state(animName);
 
-        std::string path = UnitData::getUnitGearPath(unitFile["unit_id"], unitFile.value("gear", 1));
+        std::string path = UnitConfig::getUnitGearPath(unitFile["unit_id"], unitFile.value("gear", 1));
         std::string fullPath = path + animName + ".png";
         Textures::loadTexture(unitTextures[curAnim], fullPath);
 

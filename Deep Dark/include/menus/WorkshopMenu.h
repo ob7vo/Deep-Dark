@@ -1,18 +1,16 @@
 #pragma once
 #include "Menu.h"
 #include "Animation.h"
-#include "UnitData.h"
+#include "UnitStats.h"
 #include <deque>
+#include <SFML/Graphics/RectangleShape.hpp>
 
 /*
 	Workshop will be a status screen dedicated to ONE unit that is selected 
 	from the Armory Equip Menu. The Unit will be on Display for the play to 
 	test its animations, and its stats, augments, and cores will be displayed
-	below (each seperated by their won dropdown/folder
+	below (each seperated by their won dropdown/folder /\/\ \/ /\/ \/\/
 */
-const int CONFIG_FOLDERS = 3; // The Dropdowns I mentioned.
-const int ANIMATION_BTNS = 7; // To play the 5 main animations, the pause BTN, and an extra for a special animation
-const int WORKSHOP_BTNS = ANIMATION_BTNS + 3;
 
 const int STAT_ICONS = 8;
 const std::array<float, 5> UNIT_ANIMATION_SPEEDS = { 0.5f, 0.75f, 1, 1.5f, 2.f };
@@ -30,7 +28,7 @@ struct WorkshopMenu : public Menu<UI::Workshop::BTN_COUNT> {
 
 	AnimationPlayer unitAnimPlayer;
 	std::deque<sf::Texture> unitAnimTextures;
-	UnitAniMap unitAnimations; // unordered map of Animations for the Unit
+	UnitAniMap unitAnimMap; // unordered map of Animations for the Unit
 	UnitAnimationState currentAnimState = UnitAnimationState::MOVE;
 	int unitAnimSpeedIndex = 2;
 
@@ -40,14 +38,22 @@ struct WorkshopMenu : public Menu<UI::Workshop::BTN_COUNT> {
 	explicit WorkshopMenu(Camera& cam);
 	~WorkshopMenu() final = default;
 
-	void setup_workshop_unit(int id, int gear);
+	/// <summary>
+	/// Sets up the workshop overview for a Unit.
+	/// </summary>
+	/// <param name="id">The unit's ID</param>
+	/// <param name="gear">The gear level/equipment tier</param>
+	/// <param name="enemyMagnification">Scaling multiplier for enemy stats when showcased in stage preview (default: 1.0)</param>
+	void setup_workshop_unit(int id, int gear, float enemyMagnification = 1.f);
 	void set_stat_texts(const nlohmann::json& unitJson);
 
 	void draw() final;
 	void check_mouse_hover() final;
 	bool on_mouse_press(bool isM1) final;
 	bool on_mouse_release(bool isM1) final;
+
 	void reset_positions() final;
+	void set_unit_anim_btn_positions();
 
 	void update(float deltaTime) override;
 	void update_unit_animation(float dt);
