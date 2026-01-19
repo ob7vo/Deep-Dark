@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "UITextures.h"
 #include "Utils.h"
-#include "UnitData.h"
+#include "UnitConfig.h"
 
 using namespace FolderPaths;
 
@@ -40,7 +40,7 @@ namespace Textures::UI {
 	std::array<sf::IntRect, 8> r_workshopStatsIcons;
 
 	sf::Texture t_defaultUnitSlot = createTexture("sprites/defaults/empty_slot.png");
-	std::array<std::array<sf::Texture, 3>, UnitData::TOTAL_PLAYER_UNITS> t_unitSlots;
+	std::array<std::array<sf::Texture, 3>, UnitConfig::TOTAL_PLAYER_UNITS> t_unitSlots;
 
 	const sf::Texture& getUnitSlot(int id, int gear) {
 			if (gear < 1 || gear > 3) {
@@ -58,8 +58,8 @@ namespace Textures::UI {
 		r_workshopAnimBtns = createTextureRects<7>(t_workshopAnimBtns.getSize(), { 32,32 });
 		r_workshopStatsIcons = createTextureRects<8>(t_workshopStatsIcons.getSize(), { 32,32 });
 
-		for (int id = 0; id < UnitData::TOTAL_PLAYER_UNITS; id++)
-			for (int gear = 1; gear <= UnitData::getMaxGear(id); gear++)
-				t_unitSlots[id][gear - 1] = UnitData::createSlotTexture(id, gear);
+		for (int id = 0; id < UnitConfig::TOTAL_PLAYER_UNITS; id++)
+			for (int gear = 1; gear <= UnitConfig::getMaxGear(id); gear++)
+				t_unitSlots[id][gear - 1] = UnitConfig::createSlotTexture(id, gear);
 	}
 }

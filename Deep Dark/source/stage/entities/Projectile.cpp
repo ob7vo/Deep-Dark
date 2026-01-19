@@ -3,7 +3,7 @@
 #include "Stage.h"
 #include "UILayout.h"
 
-ProjectileConfig::ProjectileConfig(int id, float mag) {
+ProjectileData::ProjectileData(int id, float mag) {
 	const nlohmann::json projJson = ProjData::get_proj_json(id);
 	stats.setup(projJson);
 	stats.dmg *= mag;
@@ -21,7 +21,7 @@ ProjectileConfig::ProjectileConfig(int id, float mag) {
 		if (++state >= 2) break;
 	}
 }
-Projectile::Projectile(ProjectileConfig& config) : 
+Projectile::Projectile(ProjectileData& config) : 
 	StageEntity({ -5000.f,-5000.f }, 0), // Calling pathing (made in Stage class) will get the start position
 	stats(&config.stats), 
 	aniArr(&config.aniArr) 

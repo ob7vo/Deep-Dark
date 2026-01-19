@@ -1,6 +1,6 @@
 #pragma once
 #include "Animation.h"
-#include "UnitData.h"
+#include "UnitStats.h"
 #include <deque>
 
 const sf::Vector2f FIRST_SLOT_POS = { 0.278f, 0.84375f };

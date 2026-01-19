@@ -1,9 +1,10 @@
 #pragma once
 #include "Menu.h"
-#include "UnitData.h"
+#include "UnitConfigConstants.h"
 #include "StageRestrictions.h"
 #include <bitset>
 #include <array>
+#include <SFML/Graphics/Sprite.hpp>
 
 // Will be owned by the Armroy Menu as a big overlay/draw.
 // IT will comprise of the background to show the enemys, the small sprites
@@ -15,7 +16,7 @@
 const int STAGE_SET_BUTTONS = 3;
 
 struct StageSetMenu : public Menu<STAGE_SET_BUTTONS> {
-    std::bitset<UnitData::TOTAL_PLAYER_UNITS> usedUnits;
+    std::bitset<UnitConfig::TOTAL_PLAYER_UNITS> usedUnits;
     // First index is the specific Unit Id, the bitset is its gear (form)
     UnitRestrictions unitRestrictions;
 

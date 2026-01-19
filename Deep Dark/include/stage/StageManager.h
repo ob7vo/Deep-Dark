@@ -60,7 +60,7 @@ struct StageManager
 	bool try_create_cloner(const Unit& unit);
 
 	void handle_death_augment(const Unit& unit);
-	void handle_unit_death(const Unit& unit);
+	void handle_unit_death(const Unit& unit, size_t poolIndex);
 
 	void notify_challenges();
 	void update_challenges_text(int clears);

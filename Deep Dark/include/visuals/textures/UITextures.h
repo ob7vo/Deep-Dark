@@ -1,6 +1,6 @@
 #pragma once
 #include "TextureManager.h"
-#include "UnitDataConstants.h"
+#include "UnitConfigConstants.h"
 
 namespace Textures::UI {
 	// General Buttons
@@ -35,7 +35,7 @@ namespace Textures::UI {
 	extern std::array<sf::IntRect, 8> r_workshopStatsIcons;
 
 	extern sf::Texture t_defaultUnitSlot;
-	extern std::array<std::array<sf::Texture, 3>, UnitData::TOTAL_PLAYER_UNITS> t_unitSlots;
+	extern std::array<std::array<sf::Texture, 3>, UnitConfig::TOTAL_PLAYER_UNITS> t_unitSlots;
 
 	const sf::Texture& getUnitSlot(int id, int gear);
 	const sf::Texture& getUnitSlot(std::pair<int, int> unit);

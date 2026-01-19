@@ -2,6 +2,7 @@
 #include "Spawners.h"
 #include "Stage.h"
 #include "EntityTextures.h"
+#include "UnitConfig.h"
 #include "Utils.h"
 
 #pragma region Constructors
@@ -21,7 +22,7 @@ EnemySpawner::EnemySpawner(const nlohmann::json& spawnerData)
 void EnemySpawner::create_unit_data(const nlohmann::json& spawnerData) {
 	int id = spawnerData["unit_id"];
 	int gear = spawnerData.value("unit_gear", 1);
-	const nlohmann::json unitJson = UnitData::createUnitJson(id, gear);
+	const nlohmann::json unitJson = UnitConfig::createUnitJson(id, gear);
 
 	AnimationClip::setup_unit_animation_map(unitJson, aniMap, unitTextures);
 	enemyStats = UnitStats::create_enemy(unitJson, spawnerData["magnification"].get<float>());
@@ -52,10 +53,10 @@ void EnemySpawner::spawn_an_enemy(Stage& stage) {
 }
 void EnemySpawner::unleash_boss_shockwave(Stage& stage) const {
 	for (const auto& lane : stage.lanes) {
-		for (const auto& index : lane.getOpponentUnits(UnitData::ENEMY_TEAM)){
+		for (const auto& index : lane.getOpponentUnits(UnitConfig::ENEMY_TEAM)){
 			auto& playerUnit = stage.getUnit(index);
 			if (!playerUnit.anim.invincible())
-				playerUnit.movement.knockback(&stage, playerUnit, UnitData::BOSS_SHOCKWAVE_KB_FORCE);
+				playerUnit.movement.knockback(&stage, playerUnit, UnitConfig::BOSS_SHOCKWAVE_KB_FORCE);
 		}
 	}
 }

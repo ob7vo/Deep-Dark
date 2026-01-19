@@ -3,7 +3,7 @@
 #include "Unit.h"
 #include "Stage.h"
 
-using namespace UnitData;
+using namespace UnitConfig;
 
 void UnitMovement::setup(sf::Vector2f pos, int lane) {
 	this->pos = pos;

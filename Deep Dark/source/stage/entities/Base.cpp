@@ -61,7 +61,7 @@ void Base::create_cannon(const std::string& path, float magnification) {
 void Base::take_damage(Stage* stage, int dmg) {
 	hp -= dmg;
 
-	if (team == UnitData::ENEMY_TEAM)
+	if (team == UnitConfig::ENEMY_TEAM)
 		stage->break_spawner_thresholds();
 
 	if (hp <= 0) stage->destroy_base(team);

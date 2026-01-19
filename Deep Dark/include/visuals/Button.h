@@ -1,5 +1,7 @@
 #pragma once
 #include "TextureManager.h"
+#include <SFML/Graphics/Sprite.hpp>
+#include <functional>
 
 class Camera; 
 

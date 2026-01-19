@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "WorkshopMenu.h"
-#include "UnitData.h"
+#include "UnitConfig.h"
 #include "Camera.h"
 #include "UILayout.h"
 #include "UITextures.h"
@@ -31,7 +31,7 @@ statTexts(make_statTexts()) {
 	switchGearBtn().onClick = [this](bool isM1) {if (isM1) switch_unit_gear(); };
 	animationSpeedBtn().onClick = [this](bool isM1) {if (isM1) unitAnimSpeedIndex = (unitAnimSpeedIndex + 1) % 5; };
 
-	for (int i = 0; i < 5; i++) {
+	for (int i = 0; i < UnitConfig::TOTAL_ANIM_COUNT; i++) {
 		// Setting the positions for animPlayer Btns takes a lot fo lines, so its done in reset_positions()
 		animation_btn(i).setup({}, UNIT_ANIMATION_BTN_SIZE, cam, t_workshopAnimBtns, r_workshopAnimBtns[i]);
 		animation_btn(i).onClick = [i, this](bool isM1) {
@@ -40,7 +40,7 @@ statTexts(make_statTexts()) {
 			unitHitboxes.clear();
 
 			if (newAnimState != currentAnimState)
-				unitAnimPlayer.start(&unitAnimations[newAnimState], unitSprite);
+				unitAnimPlayer.start(&unitAnimMap[newAnimState], unitSprite);
 			else unitAnimPlayer.reset(unitSprite);
 
 			currentAnimState = newAnimState;
@@ -48,26 +48,27 @@ statTexts(make_statTexts()) {
 	}
 }
 
-void WorkshopMenu::setup_workshop_unit(int id, int gear) {
+void WorkshopMenu::setup_workshop_unit(int id, int gear, float enemyMagnification) {
 	unitId = id;
 	unitGear = gear;
-	highestGear = UnitData::getMaxGear(id);
+	highestGear = UnitConfig::getMaxGear(id);
 
-	const nlohmann::json unitJson = UnitData::createUnitJson(id, gear);
+	const nlohmann::json unitJson = UnitConfig::createUnitJson(id, gear);
 
 	unitHitboxes.clear();
 	unitAnimTextures.clear();
-	unitAnimations.clear();
+	unitAnimMap.clear();
 
-	unitStats = UnitStats::create_player(unitJson);
-	AnimationClip::setup_unit_animation_map(unitJson, unitAnimations, unitAnimTextures);
+	unitStats = id < 100 ? UnitStats::create_player(unitJson) : UnitStats::create_enemy(unitJson, enemyMagnification);
+	AnimationClip::setup_unit_animation_map(unitJson, unitAnimMap, unitAnimTextures);
 
-	for (auto& [state, animPlayer] : unitAnimations) animPlayer.loops = true;
+	for (auto& [state, animPlayer] : unitAnimMap) animPlayer.loops = true;
 	currentAnimState = UnitAnimationState::MOVE;
 
-	unitAnimPlayer.start(&unitAnimations[currentAnimState], unitSprite);
+	unitAnimPlayer.start(&unitAnimMap[currentAnimState], unitSprite);
 	set_stat_texts(unitJson);
 }
+
 void WorkshopMenu::set_stat_texts(const nlohmann::json& unitJson) {
 	unitNameText.setString(unitJson["name"].get<std::string>());
 	if (unitJson.contains("description"))
@@ -100,10 +101,21 @@ void WorkshopMenu::reset_positions() {
 		iconPos += inc;
 	}
 
+	set_unit_anim_btn_positions();
+}
+void WorkshopMenu::set_unit_anim_btn_positions() {
 	sf::Vector2f animPos = UNIT_ANIMATION_BTN_POS;
 
-	for (int i = 0; i < 5; i++) {
+	for (int i = 0; i < 6; i++) {
 		animation_btn(i).set_norm_pos(animPos, cam);
+		animPos += UNIT_ANIMATION_BTN_INCREMENT;
+	}
+
+	if (unitId == -1) return;
+
+	for (const auto& [animState, anim] : unitAnimMap) {
+		if (isDefaultUnitAnim(animState)) continue;
+		animation_btn(animState).set_norm_pos(animPos, cam);
 		animPos += UNIT_ANIMATION_BTN_INCREMENT;
 	}
 }
@@ -114,7 +126,13 @@ void WorkshopMenu::draw() {
 		cam.queue_ui_draw(&statTexts[i]);
 	}
 
-	buttonManager.draw(cam);
+	buttonManager.draw(cam, 0, (int)ButtonIndex::ANIMATIONS);
+
+	// Draw only the animations the current unit has
+	for (const auto& [animState, anim] : unitAnimMap) {
+		cam.queue_ui_draw(&animation_btn(animState).sprite);
+	}
+
 	cam.queue_world_draw(&unitSprite);
 	cam.queue_ui_draw(&unitNameText);
 	cam.queue_ui_draw(&unitDescText);
@@ -156,6 +174,30 @@ void WorkshopMenu::create_hitbox_visualizer() {
 	unitHitboxes.push_back(shape);
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void WorkshopMenu::update(float dt) {
 	if (paused) return;
 	update_unit_animation(dt);
@@ -195,9 +237,14 @@ Button& WorkshopMenu::switchGearBtn() { return buttonManager.buttons[static_cast
 Button& WorkshopMenu::animationSpeedBtn() { return buttonManager.buttons[static_cast<int>(ButtonIndex::SPEED_UP)]; }
 
 Button& WorkshopMenu::animation_btn(UnitAnimationState ani) {
-	auto i = static_cast<int>(ani);
-	if (i < 0 || i > 4) i = 5; // if its a special animation
-	return animation_btn(i);
+	switch (ani) {
+	case UnitAnimationState::PHASE_WINDDOWN: return animation_btn(9);
+	case UnitAnimationState::PHASE_WINDUP: return animation_btn(10);
+	case UnitAnimationState::WAITING_TO_DELETE: 
+		throw std::runtime_error("Workshop cannot display the \"Waiting to Delete\" animation.");
+		return animation_btn(0);
+	default: return animation_btn(static_cast<int>(ani));
+	}
 }
 Button& WorkshopMenu::animation_btn(int i) { return buttonManager.buttons[i + static_cast<int>(ButtonIndex::ANIMATIONS)]; }
 

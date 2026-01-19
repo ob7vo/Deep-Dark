@@ -40,7 +40,7 @@ void RestrictionParser::apply_gear_restriction(UnitRestrictions& restrictions,
     restrictions.descriptions.push_back(desc);
 
     // Restrict all other gears
-    for (int unitId = 0; unitId < UnitData::TOTAL_PLAYER_UNITS; unitId++)
+    for (int unitId = 0; unitId < UnitConfig::TOTAL_PLAYER_UNITS; unitId++)
         for (int gear = 0; gear < 3; gear++) 
             if (gear != allowedGear - 1)  // gear is 0-indexed
                 restrictions.restrictedGears[unitId][gear] = true;
@@ -61,9 +61,9 @@ void RestrictionParser::apply_cost_restriction(UnitRestrictions& restrictions,
     );
 
     // Restrict units based on cost
-    for (int unitId = 0; unitId < UnitData::TOTAL_PLAYER_UNITS; unitId++) {
+    for (int unitId = 0; unitId < UnitConfig::TOTAL_PLAYER_UNITS; unitId++) {
         for (int gear = 0; gear < 3; gear++) {
-            int cost = UnitData::createUnitJson(unitId, gear)["stats"]["parts_cost"];  // Your function
+            int cost = UnitConfig::createUnitJson(unitId, gear)["stats"]["parts_cost"];  // Your function
             if (limitType[0] == 'a') // above
                 restrictions.restrictedGears[unitId][gear] = cost >= partsLimit;
             else if (limitType[0] == 'u') // under
@@ -84,8 +84,8 @@ void RestrictionParser::apply_unit_type_restriction(UnitRestrictions& restrictio
   //  );
 
     // Units wont change traits naturally (without cores), so use base gear
-    for (int unitId = 0; unitId < UnitData::TOTAL_PLAYER_UNITS; unitId++) {
-        std::vector<std::string> unitTypes = UnitData::createUnitJson(unitId, 1)["types"];
+    for (int unitId = 0; unitId < UnitConfig::TOTAL_PLAYER_UNITS; unitId++) {
+        std::vector<std::string> unitTypes = UnitConfig::createUnitJson(unitId, 1)["types"];
 
         // Check if ANY unit type is in required set - O(1) per check
         bool hasMatchingType = std::ranges::any_of(unitTypes, [&](const auto& type) {

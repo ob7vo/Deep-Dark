@@ -109,7 +109,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)\include\game_states\;$(ProjectDir)\include\visuals\;$(ProjectDir)\include\visuals\textures\;$(ProjectDir)\include\systems\;$(ProjectDir)\include\enums\;$(ProjectDir)\include\stage\entities\;$(ProjectDir)\include\stage\;$(ProjectDir)include\menus\;$(ProjectDir)\include\utilities\;$(ProjectDir)\include\stage\mechanics\;$(ProjectDir)\include\stage\unit\;$(ProjectDir)\game_saves\;C:\Users\amaec\source\SFML-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include\game_states\;$(ProjectDir)\include\visuals\;$(ProjectDir)\include\visuals\textures\;$(ProjectDir)\include\systems\;$(ProjectDir)\include\configs\;$(ProjectDir)\include\enums\;$(ProjectDir)\include\stage\entities\;$(ProjectDir)\include\stage\;$(ProjectDir)include\menus\;$(ProjectDir)\include\utilities\;$(ProjectDir)\include\stage\mechanics\;$(ProjectDir)\include\stage\unit\;$(ProjectDir)\game_saves\;C:\Users\amaec\source\SFML-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -143,6 +143,7 @@
   <ItemGroup>
     <ClCompile Include="game_saves\SaveSystem.cpp" />
     <ClCompile Include="Deep Dark.cpp" />
+    <ClCompile Include="source\configs\UnitConfig.cpp" />
     <ClCompile Include="source\stage\mechanics\StageChallenge.cpp" />
     <ClCompile Include="source\game_states\MainMenusGameState.cpp" />
     <ClCompile Include="source\game_states\PreparationState.cpp" />
@@ -185,7 +186,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="source\stage\mechanics\ProjectileData.cpp" />
-    <ClCompile Include="source\stage\unit\UnitData.cpp" />
+    <ClCompile Include="source\stage\unit\UnitStats.cpp" />
     <ClCompile Include="source\stage\unit\UnitStatus.cpp" />
     <ClCompile Include="source\visuals\Animation.cpp" />
     <ClCompile Include="source\visuals\ArmorySlot.cpp" />
@@ -198,6 +199,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="game_saves\SaveSystem.h" />
+    <ClInclude Include="include\configs\UnitConfig.h" />
     <ClInclude Include="include\enums\AnimationEvent.h" />
     <ClInclude Include="include\enums\AugmentTypes.h" />
     <ClInclude Include="include\enums\EnumFunctions.h" />
@@ -212,11 +214,12 @@
     <ClInclude Include="include\menus\StageUI.h" />
     <ClInclude Include="include\menus\StartMenu.h" />
     <ClInclude Include="include\enums\ChallengeTypes.h" />
+    <ClInclude Include="include\configs\StageConfig.h" />
     <ClInclude Include="include\stage\UnitPool.h" />
     <ClInclude Include="include\stage\mechanics\StageChallenge.h" />
     <ClInclude Include="include\stage\mechanics\StageRestrictions.h" />
     <ClInclude Include="include\stage\mechanics\UnitMoveRequest.h" />
-    <ClInclude Include="include\stage\unit\UnitDataConstants.h" />
+    <ClInclude Include="include\configs\UnitConfigConstants.h" />
     <ClInclude Include="include\utilities\CustomErrors.hpp" />
     <ClInclude Include="include\utilities\EntityConfigs.h" />
     <ClInclude Include="include\utilities\json.hpp" />
@@ -244,7 +247,7 @@
     <ClInclude Include="include\stage\entities\Teleporter.h" />
     <ClInclude Include="include\stage\entities\Trap.h" />
     <ClInclude Include="include\stage\unit\Unit.h" />
-    <ClInclude Include="include\stage\unit\UnitData.h" />
+    <ClInclude Include="include\stage\unit\UnitStats.h" />
     <ClInclude Include="include\systems\ButtonManager.h" />
     <ClInclude Include="include\systems\Camera.h" />
     <ClInclude Include="include\stage\Loadout.h" />

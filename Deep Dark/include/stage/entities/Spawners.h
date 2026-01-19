@@ -1,6 +1,6 @@
  #pragma once
 #include <StageEntity.h>
-#include <UnitData.h>
+#include <UnitStats.h>
 #include <json_fwd.hpp>
 #include "Augment.h"
 #include <deque>

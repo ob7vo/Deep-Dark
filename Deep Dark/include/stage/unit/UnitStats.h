@@ -1,33 +1,9 @@
 #pragma once
 #include "UnitEnums.h" // Has Augment.h, which has json_fwd.hpp
 #include "Augment.h"
-#include <SFML/Graphics/Texture.hpp>
-#include <json_fwd.hpp>
-#include "UnitDataConstants.h"
-
-const int TEAM_PLAYER = 1;
-const int TEAM_ENEMY = -1;
-const float GUARANTEED_CHANCE = 100.0f;
-
-namespace UnitData {
-	/// <summary> Get only the general folder of the Unit </summary>
-	std::string getUnitFolderPath(int id);
-	/// <summary> Get the specific unit files. (The ID folder path + the gear folder) </summary>
-	std::string getUnitGearPath(int id, int gear, bool throwError = true);
-	nlohmann::json createUnitJson(int id, int gear);
-	nlohmann::json createSummonJson(int id);
-	sf::Texture createSlotTexture(int id, int gear);
-	/// <summary> Gets the highest gear leel Unit #id has  </summary>
-	int getMaxGear(int id);
-
-	// Overloads
-	std::string getUnitGearPath(std::pair<int,int> unit);
-	nlohmann::json createUnitJson(std::pair<int, int> unit);
-	sf::Texture createSlotTexture(std::pair<int, int> unit);
-
-	bool shouldFlipSprite(int id);
-	sf::Color getGearColor(int id, int gear);
-};
+#include "json_fwd.hpp"
+#include "UnitConfigConstants.h"
+#include "SFML/System/Vector2.hpp"
 
 struct Hit {
 	int dmg = 0;
@@ -39,6 +15,7 @@ struct Hit {
 		dmg(dmg), laneReach(laneReach), attackRange(attackRange) { }
 };
 
+// Runtime stats for the Units during Gameplay (Shared data via pointer)
 struct UnitStats {
 	// * = wont be change by core
 	int id = -1; // *

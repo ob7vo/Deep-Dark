@@ -23,13 +23,13 @@ class Unit;
 struct Stage;
 struct StageRecord;
 
-struct UnitConfig {
+struct UnitData {
 	/// <summary> How many Unit Instances are using this data </summary>
 	int count = 0;
 	const UnitStats stats;
 	UnitAniMap ani;
 
-	UnitConfig(const nlohmann::json& file, float mag) :
+	UnitData(const nlohmann::json& file, float mag) :
 		stats(UnitStats::create_enemy(file, mag)) {
 	}
 }; 
@@ -61,8 +61,8 @@ struct Stage
 	std::vector<Trap> traps = {}; // Persistant
 
 	// Configs
-	std::unordered_map<int, ProjectileConfig> projConfigMap = {};
-	std::unordered_map<int, std::unique_ptr<UnitConfig>> unitConfigMap;
+	std::unordered_map<int, ProjectileData> projDataMap = {};
+	std::unordered_map<int, std::unique_ptr<UnitData>> unitDataMap;
 
 	Base enemyBase = {};
 	Base playerBase = {};
@@ -85,7 +85,7 @@ struct Stage
 	/// <summary> Reserved for Bosses. They die and tehn transform, like a Phase-Transition </summary>
 	void transform_unit(const Unit& unit);
 	void create_summon(const Unit& unit);
-	UnitConfig* get_unit_config(int id, float magnification, UnitSpawnType spawnType);
+	UnitData* get_unit_config(int id, float magnification, UnitSpawnType spawnType);
 
 	// Creating Surges
 	Surge* create_surge(const Unit& unit, const Augment& surge);

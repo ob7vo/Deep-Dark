@@ -171,10 +171,12 @@ void StageManager::handle_death_augment(const Unit& unit) {
 	try_spawn_death_surge(unit);
 	try_create_cloner(unit);
 }
-void StageManager::handle_unit_death(const Unit& unit) {
+void StageManager::handle_unit_death(const Unit& unit, size_t poolIndex) {
 	handle_death_augment(unit);
 
-	if (unit.stats->team == UnitData::ENEMY_TEAM)
+	stage->unitPool.freeUnit(poolIndex);
+
+	if (unit.stats->team == UnitConfig::ENEMY_TEAM)
 		wallet.collect_parts_from_unit(unit, stageRecorder);
 }
 
@@ -218,7 +220,8 @@ void StageManager::update_units(std::vector<size_t>& unitIndexes, float deltaTim
 
 		// Swap and pop
 		if (unit.dead()) {
-			handle_unit_death(unit);
+			handle_unit_death(unit, unitIndexes[i]);
+
 			unitIndexes[i] = unitIndexes.back();
 			unitIndexes.pop_back();
 		}
@@ -322,7 +325,7 @@ void StageManager::tick(float deltaTime) {
 	stage->effectSpritePositions.clear();
 
 	// If the stage set is ongoing or enemies won, keeps spawning them in.
-	if (!stage->reached_unit_capacity(UnitData::ENEMY_TEAM) && stage->victoriousTeam != UnitData::PLAYER_TEAM)
+	if (!stage->reached_unit_capacity(UnitConfig::ENEMY_TEAM) && stage->victoriousTeam != UnitConfig::PLAYER_TEAM)
 		spawn_enemies();
 
 	update_lanes(deltaTime); 

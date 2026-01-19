@@ -2,7 +2,7 @@
 #include <json_fwd.hpp>
 #include <array>
 #include <bitset>
-#include "UnitData.h"
+#include "UnitConfig.h"
 
 /// <summary>
 /// Restrictions that actively inhibit the player during while playing a stage
@@ -15,7 +15,7 @@ struct StageRestrictions {
 /// </summary>
 struct UnitRestrictions {
     /// <summary> If true, that specific gear CANNOT be used </summary>
-    std::array<std::bitset<3>, UnitData::TOTAL_PLAYER_UNITS> restrictedGears;
+    std::array<std::bitset<3>, UnitConfig::TOTAL_PLAYER_UNITS> restrictedGears;
     int maxUsableSlots = 10;
 
     // Descriptions for UI

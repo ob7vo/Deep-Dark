@@ -15,7 +15,6 @@ private:
 	sf::Sprite sprite = sf::Sprite(defTex);
 	sf::RectangleShape hurtbox;
 public:
-	bool drawable = true;
 
 	UnitAnimation() = default;
 	~UnitAnimation() = default;
@@ -36,6 +35,8 @@ public:
 	void update_visual_state();
 	void enter_is_phasing_state();
 
+	inline void reset() { player.reset(sprite); }
+	inline void restart() { player.restart(); }
 	inline bool falling() const { return state == UnitAnimationState::FALLING; }
 	inline bool dying() const { return state == UnitAnimationState::DEATH; }
 	inline bool dead() const { return dying() && player.onFinalFrame(); }

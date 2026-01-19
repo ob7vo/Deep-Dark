@@ -1,7 +1,7 @@
 #pragma once
 #include <SFML/System/Vector2.hpp>
 #include <array>
-#include <UnitDataConstants.h>
+#include <UnitConfigConstants.h>
 
 namespace UI 
 {
@@ -21,7 +21,7 @@ namespace Colors {
 
 //MENUS
 namespace ArmoryMenu {
-	constexpr int BTN_COUNT = UnitData::TOTAL_PLAYER_UNITS + 2;
+	constexpr int BTN_COUNT = UnitConfig::TOTAL_PLAYER_UNITS + 2;
 
 	constexpr sf::Vector2f FIRST_SLOT_POS = { 0.225f, 0.15f };
 	constexpr sf::Vector2f SLOT_INCREMENT = { 0.15f, 0.1f };
@@ -45,7 +45,7 @@ namespace ArmoryMenu {
 	constexpr sf::Vector2f STAGE_SET_BTN_SIZE = { 0.08f, 0.08f };
 
 	enum class ButtonIndex {
-		RETURN = UnitData::TOTAL_PLAYER_UNITS,
+		RETURN = UnitConfig::TOTAL_PLAYER_UNITS,
 		STAGE_SET = BTN_COUNT - 1
 	};
 	// 0.089f, 0.0625f
@@ -175,7 +175,7 @@ namespace StageSet {
 } // namespace StageSet
 
 namespace Workshop {
-	constexpr int BTN_COUNT = 10;
+	constexpr int BTN_COUNT = 4 + UnitConfig::TOTAL_ANIM_COUNT;
 
 	constexpr sf::Vector2f RETURN_BTN_POS = { 0.1f, 0.1f };
 	constexpr sf::Vector2f RETURN_BTN_SIZE = { 0.05f, 0.05f };

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "UnitAnimation.h"
+#include "UnitConfig.h"
 #include "Unit.h"
 
 constexpr sf::Color HURTBOX_COLOR = { 0, 255, 255, static_cast<uint8_t>(255 * 0.2f) };
@@ -19,8 +20,8 @@ void UnitAnimation::setup(UnitAniMap* map, const UnitStats* stats) {
 
 	// These are for the debuging/creation process to make configing
 	// Unit sprites easier. Will be removed in final build
-	if (UnitData::shouldFlipSprite(stats->id)) sprite.setScale({ -1, 1 });
-	sprite.setColor(UnitData::getGearColor(stats->id, stats->gear));
+	if (UnitConfig::shouldFlipSprite(stats->id)) sprite.setScale({ -1, 1 });
+	sprite.setColor(UnitConfig::getGearColor(stats->id, stats->gear));
 }
 
 void UnitAnimation::draw(sf::RenderWindow& window) const {
@@ -73,7 +74,7 @@ void UnitAnimation::set_position(sf::Vector2f pos) {
 std::string UnitAnimation::stateToString(UnitAnimationState state) {
 	switch (state) {
 	case UnitAnimationState::FALLING: return "falling";
-	case UnitAnimationState::WAITING: return "waiting";
+	case UnitAnimationState::WAITING_TO_DELETE: return "waiting";
 	case UnitAnimationState::MOVE: return "move";
 	case UnitAnimationState::JUMPING: return "jump";
 	case UnitAnimationState::PHASE_WINDDOWN: return "phase_windown";

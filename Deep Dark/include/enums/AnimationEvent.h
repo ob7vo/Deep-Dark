@@ -1,5 +1,6 @@
 #pragma once
 #include <string_view>
+#include <EnumFunctions.h>
 
 enum class AnimationEvent : std::uint32_t {
 	EMPTY_EVENT = 0,
@@ -9,6 +10,7 @@ enum class AnimationEvent : std::uint32_t {
 	TRIGGER = 1 << 3,
 	TRIGGER_2 = 1 << 4
 };
+
 constexpr AnimationEvent operator|(AnimationEvent a, AnimationEvent b) {
     return static_cast<AnimationEvent>(
         static_cast<std::uint32_t>(a) |

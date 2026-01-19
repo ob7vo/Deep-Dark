@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 enum class UnitAnimationState {
-	WAITING = -4,
+	WAITING_TO_DELETE = -4, // If the Unit is in this state, its about to get deleted (more specifically its spot in pool is freed up)
 	PHASE_WINDDOWN = -3,
 	PHASE_WINDUP = -2,
 	SUMMON = -1,
@@ -12,10 +12,10 @@ enum class UnitAnimationState {
 	IDLE = 2, // Any AnimationState below this make the Unit INVINCIBLE (title card)
 	KNOCKBACK = 3,
 	FALLING = 4,
-	JUMPING = 5,
-	PHASE_ACTIVE = 6,
-	TRANSFORM = 7,
-	DEATH
+	DEATH = 5,
+	JUMPING = 6,
+	PHASE_ACTIVE = 7,
+	TRANSFORM = 8,
 };
 enum class DeathCause {
 	NONE = 0,
@@ -88,4 +88,8 @@ constexpr DeathCause operator~(DeathCause a) {
 constexpr DeathCause& operator|=(DeathCause& a, DeathCause b) {
 	a = a | b;
 	return a;
+}
+
+constexpr bool isDefaultUnitAnim(UnitAnimationState state) {
+	return static_cast<int>(state) >= 0 && static_cast<int>(state) <= 5;
 }

@@ -1,7 +1,7 @@
 #pragma once
 #include "StageEntity.h"
 #include "Augment.h"
-#include "UnitDataConstants.h"
+#include "UnitConfigConstants.h"
 
 const float TRAP_HEIGHT = 15.0f;
 enum class TrapType {

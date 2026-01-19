@@ -26,7 +26,7 @@ bool UnitCombat::process_attack_on_lanes(Unit& attacker) const{
 	return hitEnemy;
 }
 bool UnitCombat::attack_lane(Unit& attacker, int laneIndex) const{
-	std::vector<size_t>& enemyIndexes = stage->lanes[laneIndex].getOpponentUnits(attacker.stats->team);
+	const auto& enemyIndexes = stage->lanes[laneIndex].getOpponentUnits(attacker.stats->team);
 
 	if (attacker.stats->singleTarget)
 		return attack_single_target(attacker, enemyIndexes);
@@ -40,10 +40,11 @@ bool UnitCombat::attack_single_target(Unit& attacker, const std::vector<size_t>&
 	float minDist = abs(attacker.get_pos().x - stage->get_enemy_base(attacker.stats->team).xPos());
 
 	for (const auto& index : enemyIndexes) {
-		auto& enemyUnit = stage->getUnit(index);
+		const auto& enemyUnit = stage->getUnit(index);
 
 		if (attacker.found_valid_target(enemyUnit, minAttackRange, maxAttackRange)) {
 			float dist = abs(attacker.get_pos().x - enemyUnit.get_pos().x);
+
 			if (dist < minDist) {
 				minDist = dist;
 				targetIndex = enemyUnit.spawnID;
@@ -147,12 +148,11 @@ bool UnitCombat::try_terminate_unit(const Unit& attacker, const Unit& hitUnit, i
 
 void UnitCombat::self_destruct(Unit& explodingUnit, const Augment& selfDestruct) const {
 	int minLane = std::max(0, explodingUnit.movement.laneInd - selfDestruct.intValue);
-	int maxLane = std::min(explodingUnit.stage->laneCount - 1,
-		explodingUnit.movement.laneInd + selfDestruct.intValue);
+	int maxLane = std::min(stage->laneCount - 1, explodingUnit.movement.laneInd + selfDestruct.intValue);
 
 	for (int i = minLane; i <= maxLane; i++) {
-		auto& lane = explodingUnit.stage->lanes[i];
-		auto& enemyIndexes = lane.getOpponentUnits(explodingUnit.stats->team);
+		auto& lane = stage->lanes[i];
+		const auto& enemyIndexes = lane.getOpponentUnits(explodingUnit.stats->team);
 
 		for (const auto& index : enemyIndexes) {
 			auto& enemyUnit = stage->getUnit(index);
