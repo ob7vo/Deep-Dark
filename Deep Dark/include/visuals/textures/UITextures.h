@@ -2,7 +2,12 @@
 #include "TextureManager.h"
 #include "UnitConfigConstants.h"
 
+#pragma warning(disable: 542)
+
 namespace Textures::UI {
+	// General Icons
+	extern sf::Texture t_scrapParts;
+
 	// General Buttons
 	extern sf::Texture t_returnBtn;
 	extern sf::Texture t_closeBtn;
@@ -23,6 +28,8 @@ namespace Textures::UI {
 	// WorkShop
 	extern sf::Texture t_switchGearBtn;
 	extern sf::Texture t_speedUpBtn;
+	extern sf::Texture t_upgradeUnitBtn;;
+
 	// Armory Menu
 	extern sf::Texture t_enterStageSetBtn;
 
@@ -30,7 +37,7 @@ namespace Textures::UI {
 	extern sf::Texture t_menuBG2;
 
 	extern sf::Texture t_workshopAnimBtns;
-	extern std::array<sf::IntRect, 7> r_workshopAnimBtns;
+	extern std::array<sf::IntRect, 10> r_workshopAnimBtns;
 	extern sf::Texture t_workshopStatsIcons;
 	extern std::array<sf::IntRect, 8> r_workshopStatsIcons;
 

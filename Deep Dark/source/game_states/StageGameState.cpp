@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "StageGameState.h"
+#include "StageSaveData.h"
 #include "PreparationState.h"
 #include "ArmoryMenu.h"
 
@@ -35,7 +36,7 @@ void StageState::update(float deltaTime) {
 	update_ui(deltaTime);
 }
 void StageState::render() {
-	stageManager.draw(cam.get_window());
+	stageManager.draw(cam.getWindow());
 	loadout.draw_slots(cam, stageManager.wallet.parts);
 	stageUI.draw();
 }
@@ -57,21 +58,42 @@ void StageState::quit_stage() {
 	nextStateEnterData = std::make_unique<PrepEnterData>(cur, prev);
 	readyToEndState = true;
 }
-void StageState::end_current_stage_set() {
-	if (++curStageSet >= stageSetCount) quit_stage(); // no logic for winning at the moment
-			
+void StageState::handle_stage_victory() {
+	int currentWinsOnStage = StageSaveData::AddStageClear(curStageID);
+
+	// First Clear
+	if (currentWinsOnStage == 1) {
+		StageSaveData::UnlockStages(curStageID);
+	}
+
+	StageSaveData::SetClearTime(curStageID, stageManager.stageRecorder.timeSinceStart);
+	for (int i = 0; i < StageConfig::CHALLENGES_PER_STAGE; i++)
+		if (stageManager.challenges[i].cleared) 
+			StageSaveData::ClearChallenge(curStageID, i);
+}
+void StageState::end_current_stage_set(bool playerWon) {
+	if (playerWon) {
+		curStageSet++;
+		
+		if (curStageSet >= stageSetCount) {
+			handle_stage_victory();
+			return;
+		}
+	}
+}
+void StageState::enter_next_stage_set() {
 	/*
-	* When a stage set (phase) is completed, if there is more sets avalible, 
-	* the game will go to PrepState. In this case, PrepState needs to know 
+	* When a stage set (phase) is completed, if there is more sets avalible,
+	* the game will go to PrepState. In this case, PrepState needs to know
 	* The list of units used during this set, so that they may not be reused in the next set
-	* 
+	*
 	* StageState will handle keeping the wallet, challenges, and stageRecord intact.
 	*/
 	std::vector<int> usedUnits;
-	for (int i = 0; i < loadout.filledSlots; i++) 
+	for (int i = 0; i < loadout.filledSlots; i++)
 		usedUnits.push_back(loadout.slots[i].unitStats.id);
 
-	nextStateEnterData = std::make_unique<StageSetPrepEnterData>(usedUnits, stageId, curStageSet);
+	nextStateEnterData = std::make_unique<StageSetPrepEnterData>(usedUnits, curStageID, curStageSet);
 	readyToEndState = true;
 }
 

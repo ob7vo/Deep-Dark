@@ -25,7 +25,7 @@ bool StageChallenge::notify(const StageManager& manager) {
 	// handled by the pointer above
 	switch (challengeType) {
 	case ChallengeType::CLEAR_TIME:
-		return cleared = compare((int)manager.stage->timeSinceStart, value);
+		return cleared = compare((int)manager.stageRecorder.timeSinceStart, value);
 	case ChallengeType::UNITS_AT_ONCE: {
 		return cleared = compare((int)get_current_unit_count(manager), value);
 	}

@@ -59,8 +59,11 @@ void Base::create_cannon(const std::string& path, float magnification) {
 }
 
 void Base::take_damage(Stage* stage, int dmg) {
-	hp -= dmg;
+	if (hp <= 0) return; // Unit's won't attack a destroyed base anyway, but may aswell put this here
 
+	hp -= dmg;
+	
+	// To activate enemy spawners that start after a % of damage to the enemy base
 	if (team == UnitConfig::ENEMY_TEAM)
 		stage->break_spawner_thresholds();
 
@@ -95,7 +98,7 @@ void Base::tick(Stage& stage, float deltaTime) {
 
 	for (const auto& lane : stage.lanes) {
 		for (const auto& index : lane.playerUnitIndexes)
-			if (enemy_in_range(stage.getUnit(index).get_pos().x)) {
+			if (enemy_in_range(stage.getUnit(index).movement.pos.x)) {
 				try_fire_cannon();
 				return;
 			};

@@ -8,6 +8,7 @@ const float RUST_TYPE_LEDGE_RANGE = 10.f;
 const float BASE_PHASING_TIMER = 1.f; // over 50 distance
 const float PHASE_GAP_PADDING = 25; // Distance from gaps to assure Units dont immediately fall
 
+Unit::Unit() : combat(*this), movement(*this), status(*this) {}
 void Unit::setup(sf::Vector2f startPos, int startingLane, const UnitStats* unitStats,
 	UnitAniMap* aniMap, int newSpawnID) {
 	stats = unitStats;
@@ -52,35 +53,42 @@ float calc_phase_timer(float distance, float speed) {
 	return (distance / speed);
 }
 void Unit::try_knockback(int oldHp, int enemyHitIndex, const UnitStats* enemyStats) {
-	if (anim.in_knockback()) return;
+	if (anim.in_knockback() || status.is_bolted()) return;
 
-	if (status.met_knockback_threshold(oldHp, stats)) {
-		if (auto shield = stats->get_augment(AugmentType::SHIELD)) status.shieldHp = shield->intValue;
+	if (status.met_knockback_threshold(oldHp)) 
+	{
+		if (auto shield = stats->get_augment(AugmentType::SHIELD)) 
+			status.shieldHp = shield->intValue;
 
 		// If the Enemy both has the Bully Augment and targets this Unit's
 		// typings, increase the force to 1.5f
 		float kbForce = enemyStats->has_augment(AugmentType::BULLY) && is_targeted(enemyStats->targetTypes) 
 			? UnitConfig::BULLY_KB_FORCE : UnitConfig::BASE_KB_FORCE;
 
-		if (enemyStats->has_augment(AugmentType::SQUASH)) {
-			movement.push_squash_request(stage, *this);
+		if (enemyStats->has_augment(AugmentType::SQUASH)) 
+		{
+			movement.push_squash_request();
 		}
-		else if (enemyStats->has_augment(AugmentType::LAUNCH)) {
-			movement.push_launch_request(stage, *this);
+		else if (enemyStats->has_augment(AugmentType::LAUNCH)) 
+		{
+			movement.push_launch_request();
 		}
-		else movement.knockback(stage, *this, kbForce);
+		else movement.knockback(kbForce);
 	}
-	else if (enemyStats->try_proc_augment(AugmentType::SHOVE, enemyHitIndex))
-		movement.knockback(stage, *this, UnitConfig::SHOVE_KB_FORCE);
-	else if (enemyStats->try_proc_augment(AugmentType::WARP, enemyHitIndex))
-		movement.warp(stage, *this, enemyStats);
+	else if (enemyStats->try_proc_augment(AugmentType::SHOVE, enemyHitIndex)) 
+	{
+		movement.knockback(UnitConfig::SHOVE_KB_FORCE);
+		
+		if (has(stats->augmentsMask, AugmentType::LINK))
+			status.link_augment(*enemyStats->get_augment(AugmentType::SHOVE));
+	}
+	else if (enemyStats->try_proc_augment(AugmentType::WARP, enemyHitIndex)) 
+	{
+		movement.warp(enemyStats);
+	}
 }
 
-// Checks
-bool Unit::enemy_in_range(float xPos, float minRange, float maxRange) const {
-	float dist = (xPos - get_pos().x) * (float)stats->team;
-	return dist >= minRange && dist <= maxRange;
-}
+// Getters
 std::pair<int, int> Unit::get_lane_reach() const {
 	const auto& [minLane, maxLane] = stats->get_hit_stats(combat.hitIndex).laneReach;
 
@@ -100,8 +108,32 @@ std::pair<float, float> Unit::getHurtboxEdges() const {
 	float edge = movement.pos.x - (stats->hurtBox.x * (float)stats->team);
 	return std::minmax(movement.pos.x, edge);
 }
+std::pair<float, float> Unit::get_attack_range() const {
+	auto range = stats->get_hit_stats(combat.hitIndex).attackRange;
+
+	if (status.is_scoped()) {
+		range.first *= 0.7f;
+		range.second *= 1.3f;
+	}
+
+	return range;
+}
+const std::vector<size_t>& Unit::getLaneAllies() const {
+	return stage->lanes[movement.laneInd].getAllyUnits(stats->team);
+}
+const std::vector<size_t>& Unit::getLaneEnemies() const {
+	return stage->lanes[movement.laneInd].getOpponentUnits(stats->team);
+}
+
+// Checks
+bool Unit::enemy_in_range(float xPos, float minRange, float maxRange) const {
+	float dist = (xPos - movement.pos.x) * (float)stats->team;
+	return dist >= minRange && dist <= maxRange;
+}
 bool Unit::enemy_is_in_sight_range() const{
-	float sightMultiplier = status.blinded() ? 0.5f : 1;
+	float sightMultiplier = status.get_blindness_multiplier();
+	if (status.is_scoped()) sightMultiplier *= 1.3f;
+
 	float sightDist = stats->sightRange * sightMultiplier;
 
 	// Check if the enemy's base is in range
@@ -128,7 +160,6 @@ bool Unit::over_gap() const {
 	const auto& [left, right] = getHurtboxEdges();
 	return stage->lanes[movement.laneInd].within_gap(left, right);
 }
-
 bool Unit::can_make_surge(const Augment& aug) const {
 	return aug.is_surge() && Random::chance(aug.percentage) &&
 		aug.can_hit(combat.hitIndex);
@@ -146,10 +177,11 @@ bool Unit::rust_type_and_near_gap() const {
 
 // Tick
 void Unit::tick(float deltaTime) {
-	if (status.overloaded()) deltaTime *= 0.5f;
+	deltaTime *= status.get_overclock_multiplier();
+	deltaTime *= status.get_overload_multiplier();
 
 	combat.cooldown -= deltaTime;
-	status.update_status_effects(*this, deltaTime);
+	status.update_status_effects(deltaTime);
 
 	switch (anim.get_state()) {
 	case UnitAnimationState::MOVE:
@@ -196,12 +228,12 @@ void Unit::tick(float deltaTime) {
 
 #pragma region Unit States
 void Unit::moving_state(float deltaTime) {
-	movement.move(*this, deltaTime);
+	movement.move(deltaTime);
 	anim.update(deltaTime);
 	anim.set_position(movement.pos);
 
 	if (can_fall())
-		movement.push_fall_request(stage, *this);
+		movement.push_fall_request();
 	else if (enemy_is_in_sight_range()) {
 		if (status.can_phase()) anim.start(UnitAnimationState::PHASE_WINDUP);
 		else anim.start_idle_or_attack_animation(*this);
@@ -209,9 +241,9 @@ void Unit::moving_state(float deltaTime) {
 	else {
 		// in case Unit has both JUMP and LEAP, return if they succeed in jumping
 		if (stats->has_augment(AugmentType::JUMP) && get_lane() < stage->laneCount - 1 && 
-			movement.try_push_jump_request(stage, *this)) 
+			movement.try_push_jump_request()) 
 			return; 
-		if (stats->has_augment(AugmentType::LEAP) && movement.try_leap(stage, *this)) return;
+		if (stats->has_augment(AugmentType::LEAP) && movement.try_leap()) return;
 		if (rust_type_and_near_gap())
 			anim.start(UnitAnimationState::IDLE);
 	}
@@ -230,7 +262,7 @@ void Unit::attack_state(float deltaTime) {
 			anim.start(UnitAnimationState::IDLE);
 	}
 	if (any(events & AnimationEvent::ATTACK)) {
-		combat.attack(*this);
+		combat.attack();
 		if (stats->has_augment(AugmentType::FRAGILE)) status.hp = 0;
 	}
 }
@@ -254,7 +286,7 @@ void Unit::knockback_state(float deltaTime) {
 	anim.update(deltaTime);
 	anim.set_position(movement.pos);
 
-	if (can_fall()) movement.push_fall_request(stage, *this);
+	if (can_fall()) movement.push_fall_request();
 	else if (!movement.tweening()) {
 		if (status.dead()) anim.start(UnitAnimationState::DEATH);
 		else anim.start_move_idle_or_attack(*this);
@@ -262,7 +294,7 @@ void Unit::knockback_state(float deltaTime) {
 	else {
 		// If the tween ends, and it was a LAUNCH tween, enter the drop portion of it.
 		UnitMoveRequestType finishedType = movement.update_tween(deltaTime);
-		if (finishedType == UnitMoveRequestType::LAUNCH) movement.finish_launch_tween(stage);
+		if (finishedType == UnitMoveRequestType::LAUNCH) movement.finish_launch_tween();
 	}
 }
 void Unit::falling_state(float deltaTime) {
@@ -288,7 +320,7 @@ void Unit::phase_windup_state(float deltaTime) {
 	if (anim.onFirstFrame()) remove(status.statusFlags, AugmentType::PHASE);
 	else if (any(events & AnimationEvent::TRIGGER)) {
 		if (auto phaseAugment = stats->get_augment(AugmentType::PHASE)) {
-			float newX = get_pos().x + phaseAugment->value * static_cast<float>(stats->team);
+			float newX = movement.pos.x + phaseAugment->value * static_cast<float>(stats->team);
 			newX = stage->lanes[movement.laneInd].get_stopping_point
 			(newX, stats->sightRange, stats->team, getHurtboxEdges());
 			float dist = std::abs(movement.pos.y - newX);
@@ -316,7 +348,7 @@ void Unit::death_state(float deltaTime) {
 	// AND it does explosion damage
 	if (any(events & AnimationEvent::TRIGGER)) {
 		if (auto selfDestruct = stats->get_augment(AugmentType::SELF_DESTRUCT))
-			combat.self_destruct(*this, *selfDestruct);
+			combat.self_destruct(*selfDestruct);
 	}
 	else if (any(events & AnimationEvent::FINAL_FRAME)) 
 		destroy_unit();

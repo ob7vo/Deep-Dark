@@ -5,45 +5,45 @@
 #include "Surge.h"
 
 #pragma region Attacking Functions
-void UnitCombat::attack(Unit& attacker) {
+void UnitCombat::attack() {
 	cooldown = attacker.stats->attackTime;
 
 	attacker.stage->create_hitbox_visualizers(
-		attacker.get_pos(), attacker.get_attack_range(), attacker.stats->team);
+		attacker.movement.pos, attacker.get_attack_range(), attacker.stats->team);
 
-	bool didHitEnemy = process_attack_on_lanes(attacker);
-	handle_post_attack_effects(attacker, didHitEnemy);
+	bool didHitEnemy = process_attack_on_lanes();
+	handle_post_attack_effects(didHitEnemy);
 
 	hitIndex = (hitIndex + 1) % attacker.stats->totalHits;
 }
-bool UnitCombat::process_attack_on_lanes(Unit& attacker) const{
+bool UnitCombat::process_attack_on_lanes() {
 	auto [minLane, maxLane] = attacker.get_lane_reach();
 	bool hitEnemy = false;
 
 	for (int laneInd = minLane; laneInd <= maxLane; laneInd++) 
-		hitEnemy |= attack_lane(attacker, laneInd);
+		hitEnemy |= attack_lane(laneInd);
 
 	return hitEnemy;
 }
-bool UnitCombat::attack_lane(Unit& attacker, int laneIndex) const{
+bool UnitCombat::attack_lane(int laneIndex) {
 	const auto& enemyIndexes = stage->lanes[laneIndex].getOpponentUnits(attacker.stats->team);
 
 	if (attacker.stats->singleTarget)
-		return attack_single_target(attacker, enemyIndexes);
+		return attack_single_target(enemyIndexes);
 	else
-		return attack_all_targets(attacker, enemyIndexes);
+		return attack_all_targets(enemyIndexes);
 }
-bool UnitCombat::attack_single_target(Unit& attacker, const std::vector<size_t>& enemyIndexes) const{
+bool UnitCombat::attack_single_target(const std::vector<size_t>& enemyIndexes) {
 	size_t targetIndex = NULL_UNIT_INDEX;
 
 	auto [minAttackRange, maxAttackRange] = attacker.get_attack_range();
-	float minDist = abs(attacker.get_pos().x - stage->get_enemy_base(attacker.stats->team).xPos());
+	float minDist = abs(attacker.movement.pos.x - stage->get_enemy_base(attacker.stats->team).xPos());
 
 	for (const auto& index : enemyIndexes) {
 		const auto& enemyUnit = stage->getUnit(index);
 
 		if (attacker.found_valid_target(enemyUnit, minAttackRange, maxAttackRange)) {
-			float dist = abs(attacker.get_pos().x - enemyUnit.get_pos().x);
+			float dist = abs(attacker.movement.pos.x - enemyUnit.movement.pos.x);
 
 			if (dist < minDist) {
 				minDist = dist;
@@ -55,15 +55,15 @@ bool UnitCombat::attack_single_target(Unit& attacker, const std::vector<size_t>&
 	if (targetIndex != NULL_UNIT_INDEX) {
 		auto& hitUnit = stage->getUnit(targetIndex);
 
-		if (hitUnit.status.take_damage(hitUnit, attacker)) {
-			on_kill(attacker, hitUnit);
+		if (hitUnit.status.take_damage(attacker)) {
+			on_kill(hitUnit);
 			return true;
 		}
 	}
 
 	return false;
 }
-bool UnitCombat::attack_all_targets(Unit& attacker, const std::vector<size_t>& enemyIndexes) const{
+bool UnitCombat::attack_all_targets(const std::vector<size_t>& enemyIndexes) {
 	bool hitEnemy = false;
 	auto [minAttackRange, maxAttackRange] = attacker.get_attack_range();
 
@@ -72,8 +72,8 @@ bool UnitCombat::attack_all_targets(Unit& attacker, const std::vector<size_t>& e
 
 		if (attacker.found_valid_target(enemyUnit, minAttackRange, maxAttackRange)) {
 			hitEnemy = true;
-			if (enemyUnit.status.take_damage(enemyUnit, attacker)) 
-				on_kill(attacker, enemyUnit);
+			if (enemyUnit.status.take_damage(attacker)) 
+				on_kill(enemyUnit);
 		}
 	}
 
@@ -82,12 +82,13 @@ bool UnitCombat::attack_all_targets(Unit& attacker, const std::vector<size_t>& e
 #pragma endregion
 
 #pragma region Post Attack Functions
-void UnitCombat::handle_post_attack_effects(Unit& attacker, bool hitEnemy) const{
-	try_attack_enemy_base(attacker, hitEnemy);
-	try_create_surge(attacker, hitEnemy);
-	try_create_projectile(attacker);
+void UnitCombat::handle_post_attack_effects(bool hitEnemy) const{
+	try_attack_enemy_base(hitEnemy);
+	try_create_surge(hitEnemy);
+	try_create_projectile();
 }
-void UnitCombat::try_create_surge(Unit& attacker, bool hitEnemy) const{
+
+void UnitCombat::try_create_surge(bool hitEnemy) const{
 	if (!hitEnemy || !attacker.stats->has_surge()) return;
 
 	for (auto& augment : attacker.stats->augments) {
@@ -110,7 +111,7 @@ void UnitCombat::try_create_surge(Unit& attacker, bool hitEnemy) const{
 		}
 	}
 }
-void UnitCombat::try_attack_enemy_base(Unit& attacker, bool& hitEnemy) const{
+void UnitCombat::try_attack_enemy_base(bool& hitEnemy) const {
 	// if the Unit is single target and has already hit an enemy.
 	if (attacker.stats->singleTarget && hitEnemy) return; 
 
@@ -127,15 +128,14 @@ void UnitCombat::try_attack_enemy_base(Unit& attacker, bool& hitEnemy) const{
 		hitEnemy = true;
 	}
 }
-void UnitCombat::try_create_projectile(Unit& attacker) const{
+void UnitCombat::try_create_projectile() const {
 	if (!attacker.stats->has_augment(AugmentType::PROJECTILE)) return;
 
 	for (auto& aug : attacker.stats->augments)
 		if (has(aug.augType & AugmentType::PROJECTILE) && aug.can_hit(hitIndex))
 			stage->create_projectile(attacker, aug);
 }
-
-bool UnitCombat::try_terminate_unit(const Unit& attacker, const Unit& hitUnit, int dmg) const {
+bool UnitCombat::try_terminate_unit(const Unit& hitUnit, int dmg) const{
 	if (!attacker.stats->has_augment(AugmentType::TERMINATE)) return false;
 
 	float threshold = attacker.stats->get_augment(AugmentType::TERMINATE)->value;
@@ -143,29 +143,45 @@ bool UnitCombat::try_terminate_unit(const Unit& attacker, const Unit& hitUnit, i
 
 	return curHpPercent <= threshold;
 }
-
 #pragma endregion
 
-void UnitCombat::self_destruct(Unit& explodingUnit, const Augment& selfDestruct) const {
-	int minLane = std::max(0, explodingUnit.movement.laneInd - selfDestruct.intValue);
-	int maxLane = std::min(stage->laneCount - 1, explodingUnit.movement.laneInd + selfDestruct.intValue);
+void UnitCombat::self_destruct(const Augment& selfDestruct) {
+	int minLane = std::max(0, attacker.movement.laneInd - selfDestruct.intValue);
+	int maxLane = std::min(stage->laneCount - 1, attacker.movement.laneInd + selfDestruct.intValue);
 
 	for (int i = minLane; i <= maxLane; i++) {
 		auto& lane = stage->lanes[i];
-		const auto& enemyIndexes = lane.getOpponentUnits(explodingUnit.stats->team);
+		const auto& enemyIndexes = lane.getOpponentUnits(attacker.stats->team);
 
 		for (const auto& index : enemyIndexes) {
 			auto& enemyUnit = stage->getUnit(index);
 
-			if (explodingUnit.found_valid_target(enemyUnit, selfDestruct.value2, selfDestruct.value2)
-				&& enemyUnit.status.take_damage(enemyUnit, (int)selfDestruct.value))
+			if (attacker.found_valid_target(enemyUnit, selfDestruct.value2, selfDestruct.value2)
+				&& enemyUnit.status.take_damage((int)selfDestruct.value))
 			{
-				on_kill(explodingUnit, enemyUnit);
+				on_kill(enemyUnit);
 			}
 		}
 	}
 }
-void UnitCombat::on_kill(Unit& attacker, Unit& enemyUnit) const {
+void UnitCombat::discharge(int oldHp) {
+	int totalHPLost = oldHp - attacker.status.hp;
+	float explosionRange = attacker.stats->sightRange * UnitConfig::CHARGE_RELEASE_RANGE_BOOST;
+
+	for (const auto& index : attacker.getLaneEnemies()) {
+		Unit& enemyUnit = attacker.stage->getUnit(index);
+
+		if (std::abs(attacker.movement.pos.x - enemyUnit.movement.pos.x) <= explosionRange &&
+			enemyUnit.status.take_damage(totalHPLost))
+		{
+			on_kill(enemyUnit);
+		}
+	}
+}
+
+void UnitCombat::on_kill(Unit& enemyUnit) {
+	kills++;
+
 	if (attacker.stats->try_proc_augment(AugmentType::PLUNDER))
 		enemyUnit.status.statusFlags |= AugmentType::PLUNDER;
 
@@ -174,6 +190,11 @@ void UnitCombat::on_kill(Unit& attacker, Unit& enemyUnit) const {
 
 	if (attacker.stats->has_augment(AugmentType::SALVAGE))
 		attacker.stage->create_summon(attacker);
+
+	if (const auto syphon = attacker.stats->get_augment(AugmentType::SYPHON)) {
+		if (kills % syphon->intValue == 0)
+			attacker.status.syphon(syphon);
+	}
 
 	enemyUnit.causeOfDeath |= DeathCause::UNIT;
 }

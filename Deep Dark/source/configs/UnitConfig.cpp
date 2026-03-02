@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "UnitConfig.h"
+#include "UnitSaveData.h"
 
 namespace UnitConfig {
     std::string getUnitFolderPath(int id) {
@@ -47,12 +48,16 @@ namespace UnitConfig {
 
         return slotTex;
     }
-    int getMaxGear(int id) {
-        int gears = 1;
-        while (std::filesystem::exists(getUnitGearPath(id, gears + 1, false)))
-            gears++;
+    int getMaxGear(int id, bool useEnemyCheck) {
+        // If its an enemy
+        if (id >= 100 || useEnemyCheck) {
+            int gears = 1;
+            while (std::filesystem::exists(getUnitGearPath(id, gears + 1, false)))
+                gears++;
 
-        return gears;
+            return gears;
+        }
+        else UnitSaveData::GetMaxGear(id);
     }
 
     // Overloadss

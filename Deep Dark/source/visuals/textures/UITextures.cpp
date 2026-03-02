@@ -6,6 +6,9 @@
 using namespace FolderPaths;
 
 namespace Textures::UI {
+	// General Icons
+	sf::Texture t_scrapParts = createTexture(path(uiPath, "scrap_parts.png"));
+
 	// General Buttons
 	sf::Texture t_returnBtn = createTexture(path(uiPath, "return_btn.png"));
 	sf::Texture t_pauseBtn = createTexture(path(uiPath, "pause_btn.png"));
@@ -16,16 +19,21 @@ namespace Textures::UI {
 
 	// Stage Select
 	sf::Texture t_stageNodeBtn = createTexture(path(stageSelectPath, "stage_node.png"));
-	sf::Texture t_armoryBtn = createTexture(path(stageSelectPath, "armory_btn.png"));
+	sf::Texture t_armoryBtn = createTexture(path(stageNodeMenuPath, "armory_btn.png"));
+
 	// Stage UI
 	sf::Texture t_upgradeWalletBtn = createTexture(path(stageUIPath, "upgrade_bag.png"));
 	sf::Texture t_fireCannonBtn = createTexture(path(stageUIPath, "fire_cannon.png"));
+
 	// Start Menu
 	sf::Texture t_quitBtn = createTexture(path(startMenuPath, "quit_btn.png"));
 	sf::Texture t_startGameBtn = createTexture(path(startMenuPath, "start_btn.png"));
+
 	// WorkShop
-	sf::Texture t_switchGearBtn = createTexture(path(workshopPath, "switch_gear.png"));
-	sf::Texture t_speedUpBtn = createTexture(path(workshopPath, "speed_up.png"));
+	sf::Texture t_switchGearBtn = createTexture(path(workshopPath, "switch_gear_btn.png"));
+	sf::Texture t_speedUpBtn = createTexture(path(workshopPath, "speed_up_btn.png"));
+	sf::Texture t_upgradeUnitBtn = createTexture(path(workshopPath, "upgrade_unit_btn.png"));
+
 	// Armory Menu
 	sf::Texture t_enterStageSetBtn = createTexture(path(armoryPath, "enter_stage_set_btn.png"));
 
@@ -35,7 +43,7 @@ namespace Textures::UI {
 	// MENUS -----------------------------------------------------------------------------
 
 	sf::Texture t_workshopAnimBtns = createTexture(path(workshopPath, "unit_animation_btns.png"));
-	std::array<sf::IntRect, 7> r_workshopAnimBtns;
+	std::array<sf::IntRect, 10> r_workshopAnimBtns;
 	sf::Texture t_workshopStatsIcons = createTexture(path(workshopPath, "unit_stats_icons.png"));
 	std::array<sf::IntRect, 8> r_workshopStatsIcons;
 
@@ -55,11 +63,11 @@ namespace Textures::UI {
 	const sf::Texture& getUnitSlot(std::pair<int, int> unit) { return getUnitSlot(unit.first, unit.second); }
 
 	void initialize() {
-		r_workshopAnimBtns = createTextureRects<7>(t_workshopAnimBtns.getSize(), { 32,32 });
+		r_workshopAnimBtns = createTextureRects<10>(t_workshopAnimBtns.getSize(), { 32,32 });
 		r_workshopStatsIcons = createTextureRects<8>(t_workshopStatsIcons.getSize(), { 32,32 });
 
 		for (int id = 0; id < UnitConfig::TOTAL_PLAYER_UNITS; id++)
-			for (int gear = 1; gear <= UnitConfig::getMaxGear(id); gear++)
+			for (int gear = 1; gear <= UnitConfig::getMaxGear(id, true); gear++)
 				t_unitSlots[id][gear - 1] = UnitConfig::createSlotTexture(id, gear);
 	}
 }

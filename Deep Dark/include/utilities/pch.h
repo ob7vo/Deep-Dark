@@ -18,9 +18,12 @@
 // Data Types
 #include <json.hpp>
 #include <memory>
+#include <map>
 #include <unordered_map>
 #include <unordered_set>
 #include <span>
 #include <vector>
+#include <deque>
+#include <set>
 #include <bitset>
 #include <bit>

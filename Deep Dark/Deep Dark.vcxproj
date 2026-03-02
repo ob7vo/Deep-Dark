@@ -109,7 +109,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)\include\game_states\;$(ProjectDir)\include\visuals\;$(ProjectDir)\include\visuals\textures\;$(ProjectDir)\include\systems\;$(ProjectDir)\include\configs\;$(ProjectDir)\include\enums\;$(ProjectDir)\include\stage\entities\;$(ProjectDir)\include\stage\;$(ProjectDir)include\menus\;$(ProjectDir)\include\utilities\;$(ProjectDir)\include\stage\mechanics\;$(ProjectDir)\include\stage\unit\;$(ProjectDir)\game_saves\;C:\Users\amaec\source\SFML-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include\visuals\camera\;$(ProjectDir)\include\visuals\ui\;$(ProjectDir)\include\game_states\;$(ProjectDir)\include\visuals\;$(ProjectDir)\include\visuals\textures\;$(ProjectDir)\include\systems\managers\;$(ProjectDir)\include\systems\observers\;$(ProjectDir)\include\systems\;$(ProjectDir)\include\configs\;$(ProjectDir)\include\enums\;$(ProjectDir)\include\stage\entities\;$(ProjectDir)\include\stage\main\;$(ProjectDir)\include\stage\;$(ProjectDir)include\menus\;$(ProjectDir)\include\utilities\main\;$(ProjectDir)\include\utilities\;$(ProjectDir)\include\stage\mechanics\;$(ProjectDir)\include\stage\unit\;$(ProjectDir)\include\saves\;C:\Users\amaec\source\SFML-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -141,16 +141,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="game_saves\SaveSystem.cpp" />
+    <ClCompile Include="source\configs\StageConfig.cpp" />
+    <ClCompile Include="source\menus\StageNodeMenu.cpp" />
+    <ClCompile Include="source\menus\StageResultsScreen.cpp" />
+    <ClCompile Include="source\saves\PlayerSaveData.cpp" />
+    <ClCompile Include="source\saves\SaveSystem.cpp" />
     <ClCompile Include="Deep Dark.cpp" />
+    <ClCompile Include="source\saves\StageSaveData.cpp" />
     <ClCompile Include="source\configs\UnitConfig.cpp" />
+    <ClCompile Include="source\saves\UnitSaveData.cpp" />
     <ClCompile Include="source\stage\mechanics\StageChallenge.cpp" />
     <ClCompile Include="source\game_states\MainMenusGameState.cpp" />
     <ClCompile Include="source\game_states\PreparationState.cpp" />
     <ClCompile Include="source\game_states\StageGameState.cpp" />
     <ClCompile Include="source\menus\ArmoryMenu.cpp" />
     <ClCompile Include="source\menus\Menu.cpp" />
-    <ClCompile Include="source\menus\StageSetMenu.cpp" />
+    <ClCompile Include="source\menus\StagePreviewMenu.cpp" />
     <ClCompile Include="source\menus\StageSelect.cpp" />
     <ClCompile Include="source\menus\StageUI.cpp" />
     <ClCompile Include="source\menus\StartMenu.cpp" />
@@ -161,22 +167,23 @@
     <ClCompile Include="source\stage\entities\StageEntity.cpp" />
     <ClCompile Include="source\stage\entities\Teleporter.cpp" />
     <ClCompile Include="source\stage\entities\Projectile.cpp" />
-    <ClCompile Include="source\stage\Loadout.cpp" />
+    <ClCompile Include="source\stage\main\Loadout.cpp" />
     <ClCompile Include="source\stage\mechanics\Lane.cpp" />
     <ClCompile Include="source\stage\mechanics\StageRestrictions.cpp" />
     <ClCompile Include="source\stage\mechanics\StageWallet.cpp" />
     <ClCompile Include="source\stage\mechanics\UnitMoveRequest.cpp" />
-    <ClCompile Include="source\stage\Stage.cpp" />
+    <ClCompile Include="source\stage\main\Stage.cpp" />
     <ClCompile Include="source\stage\entities\Surge.cpp" />
     <ClCompile Include="source\stage\entities\Trap.cpp" />
-    <ClCompile Include="source\stage\UnitPool.cpp" />
+    <ClCompile Include="source\stage\main\UnitPool.cpp" />
     <ClCompile Include="source\stage\unit\Unit.cpp" />
     <ClCompile Include="source\stage\unit\UnitTween.cpp" />
-    <ClCompile Include="source\systems\Camera.cpp" />
-    <ClCompile Include="source\systems\Observer.cpp" />
-    <ClCompile Include="source\stage\StageManager.cpp" />
-    <ClCompile Include="source\systems\StateManager.cpp" />
-    <ClCompile Include="source\systems\TextureManager.cpp" />
+    <ClCompile Include="source\visuals\camera\Camera.cpp" />
+    <ClCompile Include="source\systems\observers\Observer.cpp" />
+    <ClCompile Include="source\stage\main\StageManager.cpp" />
+    <ClCompile Include="source\systems\observers\Scheduler.cpp" />
+    <ClCompile Include="source\systems\managers\StateManager.cpp" />
+    <ClCompile Include="source\systems\managers\TextureManager.cpp" />
     <ClCompile Include="source\stage\unit\UnitAnimation.cpp" />
     <ClCompile Include="source\stage\unit\UnitCombat.cpp" />
     <ClCompile Include="source\stage\unit\UnitMovement.cpp" />
@@ -189,16 +196,24 @@
     <ClCompile Include="source\stage\unit\UnitStats.cpp" />
     <ClCompile Include="source\stage\unit\UnitStatus.cpp" />
     <ClCompile Include="source\visuals\Animation.cpp" />
-    <ClCompile Include="source\visuals\ArmorySlot.cpp" />
-    <ClCompile Include="source\visuals\Button.cpp" />
+    <ClCompile Include="source\visuals\camera\CameraRenderercpp.cpp" />
+    <ClCompile Include="source\visuals\camera\CameraTransform.cpp" />
+    <ClCompile Include="source\visuals\ui\ArmorySlot.cpp" />
+    <ClCompile Include="source\visuals\ui\Button.cpp" />
     <ClCompile Include="source\visuals\textures\BaseTextures.cpp" />
     <ClCompile Include="source\visuals\textures\EffectTextures.cpp" />
     <ClCompile Include="source\visuals\textures\EntityTextures.cpp" />
-    <ClCompile Include="source\visuals\Slider.cpp" />
+    <ClCompile Include="source\visuals\ui\Slider.cpp" />
     <ClCompile Include="source\visuals\textures\UITextures.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="game_saves\SaveSystem.h" />
+    <ClInclude Include="Class.h" />
+    <ClInclude Include="include\enums\EventTypes.h" />
+    <ClInclude Include="include\menus\StageNodeMenu.h" />
+    <ClInclude Include="include\menus\StageResultsScreen.h" />
+    <ClInclude Include="include\saves\PlayerSaveData.h" />
+    <ClInclude Include="include\saves\SaveSystem.h" />
+    <ClInclude Include="include\saves\StageSaveData.h" />
     <ClInclude Include="include\configs\UnitConfig.h" />
     <ClInclude Include="include\enums\AnimationEvent.h" />
     <ClInclude Include="include\enums\AugmentTypes.h" />
@@ -209,19 +224,22 @@
     <ClInclude Include="include\game_states\StageGameState.h" />
     <ClInclude Include="include\menus\ArmoryMenu.h" />
     <ClInclude Include="include\menus\Menu.h" />
-    <ClInclude Include="include\menus\StageSetMenu.h" />
+    <ClInclude Include="include\menus\StagePreviewMenu.h" />
     <ClInclude Include="include\menus\StageSelect.h" />
     <ClInclude Include="include\menus\StageUI.h" />
     <ClInclude Include="include\menus\StartMenu.h" />
     <ClInclude Include="include\enums\ChallengeTypes.h" />
     <ClInclude Include="include\configs\StageConfig.h" />
-    <ClInclude Include="include\stage\UnitPool.h" />
+    <ClInclude Include="include\saves\UnitSaveData.h" />
+    <ClInclude Include="include\stage\main\UnitPool.h" />
     <ClInclude Include="include\stage\mechanics\StageChallenge.h" />
     <ClInclude Include="include\stage\mechanics\StageRestrictions.h" />
     <ClInclude Include="include\stage\mechanics\UnitMoveRequest.h" />
     <ClInclude Include="include\configs\UnitConfigConstants.h" />
+    <ClInclude Include="include\systems\observers\Scheduler.h" />
+    <ClInclude Include="include\systems\observers\UnitAbilityObserver.h" />
     <ClInclude Include="include\utilities\CustomErrors.hpp" />
-    <ClInclude Include="include\utilities\EntityConfigs.h" />
+    <ClInclude Include="include\configs\EntityConfigs.h" />
     <ClInclude Include="include\utilities\json.hpp" />
     <ClInclude Include="include\stage\entities\StageEntity.h" />
     <ClInclude Include="include\stage\mechanics\StageWallet.h" />
@@ -235,40 +253,42 @@
     <ClInclude Include="include\stage\mechanics\Lane.h" />
     <ClInclude Include="include\stage\entities\Projectile.h" />
     <ClInclude Include="include\stage\unit\UnitMovement.h" />
-    <ClInclude Include="include\visuals\ArmorySlot.h" />
+    <ClInclude Include="include\visuals\camera\CameraRenderer.h" />
+    <ClInclude Include="include\visuals\camera\CameraTransform.h" />
+    <ClInclude Include="include\visuals\ui\ArmorySlot.h" />
     <ClInclude Include="include\stage\mechanics\Augment.h" />
     <ClInclude Include="include\utilities\json_fwd.hpp" />
-    <ClInclude Include="include\utilities\Pathing.h" />
+    <ClInclude Include="include\utilities\main\Pathing.h" />
     <ClInclude Include="include\utilities\pch.h" />
     <ClInclude Include="include\stage\mechanics\ProjectileData.h" />
-    <ClInclude Include="include\stage\Stage.h" />
+    <ClInclude Include="include\stage\main\Stage.h" />
     <ClInclude Include="include\stage\mechanics\StatusEffect.h" />
     <ClInclude Include="include\stage\entities\Surge.h" />
     <ClInclude Include="include\stage\entities\Teleporter.h" />
     <ClInclude Include="include\stage\entities\Trap.h" />
     <ClInclude Include="include\stage\unit\Unit.h" />
     <ClInclude Include="include\stage\unit\UnitStats.h" />
-    <ClInclude Include="include\systems\ButtonManager.h" />
-    <ClInclude Include="include\systems\Camera.h" />
-    <ClInclude Include="include\stage\Loadout.h" />
-    <ClInclude Include="include\systems\Observer.h" />
-    <ClInclude Include="include\stage\StageManager.h" />
-    <ClInclude Include="include\stage\StageRecord.h" />
-    <ClInclude Include="include\systems\StateManager.h" />
-    <ClInclude Include="include\systems\TextureManager.h" />
+    <ClInclude Include="include\systems\managers\ButtonManager.h" />
+    <ClInclude Include="include\visuals\camera\Camera.h" />
+    <ClInclude Include="include\stage\main\Loadout.h" />
+    <ClInclude Include="include\systems\observers\Observer.h" />
+    <ClInclude Include="include\stage\main\StageManager.h" />
+    <ClInclude Include="include\stage\main\StageRecord.h" />
+    <ClInclude Include="include\systems\managers\StateManager.h" />
+    <ClInclude Include="include\systems\managers\TextureManager.h" />
     <ClInclude Include="include\systems\Tween.h" />
-    <ClInclude Include="include\utilities\Bounds.h" />
-    <ClInclude Include="include\utilities\Easing.hpp" />
-    <ClInclude Include="include\utilities\UILayout.h" />
+    <ClInclude Include="include\utilities\main\Bounds.h" />
+    <ClInclude Include="include\utilities\main\Easing.hpp" />
+    <ClInclude Include="include\visuals\ui\UILayout.h" />
     <ClInclude Include="include\stage\unit\UnitStatus.h" />
-    <ClInclude Include="include\utilities\Utils.h" />
+    <ClInclude Include="include\utilities\main\Utils.h" />
     <ClInclude Include="include\visuals\Animation.h" />
-    <ClInclude Include="include\visuals\Button.h" />
+    <ClInclude Include="include\visuals\ui\Button.h" />
     <ClInclude Include="include\visuals\textures\BaseTextures.h" />
     <ClInclude Include="include\visuals\textures\EffectTextures.h" />
     <ClInclude Include="include\visuals\textures\EntityTextures.h" />
-    <ClInclude Include="include\visuals\MouseCursor.h" />
-    <ClInclude Include="include\visuals\Slider.h" />
+    <ClInclude Include="include\visuals\camera\MouseCursor.h" />
+    <ClInclude Include="include\visuals\ui\Slider.h" />
     <ClInclude Include="include\stage\unit\UnitTween.h" />
     <ClInclude Include="include\visuals\textures\UITextures.h" />
   </ItemGroup>
@@ -288,8 +308,6 @@
     <None Include="configs\stage_data\unit_data\4\gear1\unit_data.json" />
     <None Include="configs\stage_data\unit_data\5\gear1\unit_data.json" />
     <None Include="configs\stage_data\unit_data\6\gear1\unit_data.json" />
-    <None Include="game_saves\stage_save.json" />
-    <None Include="game_saves\unit_save.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -88,7 +88,7 @@ AnimationEvent Surge::update_animation(Stage& stage, float deltaTime) {
 //Check
 bool Surge::valid_target(const Unit& unit) const {
 	return !already_hit_unit(unit.spawnID) && !unit.anim.invincible()
-		&& in_range(unit.get_pos().x);
+		&& in_range(unit.movement.pos.x);
 }
 
 #pragma region Combat
@@ -111,36 +111,52 @@ void Surge::on_kill(Unit& unit) const {
 void Surge::attack_units(Stage& stage) {
 	// lane is froms tage (passed in)
 	const auto& enemyUnitIndexes = stage.lanes[laneInd].getOpponentUnits(stats->team);
+	std::vector<size_t> enemiesToAttack;
 
-	for (const auto& index : enemyUnitIndexes) {
-		auto& enemyUnit = stage.getUnit(index); // dont have stage
+	// Add in units to attack AFTER this loop to make Surge Blocking
+	// more consistent and reliable
+	for (const auto& index : enemyUnitIndexes)
+	{
+		const auto& enemyUnit = stage.getUnit(index); // don't have stage
 
 		if (!valid_target(enemyUnit)) continue;
 
 		if (enemyUnit.immune(surgeType)) {
-			if (enemyUnit.stats->surge_blocker()) {
+			// if the surge is blocked, remove all
+			if (blocked_by_unit(enemyUnit)) {
+				enemiesToAttack.clear();
 				readyForRemoval = true;
 				return;
 			}
 			else continue;
 		}
+		else enemiesToAttack.push_back(index);
+	}
+
+	// Attack the valid enemies
+	for (const auto& index : enemiesToAttack) {
+		auto& enemyUnit = stage.getUnit(index);
 
 		hitUnits.push_back(enemyUnit.spawnID);
-		if (enemyUnit.status.take_damage(enemyUnit, *this)) 
+		if (enemyUnit.status.take_damage(*this))
 			on_kill(enemyUnit);
 	}
 }
 int Surge::calculate_damage_and_effects(Unit& unit) const {
 	int dmg = get_dmg();
-	dmg = unit.status.corroded() ? dmg * 2 : dmg;
+
+	dmg *= unit.status.get_corrosion_multiplier();
+	dmg *= unit.status.get_reinforcement_multiplier();
 
 	// If the surge targets the unit's trait, run its damage-augments
-	if (unit.is_targeted(stats->targetTypes))
-		dmg = unit.status.apply_effects(unit, stats->augments, hitIndex, dmg);
+	if (unit.is_targeted(stats->targetTypes)) {
+		unit.status.apply_on_hit_effects(stats->augments, hitIndex);
+		dmg *= unit.status.calculate_damage_boost(stats->augments);
+	}
 
 	// If the unit targets the surge's trait, run its defense-augments
 	if (targeted_by_unit(unit.stats->targetTypes))
-		dmg = (int)((float)dmg * unit.status.calculate_damage_reduction(unit.stats->augments));
+		dmg *= unit.status.calculate_damage_reduction(unit.stats->augments);
 
 	// if the unit has a sheild and it did not break, then return.
 	if (unit.status.has_shield_up() && !unit.status.damage_shield(dmg, stats)) return 0;
@@ -149,12 +165,12 @@ int Surge::calculate_damage_and_effects(Unit& unit) const {
 	// so they are run after all calculations
 	if (unit.is_targeted(stats->targetTypes)) {
 		if (stats->try_proc_augment(AugmentType::VOID, hitIndex))
-			dmg += (int)((float)unit.stats->maxHp * stats->get_augment(AugmentType::VOID)->value);
+			dmg += (float)unit.stats->maxHp * stats->get_augment(AugmentType::VOID)->value;
 		if (try_terminate_unit(unit, dmg))
-			dmg += unit.stats->maxHp;
+			dmg += (float)unit.stats->maxHp;
 	}
 
-	return dmg;
+	return (int)dmg;
 }
 #pragma endregion
 
@@ -248,6 +264,10 @@ void Surge::draw(sf::RenderWindow& window) const {
 	window.draw(hitbox);
 }
 
+bool Surge::blocked_by_unit(const Unit& enemyUnit) const {
+	return enemyUnit.enemy_in_range(pos.x, 0, enemyUnit.stats->sightRange) &&
+		has(enemyUnit.stats->augmentsMask, AugmentType::SURGE_BLOCKER);
+}
 bool Surge::already_hit_unit(int id) const {
 	return std::find(hitUnits.begin(), hitUnits.end(), id) != hitUnits.end();
 }

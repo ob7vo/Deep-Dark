@@ -17,7 +17,7 @@ namespace UnitConfig {
 	nlohmann::json createSummonJson(int id);
 	sf::Texture createSlotTexture(int id, int gear);
 	/// <summary> Gets the highest gear leel Unit #id has  </summary>
-	int getMaxGear(int id);
+	int getMaxGear(int id, bool useEnemyCheck = false);
 
 	// Overloads
 	std::string getUnitGearPath(std::pair<int, int> unit);

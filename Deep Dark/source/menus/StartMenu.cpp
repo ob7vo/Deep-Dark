@@ -28,10 +28,11 @@ void StartMenu::reset_positions() {
 
 void StartMenu::draw() {
 	if (openedSettings) {
-		cam.queue_ui_draw(&settingsBtn().sprite);
+		cam.renderer.queue_ui_draw(&settingsBtn().sprite);
 		return;
 	}
-	cam.queue_ui_draw(&startText);
+
+	cam.renderer.queue_ui_draw(&startText);
 	buttonManager.draw(cam);
 }
 bool StartMenu::on_mouse_press(bool isM1) {

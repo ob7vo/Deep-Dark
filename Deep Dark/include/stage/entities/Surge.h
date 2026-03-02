@@ -57,6 +57,7 @@ struct Surge : public StageEntity
 	bool already_hit_unit(int id) const;
 
 	bool targeted_by_unit(UnitType enemyTargetTypes) const;
+	bool blocked_by_unit(const Unit& enemyUnit) const;
 	bool in_range(float x) const;
 	int get_dmg() const;
 

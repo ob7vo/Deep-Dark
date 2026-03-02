@@ -29,5 +29,5 @@ void StageEntity::tick(Stage& stage, float deltaTime) {
 // Base doesnt have an action that uses Stage, so this isn't a pure virtual
 void StageEntity::action(Stage& stage) { return; }
 bool StageEntity::collides(sf::FloatRect entityBounds, const Unit& unit) const {
-	return Collision::AABB(entityBounds, unit.getBounds());
+	return true;// Collision::AABB(entityBounds, );
 }

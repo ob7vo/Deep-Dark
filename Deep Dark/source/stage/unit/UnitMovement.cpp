@@ -32,41 +32,41 @@ void UnitMovement::create_tween(sf::Vector2f endPos, float time,
 
 #pragma region Movement
 // HORIZONTAL
-void UnitMovement::move(const Unit& unit, float deltaTime) {
-	float speed = unit.status.slowed() ? 0.1f : unit.stats->speed;
-	pos.x += speed * deltaTime * unit.get_dir();
+void UnitMovement::move(float deltaTime) {
+	float speed = owner.status.is_slowed() ? 0.1f : owner.stats->speed;
+	pos.x += speed * deltaTime * owner.stats->team;
 }
-void UnitMovement::knockback(const Stage* stage, Unit& hitUnit, float force) {
-	if (hitUnit.stats->has_augment(AugmentType::LIGHTWEIGHT)) force *= LIGHTWEIGHT_KB_FORCE;
-	if (hitUnit.stats->has_augment(AugmentType::HEAVYWEIGHT)) force *= HEAVYWEIGHT_KB_FORCE;
+void UnitMovement::knockback(float force) {
+	if (owner.stats->has_augment(AugmentType::LIGHTWEIGHT)) force *= LIGHTWEIGHT_KB_FORCE;
+	if (owner.stats->has_augment(AugmentType::HEAVYWEIGHT)) force *= HEAVYWEIGHT_KB_FORCE;
 
-	float newX = pos.x - (KNOCKBACK_DISTANCE * force * hitUnit.get_dir());
-	newX = stage->clamp_within_lane(newX, laneInd);
+	float newX = pos.x - (KNOCKBACK_DISTANCE * force * owner.stats->team);
+	newX = owner.stage->clamp_within_lane(newX, laneInd);
 
-	sf::Vector2f newPos({ newX, stage->lanes[laneInd].yPos });
+	sf::Vector2f newPos({ newX, owner.stage->lanes[laneInd].yPos });
 
 	// The timer of knockback should change proportionally with the KB force
 	float timerMultiplier = std::clamp(force, MIN_KB_TIMER_MULTIPLIER, MAX_KB_TIMER_MULTIPLIER);
 
 	create_tween(newPos, KNOCKBACK_DURATION * timerMultiplier, UnitMoveRequestType::KNOCKBACK);
-	hitUnit.anim.start(UnitAnimationState::KNOCKBACK);
+	owner.anim.start(UnitAnimationState::KNOCKBACK);
 }
-bool UnitMovement::try_leap(const Stage* stage, Unit& unit) {
-	float leapRange = unit.stats->get_augment(AugmentType::LEAP)->value;
+bool UnitMovement::try_leap() {
+	float leapRange = owner.stats->get_augment(AugmentType::LEAP)->value;
 
-	for (auto const& [gapLeft, gapRight] : stage->lanes[laneInd].gaps) {
-		float edge = unit.player_team() ? gapLeft : gapRight;
+	for (auto const& [gapLeft, gapRight] : owner.stage->lanes[laneInd].gaps) {
+		float edge = owner.player_team() ? gapLeft : gapRight;
 
-		if (float dist = (edge - pos.x) * static_cast<float>(unit.stats->team);
+		if (float dist = (edge - pos.x) * static_cast<float>(owner.stats->team);
 			dist <= 0.f || dist > leapRange || over_this_gap({ gapLeft, gapRight }, pos.x)) 
 			continue;
 
-		float landingSpot = edge + LEDGE_SNAP * static_cast<float>(unit.stats->team);
+		float landingSpot = edge + LEDGE_SNAP * static_cast<float>(owner.stats->team);
 		sf::Vector2f newPos({ landingSpot, pos.y });
 
 		create_tween(newPos, LEAP_DURATION, UnitMoveRequestType::LEAP);
 
-		unit.anim.start(UnitAnimationState::JUMPING);
+		owner.anim.start(UnitAnimationState::JUMPING);
 		return true;
 	}
 
@@ -74,120 +74,120 @@ bool UnitMovement::try_leap(const Stage* stage, Unit& unit) {
 }
 
 // VERTICAL
-void UnitMovement::fall(Unit& unit, float newY) {
+void UnitMovement::fall(float newY) {
 	sf::Vector2f newPos({ pos.x, newY });
 
 	create_tween(newPos, FALL_DURATION, UnitMoveRequestType::FALL);
 
-	unit.anim.start(UnitAnimationState::FALLING);
+	owner.anim.start(UnitAnimationState::FALLING);
 }
-void UnitMovement::squash(Unit& unit, float newY) {
+void UnitMovement::squash(float newY) {
 	sf::Vector2f newPos({ pos.x, newY });
 
 	create_tween(newPos, SQUASH_DURATION, UnitMoveRequestType::SQUASH);
-	unit.anim.start(UnitAnimationState::KNOCKBACK);
+	owner.anim.start(UnitAnimationState::KNOCKBACK);
 }
-void UnitMovement::launch(Unit& unit, float newY) {
+void UnitMovement::launch(float newY) {
 	sf::Vector2f newPos({ pos.x, newY - LAUNCH_DISTANCE });
 
 	create_tween(newPos, LAUNCH_DURATION, UnitMoveRequestType::LAUNCH);
 
-	unit.anim.start(UnitAnimationState::KNOCKBACK);
+	owner.anim.start(UnitAnimationState::KNOCKBACK);
 }
 
 // EITHER
-void UnitMovement::jump(const Stage* stage, Unit& unit, float newX) {
-	sf::Vector2f newPos({ newX, unit.stage->lanes[laneInd].yPos });
+void UnitMovement::jump(float newX) {
+	sf::Vector2f newPos({ newX, owner.stage->lanes[laneInd].yPos });
 
 	create_tween(newPos, JUMP_DURATION, UnitMoveRequestType::JUMP);
 
-	unit.anim.start(UnitAnimationState::JUMPING);
+	owner.anim.start(UnitAnimationState::JUMPING);
 }
-void UnitMovement::warp(const Stage* stage, Unit& unit, const UnitStats* enemyStats) {
+void UnitMovement::warp(const UnitStats* enemyStats) {
 	const Augment& warpAug = *enemyStats->get_augment(AugmentType::WARP);
 
 	laneInd = std::clamp(laneInd + warpAug.intValue, 0, stage->laneCount - 1);
 
-	float newX = pos.x - (warpAug.value * (float)unit.stats->team);
+	float newX = pos.x - (warpAug.value * (float)owner.stats->team);
 	pos.x = stage->clamp_within_lane(newX, laneInd);
 
-	unit.combat.cooldown = warpAug.value2;
+	owner.combat.cooldown = warpAug.value2;
 }
 #pragma endregion
 
 #pragma region Pushing Move Requests
-void UnitMovement::push_teleport_request(Stage* stage, Unit& unit, const Teleporter& tp) {
-	if (!stage->can_push_move_request(unit.spawnID)) return;
+void UnitMovement::push_teleport_request(const Teleporter& tp) {
+	if (!stage->can_push_move_request(owner.spawnID)) return;
 
-	unit.anim.start(UnitAnimationState::MOVE);
+	owner.anim.start(UnitAnimationState::MOVE);
 
 	// If the telportor leads to the same Lane, theen theres no need for a Move Request
 	if (tp.connectedLane != laneInd)
-		stage->push_move_request(unit, tp.connectedLane, tp.xDestination, UnitMoveRequestType::TELEPORT);
+		stage->push_move_request(owner, tp.connectedLane, tp.xDestination, UnitMoveRequestType::TELEPORT);
 	else pos = { tp.xDestination, stage->lanes[tp.connectedLane].yPos };
 }
-void UnitMovement::push_fall_request(Stage* stage, Unit& unit) {
-	const auto [yPos, newLane] = stage->find_lane_to_fall_on(unit);
+void UnitMovement::push_fall_request() {
+	const auto [yPos, newLane] = stage->find_lane_to_fall_on(owner);
 
 	// Lane will be -1 if no lane to fall on is found 
 	// (aka, they fell through ALL lanes, straight into the void)
 
 	if (newLane <= -1) {
-		unit.status.hp = 0;
-		fall(unit, yPos);
+		owner.status.hp = 0;
+		fall(yPos);
 	}
 	else
-		stage->push_move_request(unit, newLane, yPos, UnitMoveRequestType::FALL);
+		stage->push_move_request(owner, newLane, yPos, UnitMoveRequestType::FALL);
 }
-void UnitMovement::push_squash_request(Stage* stage, Unit& unit) {
+void UnitMovement::push_squash_request() {
 	if (laneInd == 0) {
-		knockback(stage, unit, false);
+		knockback(false);
 		return;
 	}
 
-	int newLane = stage->find_lane_to_knock_to(unit, -1);
+	int newLane = stage->find_lane_to_knock_to(owner, -1);
 	float laneYPos = stage->lanes[newLane].yPos;
 
 	// If there is no lane below, then default to a basic knockback
-	if (newLane == laneInd) knockback(stage, unit, false);
+	if (newLane == laneInd) knockback(false);
 	else
-		stage->push_move_request(unit, newLane, laneYPos, UnitMoveRequestType::SQUASH);
+		stage->push_move_request(owner, newLane, laneYPos, UnitMoveRequestType::SQUASH);
 }
-void UnitMovement::push_launch_request(Stage* stage, Unit& unit) {
-	if (laneInd == stage->laneCount - 1 || 
-		unit.stats->has_augment(AugmentType::HEAVYWEIGHT)) {
-		knockback(stage, unit, false);
+void UnitMovement::push_launch_request() {
+	if (laneInd == owner.stage->laneCount - 1 ||
+		owner.stats->has_augment(AugmentType::HEAVYWEIGHT)) {
+		knockback(false);
 		return;
 	}
 
-	int newLane = stage->find_lane_to_knock_to(unit, 1);
+	int newLane = stage->find_lane_to_knock_to(owner, 1);
 	float laneYPos = stage->lanes[newLane].yPos;
 
 	// If there is no lane above, then default to a basic knockback
-	if (newLane == laneInd) knockback(stage, unit, false);
+	if (newLane == laneInd) knockback(false);
 	else
-		stage->push_move_request(unit, newLane, laneYPos, UnitMoveRequestType::LAUNCH);
+		stage->push_move_request(owner, newLane, laneYPos, UnitMoveRequestType::LAUNCH);
 }
-bool UnitMovement::try_push_jump_request(Stage* stage, Unit& unit) const {
+bool UnitMovement::try_push_jump_request() const {
 	int targetLane = laneInd + 1;
-	const auto& [leftEdge, rightEdge] = unit.getHurtboxEdges();
+	const auto& [leftEdge, rightEdge] = owner.getHurtboxEdges();
 
-	if (stage->lanes[targetLane].out_of_lane(leftEdge, rightEdge)) 
+	if (stage->lanes[targetLane].out_of_lane(leftEdge, rightEdge))
 		return false;
 
-	float jumpRange = unit.stats->get_augment(AugmentType::JUMP)->value;
+	float jumpRange = owner.stats->get_augment(AugmentType::JUMP)->value;
 
 	for (const auto& [gapLeft, gapRight] : stage->lanes[targetLane].gaps) {
 		if (!over_this_gap({ gapLeft, gapRight }, pos.x)) continue; 
 		// only jump to gaps you are directly under
 
-		float edge = unit.player_team() ? gapRight : gapLeft;
+		float edge = owner.player_team() ? gapRight : gapLeft;
 
-		if (float dist = (edge - pos.x) * static_cast<float>(unit.stats->team); 
+		if (float dist = (edge - pos.x) * static_cast<float>(owner.stats->team);
 			dist <= 0 || dist > jumpRange) return false;
 
-		float landingSpot = edge + LEDGE_SNAP * static_cast<float>(unit.stats->team);
-		stage->push_move_request(unit, targetLane, landingSpot, UnitMoveRequestType::JUMP);
+		float landingSpot = edge + LEDGE_SNAP * static_cast<float>(owner.stats->team);
+		stage->push_move_request(owner, targetLane, landingSpot, UnitMoveRequestType::JUMP);
 
 		return true;
 	}
@@ -195,7 +195,7 @@ bool UnitMovement::try_push_jump_request(Stage* stage, Unit& unit) const {
 	return false;
 }
 
-void UnitMovement::finish_launch_tween(const Stage* stage) {
+void UnitMovement::finish_launch_tween() {
 	float laneYPos = stage->lanes[laneInd].yPos;
 	sf::Vector2f newPos = { pos.x, laneYPos };
 

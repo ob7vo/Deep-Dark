@@ -103,13 +103,12 @@ void Projectile::attack_units(Stage& stage) {
 		hitUnits.push_back(hitTime);
 
 		// Trigger shove if the projectile has the augment
-		bool shove = has(stats->aug.augType & AugmentType::SHOVE);
-
-		unit.status.take_damage(unit, stats->dmg, shove);
+		bool hasShove = has(stats->aug.augType & AugmentType::SHOVE);
+		unit.status.take_damage(stats->dmg, hasShove);
 
 		// Proc any statuc effects the projectile might have
-		if (unit.status.can_proc_status(unit, stats->aug))
-			unit.status.add_status_effect(stats->aug);
+		if (unit.status.can_proc_status(stats->aug))
+			unit.status.process_new_status_effect(stats->aug);
 
 		hitsLeft -= 1 + (int)unit.stats->has_augment(AugmentType::ROUGH);
 		if (hitsLeft <= 0) {
@@ -126,6 +125,6 @@ bool Projectile::within_bounds(sf::Vector2f p) const {
     return overlapX && overlapY;
 }
 bool Projectile::valid_target(const Unit& enemy) const {
-	return !enemy.anim.invincible() && within_bounds(enemy.get_pos())
+	return !enemy.anim.invincible() && within_bounds(enemy.movement.pos)
 		&& can_unit_hit_again(enemy.spawnID);
 }

@@ -36,7 +36,7 @@ void FireWallCannon::fire(Stage& stage) {
 	for (int i = 0; stage.laneCount; i++) {
 		// Attack players only
 		for (const auto& index : stage.lanes[i].getOpponentUnits(-1)) {
-			float distance = std::abs(pos.x - stage.getUnit(index).get_pos().x);
+			float distance = std::abs(pos.x - stage.getUnit(index).movement.pos.x);
 			
 			if (distance < EntityConfigs::Bases::MAX_FIRE_WALL_DIST) {
 				stage.create_surge(this, fireWall, i, distance + EntityConfigs::Bases::FIRE_WALL_SPAWN_PADDING);
@@ -62,14 +62,14 @@ void AreaCannon::fire(Stage& stage) {
 			auto& enemyUnit = stage.getUnit(index);
 
 			if (is_valid_target(enemyUnit))
-				enemyUnit.status.apply_effects(enemyUnit, cannonStats.augments, 0);
+				enemyUnit.status.apply_on_hit_effects(cannonStats.augments, 0);
 		}
 	}
 }
 #pragma endregion
 
 bool AreaCannon::is_valid_target(const Unit& target) const {
-	return !target.anim.invincible() && within_range(target.get_pos().x);
+	return !target.anim.invincible() && within_range(target.movement.pos.x);
 }
 
 static AnimationClip base_animation() {

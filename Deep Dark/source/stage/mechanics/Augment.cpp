@@ -43,6 +43,9 @@ AugmentType Augment::string_to_augment_type(std::string_view str) {
 		{"corrode", AugmentType::CORRODE},
 		{"short_circuit", AugmentType::SHORT_CIRCUIT},
 		{"virus", AugmentType::VIRUS},
+		{"overclock", AugmentType::OVERCLOCK},
+		{"reinforce", AugmentType::REINFORCE},
+		{"scope", AugmentType::SCOPE},
 		{"breaker", AugmentType::BREAKER},
 		{"resist", AugmentType::RESIST},
 		{"strengthen", AugmentType::STRENGTHEN},
@@ -78,11 +81,37 @@ AugmentType Augment::string_to_augment_type(std::string_view str) {
 		{"self_destruct", AugmentType::SELF_DESTRUCT},
 		{"projectile", AugmentType::PROJECTILE},
 		{"deflect", AugmentType::DEFLECT},
-		{"rough", AugmentType::ROUGH}
+		{"rough", AugmentType::ROUGH},
+		{"link", AugmentType::LINK},
+		{"syphon", AugmentType::SYPHON}
 	};
 
 	auto it = augmentMap.find((std::string)str);
 	if (it == augmentMap.end())
 		std::cout << "Invalid Augment String: [" << str << "]" << std::endl;
 	return (it != augmentMap.end()) ? it->second : AugmentType::NONE;
+}
+int Augment::links_to_allies(AugmentType augType) {
+	static const std::unordered_set<AugmentType> linkToEnemies = {
+		AugmentType::SLOW, 
+		AugmentType::OVERLOAD,
+		AugmentType::WEAKEN,
+		AugmentType::BLIND,
+		AugmentType::CORRODE,
+		AugmentType::SHORT_CIRCUIT,
+		AugmentType::VIRUS,
+		AugmentType::BOLT,
+		AugmentType::SHOVE
+	};
+	static const std::unordered_set<AugmentType> linkToAllies = {
+		AugmentType::OVERCLOCK,
+		AugmentType::REINFORCE,
+		AugmentType::SCOPE,
+		AugmentType::STRENGTHEN,
+		AugmentType::SYPHON
+	};
+
+	if (linkToAllies.contains(augType)) return 1;
+	else if (linkToEnemies.contains(augType)) return -1;
+	else return 0;
 }

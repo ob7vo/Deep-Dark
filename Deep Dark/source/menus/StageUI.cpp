@@ -64,16 +64,16 @@ void StageUI::update_texts() {
 
 
 void StageUI::draw() {
-	cam.queue_ui_draw(&partsCountText);
-	cam.queue_ui_draw(&bagUpgradeCostText);
-	cam.queue_ui_draw(&clearedChallengesText);
+	cam.renderer.queue_ui_draw(&partsCountText);
+	cam.renderer.queue_ui_draw(&bagUpgradeCostText);
+	cam.renderer.queue_ui_draw(&clearedChallengesText);
 
 	buttonManager.draw(cam);
 
 	if (!stageManager->can_fire_cannon())
-		cam.draw_overlay(fireCannonBtn().sprite);
+		cam.renderer.draw_overlay(fireCannonBtn().sprite);
 	if (stageManager->wallet.parts < stageManager->wallet.upgradeCost)
-		cam.draw_overlay(upgradeBagBtn().sprite);
+		cam.renderer.draw_overlay(upgradeBagBtn().sprite);
 
 	if (paused) pauseMenu.draw();
 }
@@ -130,10 +130,10 @@ void StagePauseMenu::reset_positions() {
 	pauseMenuSprite.setPosition(cam.norm_to_pixels(PauseMenu::PAUSE_MENU_POS));
 }
 void StagePauseMenu::draw() {
-	cam.darken_screen(0.5f);
+	cam.renderer.darken_screen(0.5f);
 
-	cam.queue_ui_draw(&pauseMenuSprite);
-	cam.queue_ui_draw(&pauseText);
+	cam.renderer.queue_ui_draw(&pauseMenuSprite);
+	cam.renderer.queue_ui_draw(&pauseText);
 
 	buttonManager.draw(cam);
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "Menu.h"
+#include "StageResultsScreen.h"
 #include <SFML/Graphics/Sprite.hpp>
 
 struct StageManager;
@@ -9,7 +10,7 @@ struct StagePauseMenu : public Menu<UI::StageUI::PauseMenu::BTN_COUNT> {
 	StageUI& stageUI;
 	sf::Text pauseText = sf::Text(baseFont);
 	sf::Sprite pauseMenuSprite = sf::Sprite(defTex);
-
+	
 	StagePauseMenu(Camera& cam, StageUI& ui);
 	~StagePauseMenu() final = default;
 
@@ -26,10 +27,13 @@ struct StagePauseMenu : public Menu<UI::StageUI::PauseMenu::BTN_COUNT> {
 struct StageUI : public Menu<UI::StageUI::BTN_COUNT> {
 	StageManager* stageManager;
 	StagePauseMenu pauseMenu;
+	StageResultsScreen resultsScreen;
 
 	sf::Text partsCountText = sf::Text(baseFont);
 	sf::Text bagUpgradeCostText = sf::Text(baseFont);
 	sf::Text clearedChallengesText = sf::Text(baseFont);
+
+	bool isTransitioning;
 
 	explicit StageUI(Camera& cam);
 	~StageUI() final = default;
@@ -42,6 +46,8 @@ struct StageUI : public Menu<UI::StageUI::BTN_COUNT> {
 	bool on_mouse_press(bool isM1) final;
 	void check_mouse_hover() final;
 	void reset_positions() final;
+
+	void lerp_ui(float t);
 
 	void pause();
 	void upgrade_bag();

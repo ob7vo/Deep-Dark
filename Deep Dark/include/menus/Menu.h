@@ -21,6 +21,7 @@ struct MenuBase
 
 	bool paused = false;
 	bool visible = true;
+	bool clickable = true;
 
 	explicit MenuBase(Camera& cam) : cam(cam) {};
 	virtual ~MenuBase() = default;
@@ -32,6 +33,11 @@ struct MenuBase
 	virtual void check_mouse_hover() = 0;
 	virtual void reset_positions() = 0;
 	virtual void update(float dt) {}
+
+	virtual void on_enter() { reset_positions(); };
+	virtual void on_exit() {};
+
+	static std::string GetMenuName(MenuType type);
 };
 
 template<int BUTTONS>

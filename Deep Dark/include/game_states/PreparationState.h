@@ -30,18 +30,12 @@ public:
 	void start_stage_set(int stage, int set);
 	
 	/// <summary> Spefically when clearing a stage and moving onto the next phase </summary>
-	void enter_from_stage_set_completion(const StageSetPrepEnterData* setEnterData);
+	void on_enter_from_stage_set_completion(const StageSetPrepEnterData* setEnterData);
 	/// <summary> Generic entry into Prep Phase </summary>
-	void enter_from_transition(const PrepEnterData* prepData);
+	void on_enter_normal(const PrepEnterData* prepData);
 
 	MenuBase* get_menu();
-	inline void switch_menu(MenuType newMenu) {
-		prevMenuType = curMenuType;
-		curMenuType = newMenu;
-
-		menu = get_menu();
-		if (menu) menu->reset_positions();
-	}
+	void switch_menu(MenuType newMenu);
 };
 
 struct PrepEnterData : public OnStateEnterData {

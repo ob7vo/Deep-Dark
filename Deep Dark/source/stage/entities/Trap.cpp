@@ -29,15 +29,15 @@ Trap::Trap(const nlohmann::json& trap, sf::Vector2f pos, int lane) : StageEntity
 
 #pragma region Checks
 bool Trap::in_trigger_range(const Unit& unit) const {
-	float x = unit.get_pos().x; 
-	float y = unit.get_pos().y;
+	float x = unit.movement.pos.x;
+	float y = unit.movement.pos.y;
 
 	return x >= triggerRange.first && x <= triggerRange.second &&
 	y <= pos.y + TRAP_HEIGHT && y >= pos.y - TRAP_HEIGHT
 		&& !has(unit.stats->unitTypes & UnitType::NANO);
 }
 bool Trap::valid_attack_target(const Unit& unit) const {
-	return unit.get_pos().x >= attackRange.first && unit.get_pos().x <= attackRange.second &&
+	return unit.movement.pos.x >= attackRange.first && unit.movement.pos.x <= attackRange.second &&
 		!unit.anim.invincible();
 }
 bool Trap::enemy_in_trigger_range(Stage& stage) const{
@@ -96,12 +96,12 @@ void Trap::trigger_launch_pad(Stage& stage) const {
 	for (const auto& index : lane.enemyUnitIndexes) {
 		auto& unit = stage.getUnit(index);
 		if (valid_attack_target(unit))
-			unit.movement.push_launch_request(&stage, unit);
+			unit.movement.push_launch_request();
 	}
 	for (const auto& index : lane.playerUnitIndexes) {
 		auto& unit = stage.getUnit(index);
 		if (valid_attack_target(unit))
-			unit.movement.push_launch_request(&stage, unit);
+			unit.movement.push_launch_request();
 	}
 }
 void Trap::trigger_trap_door(Stage& stage) {
@@ -127,13 +127,14 @@ void Trap::attack_lane(Stage& stage, const std::vector<size_t>& unitIndexes) con
 
 		if (!valid_attack_target(unit)) continue;
 		if (dmgValue > 0.f) {
-			int dmg = trapType == TrapType::PERCENT_DMG ?
-				(int)((float)unit.stats->maxHp * dmgValue) : (int)dmgValue;
-			if (unit.status.take_damage(unit, dmg))
+			int dmg = trapType == TrapType::PERCENT_DMG ? 
+				unit.stats->maxHp * dmgValue : (int)dmgValue;
+
+			if (unit.status.take_damage(dmg))
 				unit.causeOfDeath = DeathCause::TRAP;
 		}
-		if (unit.status.can_proc_status(unit, aug))
-			unit.status.add_status_effect(aug);
+		if (unit.status.can_proc_status(aug))
+			unit.status.process_new_status_effect(aug);
 	}
 }
 #pragma endregion

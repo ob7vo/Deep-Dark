@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "game_saves/SaveSystem.h"
+#include "SaveSystem.h"
 #include "StateManager.h"
 #include "PreparationState.h"
 #include "StageGameState.h"
@@ -12,13 +12,12 @@ const int ASPECT_WIDTH = 1000;
 const int ASPECT_HEIGHT = 850;
 const sf::Color WINDOW_COLOR(54, 2, 11);
 
-
 const float FPSTimer = 0.5f;
 
 void set_mouse_position(const sf::RenderWindow& window, Camera& cam) {
     sf::Vector2i mouseScreenPos = sf::Mouse::getPosition(window);
     sf::Vector2f MOUSE_POS = window.mapPixelToCoords(mouseScreenPos);
-    cam.cursor.set_pos(MOUSE_POS, mouseScreenPos);
+    cam.update_mouse_pos(MOUSE_POS, mouseScreenPos);
 }
 void set_fps_text(float deltaTime, float& time, sf::Text& fpsText) {
     time += deltaTime;
@@ -29,6 +28,7 @@ void set_fps_text(float deltaTime, float& time, sf::Text& fpsText) {
 
     fpsText.setString(std::format("FPS: {}", fps));
 }
+
 int main()
 {
     sf::Text fpsText(baseFont);
@@ -43,9 +43,13 @@ int main()
     sf::RenderWindow window(sf::VideoMode({ ASPECT_WIDTH, ASPECT_HEIGHT }), "SFML works!",
         sf::Style::Titlebar | sf::Style::Close);
  
+    bool overwritePlayerSave = false;
+    bool overwriteStageSave = false; 
+    bool overwriteUnitSave = true;
+    SaveSystem::Initialize(overwritePlayerSave, overwriteStageSave, overwriteUnitSave);
+
     Textures::initializeAll();
     Surge::init_animations();
-    SaveSystem::initialize();
 
     fpsText.setCharacterSize(20);
     fpsText.setFillColor(sf::Color::White);
@@ -55,14 +59,14 @@ int main()
     StateManager stateManager(cam);
 
     /**/
-    std::array<ArmorySlot, 10> slots = ArmorySlot::default_armory_loadout();
+    std::array<ArmorySlot, 10> slots = ArmorySlot::default_armory_loadout(cam);
     std::string stageJsonPath = "configs/stage_data/stage_0.json";
     StageEnterData stageEnterData(stageJsonPath, 0, slots);
     //*/
 
     PrepEnterData prepData(MenuType::STAGE_SELECT, MenuType::ARMORY_EQUIP);
     OnStateEnterData enterData(GameState::Type::MAIN_MENU);
-    stateManager.switch_state(&stageEnterData);
+    stateManager.switch_state(&prepData);
 
     while (window.isOpen())
     {
@@ -73,15 +77,17 @@ int main()
         while (const std::optional event = window.pollEvent()){
             stateManager.handle_events(*event);
 
-            if (event->is<sf::Event::Closed>())
+            if (event->is<sf::Event::Closed>()) {
+                SaveSystem::SaveAll();
                 window.close();
+            }
         }
 
         set_fps_text(deltaTime, timeSinceLastFPSUpdate, fpsText);
 
         window.clear(WINDOW_COLOR);
 
-        cam.queue_ui_draw(&fpsText);
+        cam.renderer.queue_ui_draw(&fpsText);
         stateManager.update(deltaTime);
         stateManager.render();
 

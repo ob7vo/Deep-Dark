@@ -19,11 +19,15 @@ namespace UnitConfig {
 	inline constexpr int GEAR3 = 3;
 
 	inline constexpr int MAX_CORES = 3;
+	inline constexpr int BASE_UPGRADE_COST = 3;
+	inline constexpr float UPGRADE_COST_MULTIPLIER = 1.5f;
 
 	inline constexpr int BASE_ANIM_COUNT = 6; // Minimum number of animations every Unit will have (Move, Idle, Attack, Knockback, Fall, Death)
-	inline constexpr int SPECIAL_ANIM_COUNT = 5; // # of Unit animations for specific Abilities(Augments). They are Jump, Phase(windup and windown), Transform, and Summon.
+	inline constexpr int SPECIAL_ANIM_COUNT = 4; // # of Unit animations for specific Abilities(Augments). They are Jump, Phase(windup and windown), Transform, and Summon.
 	inline constexpr int TOTAL_ANIM_COUNT = BASE_ANIM_COUNT + SPECIAL_ANIM_COUNT; // Total # of different Unit animations
 
+	// Augment Constants
+	inline constexpr float CHARGE_RELEASE_RANGE_BOOST = 1.33f;
 	// Knockback Forces
 	inline constexpr float BASE_KB_FORCE = 1.f;
 	inline constexpr float BOSS_SHOCKWAVE_KB_FORCE = 2.f;	// Force of Knockback from a boss Shockwave
@@ -46,4 +50,9 @@ namespace UnitConfig {
 	const float LEDGE_SNAP = 25.0f;
 	const float JUMP_DURATION = 1.f;
 	const float LEAP_DURATION = 0.7f;
+
+	inline bool isEnemy(int unitID) { return unitID >= 100; }
+	inline int GetUpgradeCost(int curLevel) { 
+		return static_cast<int>(std::round(BASE_UPGRADE_COST * std::powf(UPGRADE_COST_MULTIPLIER, curLevel - 1)));
+	}
 }

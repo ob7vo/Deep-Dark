@@ -36,19 +36,19 @@ void UnitMoveRequest::move_unit_by_request(Stage* stage, size_t unitIndex) const
 
 	switch (type) {
 	case UnitMoveRequestType::FALL:
-		unit.movement.fall(unit, axisPos);
+		unit.movement.fall(axisPos);
 		break;
 	case UnitMoveRequestType::SQUASH:
-		unit.movement.squash(unit, axisPos);
+		unit.movement.squash(axisPos);
 		break;
 	case UnitMoveRequestType::JUMP:
-		unit.movement.jump(stage, unit, axisPos);
+		unit.movement.jump(axisPos);
 		break;
 	case UnitMoveRequestType::TELEPORT:
 		unit.movement.pos = { axisPos, stage->lanes[newLane].yPos };
 		break;
 	default:
-		unit.movement.launch(unit, axisPos);
+		unit.movement.launch(axisPos);
 		break;
 	}
 }

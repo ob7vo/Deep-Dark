@@ -27,7 +27,7 @@ public:
 	DeathCause causeOfDeath = DeathCause::NONE;
 	UnitSpawnType spawnCategory = UnitSpawnType::NORMAL;
 
-	Unit() = default;
+	Unit();
 	~Unit() = default;
 
 	Unit(Unit&&) = default;
@@ -77,18 +77,18 @@ public:
 	inline bool dead() const { return status.hp <= 0 && anim.dead(); }
 	inline bool can_fall() const { return !stats->floating_type() && over_gap(); }
 
-	inline bool immune(AugmentType aug) const { return has(stats->immunities & aug) && !status.infected(); }
+	inline bool immune(AugmentType aug) const { return has(stats->immunities & aug) && !status.is_infected(); }
 
 	inline bool is_targeted(UnitType targetTypes) const { return has(stats->unitTypes, targetTypes); }
 	inline bool targeted_by_unit(const Unit& attacker) const
-	{ return stats->is_targeted(attacker.stats->targetTypes) && !attacker.status.short_circuited(); }
+	{ return stats->is_targeted(attacker.stats->targetTypes) && !attacker.status.is_short_circuited(); }
 
 	inline int get_dmg() const { return stats->get_hit_stats(combat.hitIndex).dmg; }
-	inline const sf::Vector2f& get_pos() const { return movement.pos; }
 	inline int get_lane() const { return movement.laneInd; }
-	inline sf::FloatRect getBounds() const { return anim.get_sprite().getGlobalBounds(); }
 
-	inline std::pair<float, float> get_attack_range() const 
-	{ return stats->get_hit_stats(combat.hitIndex).attackRange; }
-	inline float get_dir() const { return stats->get_dir(); }
+	// Will check for scope status effect
+	std::pair<float, float> get_attack_range() const;
+
+	const std::vector<size_t>& getLaneAllies() const;
+	const std::vector<size_t>& getLaneEnemies() const;
 };

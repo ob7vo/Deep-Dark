@@ -78,8 +78,13 @@ std::pair<UnitAnimationState, bool> get_unit_ani_state(std::string_view str) {
     case 'k': return { UnitAnimationState::KNOCKBACK, false };
     case 'f': return { UnitAnimationState::FALLING, false };
     case 'j': return { UnitAnimationState::JUMPING, false };
-    case 'p': return { UnitAnimationState::PHASE_WINDUP, false };
+    case 'p': 
+        if (str == "phase_windup")
+            return { UnitAnimationState::PHASE_WINDUP, false };
+        else
+            return { UnitAnimationState::PHASE_WINDDOWN, false };
     case 'd': return { UnitAnimationState::DEATH, false };
+    case 't': return { UnitAnimationState::TRANSFORM, false };
     default:
         throw std::runtime_error("could not get pair[AniState, bool(loops)] with string: ");
         return { UnitAnimationState::WAITING_TO_DELETE, true };

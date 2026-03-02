@@ -1,8 +1,11 @@
 #pragma once
+#include <json_fwd.hpp>
 
 namespace StageConfig {
-	constexpr int TOTAL_STAGES = 1;
+	constexpr int TOTAL_STAGES = 3;
 
-	constexpr int CHALLENGES_COUNT = 3;
+	constexpr int CHALLENGES_PER_STAGE = 3;
 	constexpr int MAX_SETS = 3;
+
+	nlohmann::json getStageData(int stageID);
 }

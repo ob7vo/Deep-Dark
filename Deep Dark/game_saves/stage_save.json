@@ -1,3 +1,31 @@
 {
-
+  "stages": [
+    {
+      "challenge_status": [
+        false,
+        false,
+        false
+      ],
+      "clear_time": 0.0,
+      "clears": 0
+    },
+    {
+      "challenge_status": [
+        false,
+        false,
+        false
+      ],
+      "clear_time": 0.0,
+      "clears": 0
+    },
+    {
+      "challenge_status": [
+        false,
+        false,
+        false
+      ],
+      "clear_time": 0.0,
+      "clears": 0
+    }
+  ]
 }

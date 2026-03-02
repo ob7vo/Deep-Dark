@@ -1,6 +1,67 @@
 {
-  "modules_spent": 3,
-  "unit_cores": [],
-  "unit_forms": [],
-  "unlocked_units": []
+  "units": [
+    {
+      "cores": [
+        false,
+        false,
+        false
+      ],
+      "level": 1,
+      "unlocked_gear": 3
+    },
+    {
+      "cores": [
+        false,
+        false,
+        false
+      ],
+      "level": 1,
+      "unlocked_gear": 2
+    },
+    {
+      "cores": [
+        false,
+        false,
+        false
+      ],
+      "level": 1,
+      "unlocked_gear": 1
+    },
+    {
+      "cores": [
+        false,
+        false,
+        false
+      ],
+      "level": 1,
+      "unlocked_gear": 1
+    },
+    {
+      "cores": [
+        false,
+        false,
+        false
+      ],
+      "level": 1,
+      "unlocked_gear": 1
+    },
+    {
+      "cores": [
+        false,
+        false,
+        false
+      ],
+      "level": 1,
+      "unlocked_gear": 1
+    },
+    {
+      "cores": [
+        false,
+        false,
+        false
+      ],
+      "level": 1,
+      "unlocked_gear": 1
+    }
+  ]
 }

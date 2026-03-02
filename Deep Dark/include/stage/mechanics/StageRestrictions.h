@@ -8,6 +8,7 @@
 /// Restrictions that actively inhibit the player during while playing a stage
 /// </summary>
 struct StageRestrictions {
+    int maxUnits;
 
 };
 /// <summary>
@@ -30,8 +31,8 @@ struct UnitRestrictions {
 
 class RestrictionParser {
 public:
-    static void apply_stage_restrictions(StageRestrictions& restrictions,
-        const nlohmann::json& stageSetJson);
+  //  static void apply_stage_restrictions(StageRestrictions& restrictions,
+    //    const nlohmann::json& stageSetJson);
     static void apply_unit_restrictions(UnitRestrictions& restrictions,
         const nlohmann::json& stageSetJson);
 private:

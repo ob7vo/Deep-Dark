@@ -35,6 +35,10 @@ struct WorkshopMenu : public Menu<UI::Workshop::BTN_COUNT> {
 	std::array<sf::Sprite, STAT_ICONS> statIcons;
 	std::array<sf::Text, STAT_ICONS> statTexts;
 
+	sf::Sprite scrapPartsIcon = sf::Sprite(defTex);
+	sf::Text scrapPartsText = sf::Text(baseFont);
+	sf::Text upgradeCostText = sf::Text(baseFont);
+
 	explicit WorkshopMenu(Camera& cam);
 	~WorkshopMenu() final = default;
 
@@ -46,6 +50,10 @@ struct WorkshopMenu : public Menu<UI::Workshop::BTN_COUNT> {
 	/// <param name="enemyMagnification">Scaling multiplier for enemy stats when showcased in stage preview (default: 1.0)</param>
 	void setup_workshop_unit(int id, int gear, float enemyMagnification = 1.f);
 	void set_stat_texts(const nlohmann::json& unitJson);
+	/// <summary>
+	/// Depending on the Unit, certain UI elements are unseen
+	/// </summary>
+	void set_team_specific_ui_visibility();
 
 	void draw() final;
 	void check_mouse_hover() final;
@@ -63,11 +71,13 @@ struct WorkshopMenu : public Menu<UI::Workshop::BTN_COUNT> {
 	void create_hitbox_visualizer();
 
 	void switch_unit_gear();
+	void upgrade_unit();
 
 	Button& return_btn();
 	Button& pause_btn();
 	Button& switchGearBtn();
 	Button& animationSpeedBtn();
+	Button& upgradeUnitBtn();
 	// Indexes 2 - 7
 	Button& animation_btn(UnitAnimationState ani);
 	/// <summary> Index will be incremented by 2 for adjustment </summary>
@@ -80,4 +90,6 @@ struct WorkshopMenu : public Menu<UI::Workshop::BTN_COUNT> {
 
 	static std::array<sf::Sprite, 8> make_statIcons();
 	static std::array<sf::Text, 8> make_statTexts();
+
+	inline bool isViewingAnEnemy() const { return unitId >= 100; }
 };

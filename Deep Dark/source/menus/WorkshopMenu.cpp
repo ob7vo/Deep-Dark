@@ -4,15 +4,19 @@
 #include "Camera.h"
 #include "UILayout.h"
 #include "UITextures.h"
+#include "UnitSaveData.h"
+#include "PlayerSaveData.h"
 
 using namespace Textures::UI;
 using namespace UI::Workshop;
 using namespace UI::Colors;
 
-WorkshopMenu::WorkshopMenu(Camera& cam) : Menu(cam), statIcons(make_statIcons()),
-statTexts(make_statTexts()) {
+WorkshopMenu::WorkshopMenu(Camera& cam) :
+	Menu(cam), 
+	statIcons(make_statIcons()),
+	statTexts(make_statTexts())
+{
 	unsigned int fontSize = cam.get_norm_font_size(unitNameText, UNIT_TEXT_SIZE);
-	unitNameText.setCharacterSize(fontSize);
 	unitDescText.setCharacterSize(fontSize);
 
 	unsigned int fontSize2 = cam.get_norm_font_size(statTexts[0], STAT_TEXT_SIZE);
@@ -26,10 +30,12 @@ statTexts(make_statTexts()) {
 	return_btn().setup(RETURN_BTN_POS, RETURN_BTN_SIZE, cam, t_returnBtn);
 	switchGearBtn().setup(UNIT_SWITCH_GEAR_BTN_POS, UNIT_SWITCH_GEAR_BTN_SIZE, cam, t_switchGearBtn);
 	animationSpeedBtn().setup(UNIT_SPEED_BTN_POS, UNIT_SPEED_BTN_SIZE, cam, t_speedUpBtn);
+	upgradeUnitBtn().setup(UPGRADE_UNIT_BTN_POS, UPGRADE_UNIT_BTN_SIZE, cam, t_speedUpBtn);
 
 	pause_btn().onClick = [this](bool isM1) {if (isM1) paused = !paused; };
 	switchGearBtn().onClick = [this](bool isM1) {if (isM1) switch_unit_gear(); };
 	animationSpeedBtn().onClick = [this](bool isM1) {if (isM1) unitAnimSpeedIndex = (unitAnimSpeedIndex + 1) % 5; };
+	upgradeUnitBtn().onClick = [this](bool isM1) {if (isM1) upgrade_unit(); };
 
 	for (int i = 0; i < UnitConfig::TOTAL_ANIM_COUNT; i++) {
 		// Setting the positions for animPlayer Btns takes a lot fo lines, so its done in reset_positions()
@@ -48,42 +54,6 @@ statTexts(make_statTexts()) {
 	}
 }
 
-void WorkshopMenu::setup_workshop_unit(int id, int gear, float enemyMagnification) {
-	unitId = id;
-	unitGear = gear;
-	highestGear = UnitConfig::getMaxGear(id);
-
-	const nlohmann::json unitJson = UnitConfig::createUnitJson(id, gear);
-
-	unitHitboxes.clear();
-	unitAnimTextures.clear();
-	unitAnimMap.clear();
-
-	unitStats = id < 100 ? UnitStats::create_player(unitJson) : UnitStats::create_enemy(unitJson, enemyMagnification);
-	AnimationClip::setup_unit_animation_map(unitJson, unitAnimMap, unitAnimTextures);
-
-	for (auto& [state, animPlayer] : unitAnimMap) animPlayer.loops = true;
-	currentAnimState = UnitAnimationState::MOVE;
-
-	unitAnimPlayer.start(&unitAnimMap[currentAnimState], unitSprite);
-	set_stat_texts(unitJson);
-}
-
-void WorkshopMenu::set_stat_texts(const nlohmann::json& unitJson) {
-	unitNameText.setString(unitJson["name"].get<std::string>());
-	if (unitJson.contains("description"))
-		unitDescText.setString(unitJson["description"].get<std::string>());
-	else unitDescText.setString("No Description");
-
-	stat_text("hp").setString(std::to_string(unitStats.maxHp));
-	stat_text("speed").setString(std::to_string(unitStats.speed));
-	stat_text("cost").setString(std::format("{} parts", unitStats.parts));
-	stat_text("recharge_time").setString(std::format("{} s", unitStats.rechargeTime));
-	stat_text("attack_time").setString(std::format("{} s", unitStats.attackTime));
-	stat_text("sight_range").setString(std::format("{} m", unitStats.sightRange));
-	stat_text("knockbacks").setString(std::format("{} knockbacks", unitStats.knockbacks));
-	stat_text("hits").setString(std::to_string(unitStats.hits[0].dmg));
-}
 void WorkshopMenu::reset_positions() {
 	return_btn().set_norm_pos(RETURN_BTN_POS, cam);
 	pause_btn().set_norm_pos(UNIT_PAUSE_BTN_POS, cam);
@@ -103,6 +73,68 @@ void WorkshopMenu::reset_positions() {
 
 	set_unit_anim_btn_positions();
 }
+
+#pragma region Set Up UI For A New Unit
+void WorkshopMenu::setup_workshop_unit(int id, int gear, float enemyMagnification) {
+	unitId = id;
+	unitGear = gear;
+	highestGear = UnitConfig::getMaxGear(id);
+
+	const nlohmann::json unitJson = UnitConfig::createUnitJson(id, gear);
+
+	unitHitboxes.clear();
+	unitAnimTextures.clear();
+	unitAnimMap.clear();
+
+	unitStats = id < 100 ? UnitStats::create_player(unitJson) : UnitStats::create_enemy(unitJson, enemyMagnification);
+	AnimationClip::setup_unit_animation_map(unitJson, unitAnimMap, unitAnimTextures);
+
+	// Create the Unit's Animations and stat texts
+	for (auto& [state, animPlayer] : unitAnimMap) animPlayer.loops = true;
+	currentAnimState = UnitAnimationState::MOVE;
+	unitAnimPlayer.start(&unitAnimMap[currentAnimState], unitSprite);
+	set_stat_texts(unitJson);
+
+	// Set certain buttons invisible if viewing an enemy
+	set_team_specific_ui_visibility();	
+}
+void WorkshopMenu::set_team_specific_ui_visibility() {
+	upgradeUnitBtn().visible = !isViewingAnEnemy();
+	
+	// Set unavailable animations invisible
+	// First turns them all invisible, then the actually used ones visible
+	for (int i = 0; i < UnitConfig::TOTAL_ANIM_COUNT; i++)
+		animation_btn(i).visible = false;
+	for (const auto& [animState, anim] : unitAnimMap) 
+		animation_btn(animState).visible = true;
+
+	if (!isViewingAnEnemy()) {
+		int cost = UnitConfig::GetUpgradeCost(UnitSaveData::GetLevel(unitId));
+		int curScrapParts = PlayerSaveData::GetScrapParts();
+
+		scrapPartsText.setString(std::format("{}", curScrapParts));
+		upgradeCostText.setString(std::format("{}", cost));
+
+		sf::Color upgradeUIColor = (curScrapParts < cost) ? UI::Colors::GREY : sf::Color::White;
+		upgradeUnitBtn().sprite.setColor(upgradeUIColor);
+		upgradeCostText.setFillColor(upgradeUIColor);
+	}
+}
+void WorkshopMenu::set_stat_texts(const nlohmann::json& unitJson) {
+	unitNameText.setString(unitJson["name"].get<std::string>());
+	if (unitJson.contains("description"))
+		unitDescText.setString(unitJson["description"].get<std::string>());
+	else unitDescText.setString("No Description");
+
+	stat_text("hp").setString(std::to_string(unitStats.maxHp));
+	stat_text("speed").setString(std::to_string(unitStats.speed));
+	stat_text("cost").setString(std::format("{} parts", unitStats.parts));
+	stat_text("recharge_time").setString(std::format("{} s", unitStats.rechargeTime));
+	stat_text("attack_time").setString(std::format("{} s", unitStats.attackTime));
+	stat_text("sight_range").setString(std::format("{} m", unitStats.sightRange));
+	stat_text("knockbacks").setString(std::format("{} knockbacks", unitStats.knockbacks));
+	stat_text("hits").setString(std::to_string(unitStats.hits[0].dmg));
+}
 void WorkshopMenu::set_unit_anim_btn_positions() {
 	sf::Vector2f animPos = UNIT_ANIMATION_BTN_POS;
 
@@ -119,23 +151,27 @@ void WorkshopMenu::set_unit_anim_btn_positions() {
 		animPos += UNIT_ANIMATION_BTN_INCREMENT;
 	}
 }
+#pragma endregion
 
 void WorkshopMenu::draw() {
+	buttonManager.draw(cam);
+
+
+	// Drawing non-button Sprites and texts
 	for (int i = 0; i < STAT_ICONS; i++) {
-		cam.queue_ui_draw(&statIcons[i]);
-		cam.queue_ui_draw(&statTexts[i]);
+		cam.renderer.queue_ui_draw(&statIcons[i]);
+		cam.renderer.queue_ui_draw(&statTexts[i]);
 	}
 
-	buttonManager.draw(cam, 0, (int)ButtonIndex::ANIMATIONS);
+	cam.renderer.queue_world_draw(&unitSprite);
+	cam.renderer.queue_ui_draw(&unitNameText);
+	cam.renderer.queue_ui_draw(&unitDescText);
 
-	// Draw only the animations the current unit has
-	for (const auto& [animState, anim] : unitAnimMap) {
-		cam.queue_ui_draw(&animation_btn(animState).sprite);
+	if (!isViewingAnEnemy()) {
+		cam.renderer.queue_ui_draw(&scrapPartsIcon);
+		cam.renderer.queue_ui_draw(&scrapPartsText);
+		cam.renderer.queue_ui_draw(&upgradeCostText);
 	}
-
-	cam.queue_world_draw(&unitSprite);
-	cam.queue_ui_draw(&unitNameText);
-	cam.queue_ui_draw(&unitDescText);
 
 	draw_unit_hurtbox();
 	draw_unit_hitboxs();
@@ -149,11 +185,11 @@ void WorkshopMenu::draw_unit_hurtbox() {
 	hurtbox.setPosition(unitSprite.getPosition());
 	hurtbox.setFillColor(sf::Color(3, 252, 198, 128));
 
-	cam.queue_temp_ui_draw(hurtbox);
+	cam.renderer.queue_temp_ui_draw(hurtbox);
 }
 void WorkshopMenu::draw_unit_hitboxs() {
 	for (auto& hitbox : unitHitboxes)
-		cam.queue_world_draw(&hitbox);
+		cam.renderer.queue_world_draw(&hitbox);
 }
 void WorkshopMenu::create_hitbox_visualizer() {
 	auto hitIndex = static_cast<int>(unitHitboxes.size());
@@ -173,30 +209,6 @@ void WorkshopMenu::create_hitbox_visualizer() {
 
 	unitHitboxes.push_back(shape);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 void WorkshopMenu::update(float dt) {
 	if (paused) return;
@@ -228,6 +240,23 @@ void WorkshopMenu::switch_unit_gear() {
 	unitGear = std::clamp((unitGear + 1), 1, highestGear);
 	setup_workshop_unit(unitId, unitGear);
 }
+void WorkshopMenu::upgrade_unit() {
+	if (isViewingAnEnemy()) return;
+
+	int cost = UnitConfig::GetUpgradeCost(UnitSaveData::GetLevel(unitId));
+
+	if (auto curScrapParts = PlayerSaveData::SpendScrapParts(cost)) {
+		int newLevel = UnitSaveData::IncreaseLevel(unitId);
+		int newCost = UnitConfig::GetUpgradeCost(newLevel);
+
+		upgradeCostText.setString(std::format("{}", newCost));
+		scrapPartsText.setString(std::format("{}", curScrapParts.value()));
+
+		sf::Color upgradeUIColor = (curScrapParts < newCost) ? UI::Colors::GREY : sf::Color::White;
+		upgradeUnitBtn().sprite.setColor(upgradeUIColor);
+		upgradeCostText.setFillColor(upgradeUIColor);
+	}
+}
 
 // BUTTON INDEXEX /////////////////////////////////////////////////////
 #pragma region Button Indexs
@@ -235,6 +264,7 @@ Button& WorkshopMenu::return_btn() { return buttonManager.buttons[static_cast<in
 Button& WorkshopMenu::pause_btn() { return buttonManager.buttons[static_cast<int>(ButtonIndex::PAUSE)]; }
 Button& WorkshopMenu::switchGearBtn() { return buttonManager.buttons[static_cast<int>(ButtonIndex::SWITCH_GEAR)]; }
 Button& WorkshopMenu::animationSpeedBtn() { return buttonManager.buttons[static_cast<int>(ButtonIndex::SPEED_UP)]; }
+Button& WorkshopMenu::upgradeUnitBtn() { return buttonManager.buttons[static_cast<int>(ButtonIndex::UPGRADE_UNIT)]; }
 
 Button& WorkshopMenu::animation_btn(UnitAnimationState ani) {
 	switch (ani) {
@@ -246,7 +276,7 @@ Button& WorkshopMenu::animation_btn(UnitAnimationState ani) {
 	default: return animation_btn(static_cast<int>(ani));
 	}
 }
-Button& WorkshopMenu::animation_btn(int i) { return buttonManager.buttons[i + static_cast<int>(ButtonIndex::ANIMATIONS)]; }
+Button& WorkshopMenu::animation_btn(int i) { return buttonManager.buttons[i + static_cast<int>(ButtonIndex::FIRST_ANIMATION)]; }
 
 int WorkshopMenu::stat_index(const std::string& str) const {
 	switch (str[0]) {

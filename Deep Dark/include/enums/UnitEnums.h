@@ -14,8 +14,8 @@ enum class UnitAnimationState {
 	FALLING = 4,
 	DEATH = 5,
 	JUMPING = 6,
-	PHASE_ACTIVE = 7,
-	TRANSFORM = 8,
+	TRANSFORM = 7,
+	PHASE_ACTIVE = 8,
 };
 enum class DeathCause {
 	NONE = 0,
@@ -33,11 +33,12 @@ enum class UnitType : std::uint32_t { // comments depict the Types common builds
 	NANO = 1 << 2, // Fast, high dps, high knockback count. Don't TRIGGER traps (can still be hurt by them)
 	RUSTED = 1 << 3, // Very Slow and VERY bulky, will idle on gaps
 	FLOATING = 1 << 4, // Agile, generally mid-ranged, ignores gaps 
-	REANIMEN = 1 << 5, // Fast, low range, high dps, low health, can revive.
+	REANIMEN = 1 << 5, // Fast, low range, high dps, low health, can revive and syphon.
 	ANCIENT = 1 << 6, // Ignore teleporters, usaully apply short-circuit, good bulk and damage.
 	HOLOGRAM = 1 << 7, // Can phase through units, good at applying statuses
-	VOIDED = 1 << 8, // Aku-sheilds and have unique voided ability.
-	ALL = 1 << 9 // Every Unit has type ALL, easy way to give target to all types
+	CAPACITOR = 1 << 8, // Tankers, low-mid kbs, all units have the unique "Charge" augment
+	VOIDED = 1 << 9, // Aku-sheilds and have unique voided ability.
+	ALL = 1 << 10 // Every Unit has type ALL, easy way to give target to all types
 };
 enum class UnitSpawnType {
 	NORMAL,

@@ -11,7 +11,7 @@ private:
 	Loadout loadout;
 	StageManager stageManager;
 public:
-	int stageId = 0;
+	int curStageID = 0;
 	int curStageSet = 0;
 	int stageSetCount = 1;
 
@@ -26,8 +26,14 @@ public:
 
 	void handle_events(sf::Event event) override;
 
+	void handle_stage_victory();
+	/// <summary>
+	/// Needed to fully exit the stage. Only called via result screen quit button, or
+	/// from the quit button in the armory when preparing for the next stage set
+	/// </summary>
 	void quit_stage();
-	void end_current_stage_set();
+	void end_current_stage_set(bool playerWon);
+	void enter_next_stage_set();
 };
 
 struct StageEnterData : public OnStateEnterData {

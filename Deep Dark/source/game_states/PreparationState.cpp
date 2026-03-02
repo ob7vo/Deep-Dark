@@ -2,8 +2,11 @@
 #include "PreparationState.h"
 #include "StageGameState.h"
 
-PreparationState::PreparationState(Camera& cam) : GameState(cam),
-stageSelect(cam), armoryMenu(cam), workshopMenu(cam)
+PreparationState::PreparationState(Camera& cam) : 
+	GameState(cam),
+	stageSelect(cam), 
+	armoryMenu(cam), 
+	workshopMenu(cam)
 {
 	stageSelect.reset_positions();
 	armoryMenu.reset_positions();
@@ -11,15 +14,38 @@ stageSelect(cam), armoryMenu(cam), workshopMenu(cam)
 
 	setup_button_functions();
 }
+
 void PreparationState::setup_button_functions() {
 #pragma region StageSelect
-	for (int i = 0; i < STAGES; i++)
-		stageSelect.stageNodeBtn(i).onClick = [this, i](bool m1) { if (m1) start_stage_set(i, 0); };
-	stageSelect.enterArmoryBtn().onClick = [this](bool m1) {
+	for (int stageID = 0; stageID < StageConfig::TOTAL_STAGES; stageID++)
+		stageSelect.stageNodeBtn(stageID).onClick = [this, stageID](bool m1) {
 		if (m1) {
-			armoryMenu.inStageMode = true;
-			armoryMenu.stageSetMenu.setup_menu(stageSelect.selectedStage);
+			stageSelect.selectedStage = stageID;
+			stageSelect.stageNodeBtn(stageID).sprite.setColor(sf::Color::White);
+
+			stageSelect.stageNodeMenu.clickable = stageSelect.paused = true;
+			stageSelect.start_stage_node_menu_transition();
+			stageSelect.stageNodeMenu.set_stage_name_text(stageID);
+		}//start_stage_set(i, 0); 
+		};
+
+	stageSelect.stageNodeMenu.enterArmoryBtn().onClick = [this](bool m1) {
+		if (m1) {
+			armoryMenu.mode = ArmoryMenu::Mode::StagePreparation;
+			armoryMenu.stagePreviewMenu.setup_menu(stageSelect.selectedStage);
 			switch_menu(MenuType::ARMORY_EQUIP);
+		}
+		};
+	stageSelect.stageNodeMenu.closeBtn().onClick = [this](bool isM1) {
+		if (isM1) {
+			stageSelect.stageNodeMenu.clickable = false;
+			stageSelect.start_stage_node_menu_transition();
+		}
+		};
+	stageSelect.stageNodeMenu.startStageBtn().onClick = [this](bool isM1) {
+		if (isM1) {
+			start_stage_set(stageSelect.selectedStage, 0);
+			stageSelect.paused = stageSelect.stageNodeMenu.clickable = false;
 		}
 		};
 #pragma endregion
@@ -28,23 +54,24 @@ void PreparationState::setup_button_functions() {
 	armoryMenu.returnBtn().onClick = [this](bool m1) 
 		{ if (m1) switch_menu(prevMenuType); };
 
-	armoryMenu.stageSetMenu.startStageBtn().onClick = [this](bool m1) {
-		if (m1) start_stage_set(armoryMenu.stageSetMenu.stageId, armoryMenu.stageSetMenu.stageSet);
+	armoryMenu.stagePreviewMenu.startStageBtn().onClick = [this](bool m1) {
+		if (m1) start_stage_set(armoryMenu.stagePreviewMenu.stageId, armoryMenu.stagePreviewMenu.stageSet);
 		};
-	armoryMenu.stageSetMenu.exitStageBtn().onClick = [this](bool m1) {
+	armoryMenu.stagePreviewMenu.exitStageBtn().onClick = [this](bool m1) {
 		if (m1) {
-			armoryMenu.paused = armoryMenu.inStageMode = false;
-			armoryMenu.stageSetMenu.full_reset();
+			armoryMenu.paused = false;
+			armoryMenu.mode = ArmoryMenu::Mode::Normal;
+			armoryMenu.stagePreviewMenu.full_reset();
 
 			switch_menu(MenuType::STAGE_SELECT);
 		}
 		};
 
-	for (int i = 0; i < UnitConfig::TOTAL_PLAYER_UNITS; i++) {
-		armoryMenu.unitSelectionBtn(i).onClick = [i, this](bool isM1) {
-			if (isM1) armoryMenu.start_dragging_unit(i);
+	for (int id = 0; id < UnitConfig::TOTAL_PLAYER_UNITS; id++) {
+		armoryMenu.inventorySlotBtn(id).onClick = [id, this](bool isM1) {
+			if (isM1) armoryMenu.start_dragging_unit(id);
 			else {
-				workshopMenu.setup_workshop_unit(i, armoryMenu.displayedGears[i]);
+				workshopMenu.setup_workshop_unit(id, armoryMenu.displayedGears[id]);
 				switch_menu(MenuType::WORKSHOP_MENU);
 			}
 			};
@@ -54,7 +81,7 @@ void PreparationState::setup_button_functions() {
 	workshopMenu.return_btn().onClick = [this](bool m1) {
 		if (m1) {
 			switch_menu(prevMenuType);
-			armoryMenu.change_displayed_gear(workshopMenu.unitId, workshopMenu.unitGear);
+			armoryMenu.update_display_of_unit(workshopMenu.unitId, workshopMenu.unitGear);
 		}
 		};
 }
@@ -75,7 +102,7 @@ void PreparationState::handle_events(sf::Event event) {
 
 MenuBase* PreparationState::get_menu() {
 	cam.reset();
-	std::cout << "getting menu: " << (int)curMenuType << std::endl;
+	std::cout << "getting menu: " << MenuBase::GetMenuName(curMenuType) << std::endl;
 
 	switch (curMenuType) {
 	case MenuType::STAGE_SELECT:
@@ -97,6 +124,16 @@ MenuBase* PreparationState::get_menu() {
 	std::cout << "Could not get Menu: " << (int)curMenuType << std::endl;
 	return nullptr;
 }
+void PreparationState::switch_menu(MenuType newMenu) {
+	prevMenuType = curMenuType;
+	curMenuType = newMenu;
+
+	menu->on_exit();
+	menu = get_menu();
+
+	menu->on_enter();
+}
+
 void PreparationState::start_stage_set(int stage, int set) {
 	std::string jsonPath = std::format("configs/stage_data/stage_{}.json", stage);
 	
@@ -109,29 +146,29 @@ void PreparationState::start_stage_set(int stage, int set) {
 		return;
 	}
 
-	nextStateEnterData = std::make_unique<StageEnterData>(jsonPath, set, armoryMenu.slots);
+	nextStateEnterData = std::make_unique<StageEnterData>(jsonPath, set, armoryMenu.equipSlots);
 	readyToEndState = true;
 	std::cout << "starting stage #" << stage << std::endl;
 }
 void PreparationState::on_enter(OnStateEnterData* enterData) {
 	if (auto prepData = dynamic_cast<PrepEnterData*>(enterData))
-		enter_from_transition(prepData);
+		on_enter_normal(prepData);
 	else if (auto setData = dynamic_cast<StageSetPrepEnterData*>(enterData))
-		enter_from_stage_set_completion(setData);
+		on_enter_from_stage_set_completion(setData);
 	else {
 		std::cout << "Enter Data is not Prep Data" << std::endl;
 		return;
 	}
 }
-void PreparationState::enter_from_stage_set_completion(const StageSetPrepEnterData* setEnterData) {
+void PreparationState::on_enter_from_stage_set_completion(const StageSetPrepEnterData* setEnterData) {
 	curMenuType = prevMenuType = MenuType::ARMORY_EQUIP;
 }
-void PreparationState::enter_from_transition(const PrepEnterData* prepData) {
+void PreparationState::on_enter_normal(const PrepEnterData* prepData) {
 	curMenuType = prepData->newMenuType;
 	prevMenuType = prepData->prevMenuType;
 
-	armoryMenu.inStageMode = false;
-	armoryMenu.stageSetMenu.full_reset();
+	armoryMenu.mode = ArmoryMenu::Mode::Normal;
+	armoryMenu.stagePreviewMenu.full_reset();
 
 	menu = get_menu();
 }
