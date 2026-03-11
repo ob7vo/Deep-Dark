@@ -4,7 +4,7 @@
 #include "Utils.h"
 
 StageEntity::StageEntity(sf::Vector2f _pos, int _lane) : 
-	sprite(defTex),
+	sprite(defaultTexture),
 	laneInd(_lane),
 	pos(_pos)
 {

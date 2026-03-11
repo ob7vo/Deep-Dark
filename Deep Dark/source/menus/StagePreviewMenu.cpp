@@ -2,25 +2,26 @@
 #include "StagePreviewMenu.h"
 #include "Camera.h"
 #include "UITextures.h"
+#include "Utils.h"
 
 using namespace Textures::UI;
 using namespace UI::ArmoryMenu::StagePreview;
 
 StagePreviewMenu::StagePreviewMenu(Camera& cam) : Menu(cam) {
 	backgroundSprite.setTexture(t_menuBG1);
-	backgroundSprite.setScale(cam.get_norm_sprite_scale(backgroundSprite, BACKGROUND_SIZE));
+	backgroundSprite.setScale(Screen::getSpriteScale(backgroundSprite, BACKGROUND_SIZE));
 
 	startStageSetText.setString("beebee next stage");
-	startStageSetText.setCharacterSize(cam.get_norm_font_size(startStageSetText, TEXT_HEIGHT));
+	Screen::setFontSize(startStageSetText, TEXT_HEIGHT);
 
 	for (int i = 0; i < 10; i++) {
-		sf::Vector2f scale = cam.get_norm_sprite_scale(usedUnitsSlotSprites[i], UNIT_SLOT_SCALE);
+		sf::Vector2f scale = Screen::getSpriteScale(usedUnitsSlotSprites[i], UNIT_SLOT_SCALE);
 		usedUnitsSlotSprites[i].setScale(scale);
 	}
 
-	startStageBtn().setup(START_BTN_POS, START_BTN_SIZE, cam, t_startBtn);
-	exitStageBtn().setup(EXIT_BTN_POS, ENEMY_UNITS_SIZE, cam, t_returnBtn);
-	closeBtn().setup(CLOSE_MENU_BTN_POS, CLOSE_MENU_BTN_SIZE, cam, t_closeBtn);
+	startStageBtn().setup(START_BTN_POS, START_BTN_SIZE, t_startBtn);
+	exitStageBtn().setup(EXIT_BTN_POS, ENEMY_UNITS_SIZE, t_returnBtn);
+	closeBtn().setup(CLOSE_MENU_BTN_POS, CLOSE_MENU_BTN_SIZE, t_closeBtn);
 }
 void StagePreviewMenu::setup_menu(int stage, int set, const std::array<std::pair<int, int>, 10>& newUsedUnits) {
 	reset_sprites();
@@ -71,7 +72,7 @@ void StagePreviewMenu::create_enemy_sprites(const nlohmann::json& stageSetJson) 
 
 		sf::Texture& unitTexture = enemyUnitTextures.emplace_back();
 
-		// Get and use the json for the Enemys Idle Sprite Sheet
+		// Get and use the json for the Enemies Idle Sprite Sheet
 		// The Sprites will be of the enemy's first Idle  frame 
 		const nlohmann::json idleAnimConfig = UnitConfig::createUnitJson(id, gear)["animations"]["idle"];
 		std::string idleAnimPath = UnitConfig::getUnitGearPath(id, gear) + "idle.png";
@@ -82,12 +83,12 @@ void StagePreviewMenu::create_enemy_sprites(const nlohmann::json& stageSetJson) 
 		sf::Sprite& enemySprite = enemyUnitSprites.emplace_back(unitTexture);
 		enemySprite.setTextureRect({ {0, 0}, cellSize });
 		enemySprite.setOrigin({ (float)unitTexture.getSize().x * .5f, (float)unitTexture.getSize().y });
-		enemySprite.setScale(cam.get_norm_sprite_scale(enemySprite, ENEMY_UNITS_SIZE));
+		enemySprite.setScale(Screen::getSpriteScale(enemySprite, ENEMY_UNITS_SIZE));
 	}
 
 	// Moving the enemy sprites into place
-	sf::Vector2f center = cam.norm_to_pixels(ENEMY_UNITS_CENTER);
-	sf::Vector2f spacing = cam.norm_to_pixels(ENEMY_UNITS_SPACING); // y == 0
+	sf::Vector2f center = Screen::toPixels(ENEMY_UNITS_CENTER);
+	sf::Vector2f spacing = Screen::toPixels(ENEMY_UNITS_SPACING); // y == 0
 	sf::Vector2f left = { center.x - (spacing.x * ((float)uniqueEnemyCount - 1.f) * 0.5f), center.y};
 
 	for (size_t i = 0; i < uniqueEnemyCount; i++)
@@ -95,12 +96,12 @@ void StagePreviewMenu::create_enemy_sprites(const nlohmann::json& stageSetJson) 
 }
 
 void StagePreviewMenu::reset_positions() {
-	startStageBtn().set_norm_pos(START_BTN_POS, cam);
-	exitStageBtn().set_norm_pos(EXIT_BTN_POS, cam);
-	closeBtn().set_norm_pos(CLOSE_MENU_BTN_POS, cam);
+	startStageBtn().set_pos(Screen::toPixels(START_BTN_POS));
+	exitStageBtn().set_pos(Screen::toPixels(EXIT_BTN_POS));
+	closeBtn().set_pos(Screen::toPixels(CLOSE_MENU_BTN_POS));
 
-	sf::Vector2f slotPos = cam.norm_to_pixels(FIRST_UNIT_SLOT_POS);
-	sf::Vector2f slotInc = cam.norm_to_pixels(UNIT_SLOT_INCREMENT);
+	sf::Vector2f slotPos = Screen::toPixels(FIRST_UNIT_SLOT_POS);
+	sf::Vector2f slotInc = Screen::toPixels(UNIT_SLOT_INCREMENT);
 	float startX = slotPos.x;
 
 	for (int i = 0; i < 2; i++) {
@@ -115,8 +116,8 @@ void StagePreviewMenu::reset_positions() {
 		slotPos.y += slotInc.y;
 	}
 
-	startStageSetText.setPosition(cam.norm_to_pixels(TEXT_POS));
-	backgroundSprite.setPosition(cam.norm_to_pixels(BACKGROUND_POS));
+	startStageSetText.setPosition(Screen::toPixels(TEXT_POS));
+	backgroundSprite.setPosition(Screen::toPixels(BACKGROUND_POS));
 }
 void StagePreviewMenu::reset_sprites() {
 	enemyUnitTextures = {};

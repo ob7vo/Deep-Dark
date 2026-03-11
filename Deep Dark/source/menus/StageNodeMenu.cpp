@@ -9,31 +9,31 @@ using namespace UI::StageSelect::StageNode;
 using namespace Textures::UI;
 
 StageNodeMenu::StageNodeMenu(Camera& cam) : Menu(cam) {
-	cam.setup_sprite(MENU_POS, MENU_SIZE, menuSprite, t_menuBG1);
-	cam.get_norm_font_size(stageNameText, STAGE_NAME_TEXT_SIZE);
+	Visual::setupSprite(MENU_POS, MENU_SIZE, menuSprite, t_menuBG1);
+	Screen::setFontSize(stageNameText, STAGE_NAME_TEXT_SIZE);
 	
-	closeBtn().setup(CLOSE_BTN_POS, CLOSE_BTN_SIZE, cam, t_closeBtn);
-	startStageBtn().setup(START_STAGE_BTN_POS, START_STAGE_BTN_SIZE, cam, t_startBtn);
-	enterArmoryBtn().setup(ARMORY_BTN_POS, ARMORY_BTN_SIZE, cam, t_armoryBtn);
+	closeBtn().setup(CLOSE_BTN_POS, CLOSE_BTN_SIZE, t_closeBtn);
+	startStageBtn().setup(START_STAGE_BTN_POS, START_STAGE_BTN_SIZE, t_startBtn);
+	enterArmoryBtn().setup(ARMORY_BTN_POS, ARMORY_BTN_SIZE, t_armoryBtn);
 }
 
 void StageNodeMenu::reset_positions() {
-	menuSprite.setPosition(cam.norm_to_pixels(MENU_POS));
-	stageNameText.setPosition(cam.norm_to_pixels(STAGE_NAME_TEXT_POS));
+	menuSprite.setPosition(Screen::toPixels(MENU_POS));
+	stageNameText.setPosition(Screen::toPixels(STAGE_NAME_TEXT_POS));
 
-	closeBtn().set_pos(cam.norm_to_pixels(CLOSE_BTN_POS));
-	startStageBtn().set_pos(cam.norm_to_pixels(START_STAGE_BTN_POS));
-	enterArmoryBtn().set_pos(cam.norm_to_pixels(ARMORY_BTN_POS));
+	closeBtn().set_pos(Screen::toPixels(CLOSE_BTN_POS));
+	startStageBtn().set_pos(Screen::toPixels(START_STAGE_BTN_POS));
+	enterArmoryBtn().set_pos(Screen::toPixels(ARMORY_BTN_POS));
 }
 
-void StageNodeMenu::slide_menu_to_point(float t) {
-	sf::Vector2f offset = SLIDE_AMOUNT * (clickable ? (1.f - t) : t); // at t=0, full offset. at t=1, no offset
+void StageNodeMenu::slide(float t) {
+	sf::Vector2f offset = { TRANSITION_SLIDE_DISTANCE * (clickable ? (1.f - t) : t), 0.f }; // at t=0, full offset. at t=1, no offset
 
-	menuSprite.setPosition(cam.norm_to_pixels(MENU_POS + offset));
-	stageNameText.setPosition(cam.norm_to_pixels(STAGE_NAME_TEXT_POS + offset));
-	closeBtn().set_pos(cam.norm_to_pixels(CLOSE_BTN_POS + offset));
-	startStageBtn().set_pos(cam.norm_to_pixels(START_STAGE_BTN_POS + offset));
-	enterArmoryBtn().set_pos(cam.norm_to_pixels(ARMORY_BTN_POS + offset));
+	menuSprite.setPosition(Screen::toPixels(MENU_POS + offset));
+	stageNameText.setPosition(Screen::toPixels(STAGE_NAME_TEXT_POS + offset));
+	closeBtn().set_pos(Screen::toPixels(CLOSE_BTN_POS + offset));
+	startStageBtn().set_pos(Screen::toPixels(START_STAGE_BTN_POS + offset));
+	enterArmoryBtn().set_pos(Screen::toPixels(ARMORY_BTN_POS + offset));
 }
 void StageNodeMenu::set_stage_name_text(int stageID) {
 	nlohmann::json stageJson = StageConfig::getStageData(stageID);

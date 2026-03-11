@@ -2,8 +2,11 @@
 #include <SFML/System/Vector2.hpp>
 #include <SFML/Graphics/Rect.hpp>
 #include <SFML/Graphics/Text.hpp>
+#include <SFML/Graphics/Sprite.hpp>
 #include <random>
 #include <format>
+
+enum class Direction { Up, Down, Left, Right };
 
 namespace Random {
     inline std::mt19937& generator() {
@@ -109,5 +112,85 @@ namespace Collision {
     inline bool range(float posA, float posB, float minRange, float maxRange) {
         float dist = std::abs(posA - posB);
         return dist >= minRange && dist <= maxRange;
+    }
+}
+namespace Math {
+    inline sf::Vector2f v_Lerp(sf::Vector2f start, sf::Vector2f end, float t) {
+        return start + (end - start) * t;
+    }
+}
+namespace Screen {
+    inline sf::Vector2u size;
+
+    inline sf::Vector2f toPixels(sf::Vector2f norm) {
+        return { norm.x * size.x, norm.y * size.y };
+    }
+    inline std::pair<float,float> toPixels(std::pair<float,float> norm) {
+        return { norm.first * size.x, norm.second * size.y };
+    }
+    inline sf::Vector2f pixelsToNorm(sf::Vector2f pixels) {
+        return { pixels.x / size.x, pixels.y / size.y };
+    }
+
+    inline sf::Vector2f lerpOffscreen(sf::Vector2f startNormPos, float offscreenNormDist, float t, Direction dir) {
+        sf::Vector2f slide = {};
+
+        switch (dir) {
+        case Direction::Up:	slide = { startNormPos.x, 0.f - offscreenNormDist }; break;
+        case Direction::Down:  slide = { startNormPos.x, 1 + offscreenNormDist }; break;
+        case Direction::Left:  slide = { 0 - offscreenNormDist, startNormPos.y }; break;
+        case Direction::Right: slide = { 1 + offscreenNormDist,  startNormPos.y }; break;
+        }
+
+        sf::Vector2f normTargetPosition = Math::v_Lerp(startNormPos , slide, t);
+        return toPixels(normTargetPosition);
+    }
+
+    inline sf::Vector2f getSpriteScale(const sf::Sprite& sprite, sf::Vector2f normScale) {
+        // Get the sprite's original pixel dimensions
+        sf::FloatRect bounds = sprite.getLocalBounds();
+        sf::Vector2f targetPixelSize = normScale * (float)std::min(size.x, size.y);
+
+        float scaleX = targetPixelSize.x / bounds.size.x;
+        float scaleY = targetPixelSize.y / bounds.size.y;
+
+        return { scaleX, scaleY };
+    }
+    inline void setFontSize(sf::Text& text, float normHeight) {
+        float targetPixelHeight = normHeight * size.y;
+
+        if (text.getString() == "") text.setString("Ag");
+
+        // Start with an estimate
+        auto fontSize = static_cast<unsigned int>(targetPixelHeight);
+        text.setCharacterSize(fontSize);
+
+        // Measure actual height
+        float actualHeight = text.getLocalBounds().size.y;
+
+        // Adjust if needed
+        if (actualHeight > 0.f) {
+            fontSize = static_cast<unsigned int>(fontSize * (targetPixelHeight / actualHeight));
+            text.setCharacterSize(fontSize);
+        }
+
+        // set the final size
+        text.setCharacterSize(fontSize);
+    }
+}
+namespace Visual {
+    inline void setupSprite(sf::Vector2f uiPos, sf::Vector2f normScale, sf::Sprite& sprite,
+        const sf::Texture& texture, sf::IntRect textureRect = {})
+    {
+        if (textureRect.size.x == 0 || textureRect.size.y == 0) textureRect.size = (sf::Vector2i)texture.getSize();
+        bool isUI = std::abs(uiPos.x) <= 1.f && std::abs(uiPos.y) <= 1.f;
+
+        sprite.setTexture(texture);
+        sprite.setTextureRect(textureRect);
+
+        sprite.setScale(Screen::getSpriteScale(sprite, normScale));
+        sprite.setPosition((isUI ? Screen::toPixels(uiPos) : uiPos));
+        sprite.setOrigin(sprite.getLocalBounds().size * 0.5f);
+
     }
 }

@@ -22,7 +22,7 @@ struct StagePreviewMenu : public Menu<UI::ArmoryMenu::StagePreview::BTN_COUNT> {
     int stageId = 0;
     int stageSet = 0;
     
-    sf::Sprite backgroundSprite = sf::Sprite(defTex);
+    sf::Sprite backgroundSprite = sf::Sprite(defaultTexture);
 
     sf::Text startStageSetText = sf::Text(baseFont);
     std::vector<sf::Texture> enemyUnitTextures = {};

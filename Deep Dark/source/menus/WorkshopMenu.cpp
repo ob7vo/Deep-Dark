@@ -6,6 +6,7 @@
 #include "UITextures.h"
 #include "UnitSaveData.h"
 #include "PlayerSaveData.h"
+#include "Utils.h"
 
 using namespace Textures::UI;
 using namespace UI::Workshop;
@@ -16,21 +17,21 @@ WorkshopMenu::WorkshopMenu(Camera& cam) :
 	statIcons(make_statIcons()),
 	statTexts(make_statTexts())
 {
-	unsigned int fontSize = cam.get_norm_font_size(unitNameText, UNIT_TEXT_SIZE);
-	unitDescText.setCharacterSize(fontSize);
+	Screen::setFontSize(unitNameText, UNIT_TEXT_SIZE);
 
-	unsigned int fontSize2 = cam.get_norm_font_size(statTexts[0], STAT_TEXT_SIZE);
+	Screen::setFontSize(statTexts[0], STAT_TEXT_SIZE);
+	unsigned int fontSize = statTexts[0].getCharacterSize();
 	for (int i = 0; i < STAT_ICONS; i++) {
-		statTexts[i].setCharacterSize(fontSize2);
+		statTexts[i].setCharacterSize(fontSize);
 		statIcons[i].setTextureRect(r_workshopStatsIcons[i]);
 		statIcons[i].setOrigin(statIcons[i].getLocalBounds().size * 0.5f);
 	}
 	 
-	pause_btn().setup(UNIT_PAUSE_BTN_POS, UNIT_PAUSE_BTN_SIZE, cam, t_pauseBtn);
-	return_btn().setup(RETURN_BTN_POS, RETURN_BTN_SIZE, cam, t_returnBtn);
-	switchGearBtn().setup(UNIT_SWITCH_GEAR_BTN_POS, UNIT_SWITCH_GEAR_BTN_SIZE, cam, t_switchGearBtn);
-	animationSpeedBtn().setup(UNIT_SPEED_BTN_POS, UNIT_SPEED_BTN_SIZE, cam, t_speedUpBtn);
-	upgradeUnitBtn().setup(UPGRADE_UNIT_BTN_POS, UPGRADE_UNIT_BTN_SIZE, cam, t_speedUpBtn);
+	pause_btn().setup(UNIT_PAUSE_BTN_POS, UNIT_PAUSE_BTN_SIZE, t_pauseBtn);
+	return_btn().setup(RETURN_BTN_POS, RETURN_BTN_SIZE, t_returnBtn);
+	switchGearBtn().setup(UNIT_SWITCH_GEAR_BTN_POS, UNIT_SWITCH_GEAR_BTN_SIZE, t_switchGearBtn);
+	animationSpeedBtn().setup(UNIT_SPEED_BTN_POS, UNIT_SPEED_BTN_SIZE, t_speedUpBtn);
+	upgradeUnitBtn().setup(UPGRADE_UNIT_BTN_POS, UPGRADE_UNIT_BTN_SIZE, t_speedUpBtn);
 
 	pause_btn().onClick = [this](bool isM1) {if (isM1) paused = !paused; };
 	switchGearBtn().onClick = [this](bool isM1) {if (isM1) switch_unit_gear(); };
@@ -38,8 +39,8 @@ WorkshopMenu::WorkshopMenu(Camera& cam) :
 	upgradeUnitBtn().onClick = [this](bool isM1) {if (isM1) upgrade_unit(); };
 
 	for (int i = 0; i < UnitConfig::TOTAL_ANIM_COUNT; i++) {
-		// Setting the positions for animPlayer Btns takes a lot fo lines, so its done in reset_positions()
-		animation_btn(i).setup({}, UNIT_ANIMATION_BTN_SIZE, cam, t_workshopAnimBtns, r_workshopAnimBtns[i]);
+		// Setting the positions for animPlayer buttons takes a lot fo lines, so its done in reset_positions()
+		animation_btn(i).setup({}, UNIT_ANIMATION_BTN_SIZE, t_workshopAnimBtns, r_workshopAnimBtns[i]);
 		animation_btn(i).onClick = [i, this](bool isM1) {
 			if (!isM1) return;
 			auto newAnimState = static_cast<UnitAnimationState>(i);
@@ -55,20 +56,20 @@ WorkshopMenu::WorkshopMenu(Camera& cam) :
 }
 
 void WorkshopMenu::reset_positions() {
-	return_btn().set_norm_pos(RETURN_BTN_POS, cam);
-	pause_btn().set_norm_pos(UNIT_PAUSE_BTN_POS, cam);
-	unitNameText.setPosition(cam.norm_to_pixels(UNIT_NAME_TEXT_POS));
-	unitDescText.setPosition(cam.norm_to_pixels(UNIT_DESC_TEXT_POS));
-	unitSprite.setPosition(cam.norm_to_pixels(UNIT_POS));
+	return_btn().set_pos(Screen::toPixels(RETURN_BTN_POS));
+	pause_btn().set_pos(Screen::toPixels(UNIT_PAUSE_BTN_POS));
+	unitNameText.setPosition(Screen::toPixels(UNIT_NAME_TEXT_POS));
+	unitDescText.setPosition(Screen::toPixels(UNIT_DESC_TEXT_POS));
+	unitSprite.setPosition(Screen::toPixels(UNIT_POS));
 
-	sf::Vector2f iconPos = cam.norm_to_pixels(STAT_ICON_POS);
-	sf::Vector2f inc = cam.norm_to_pixels(STAT_ICON_INCREMENT);
-	sf::Vector2f offset = cam.norm_to_pixels(STAT_TEXT_OFFSET);
+	sf::Vector2f iconPos = Screen::toPixels(STAT_ICON_POS);
+	sf::Vector2f spacing = Screen::toPixels(STAT_ICON_SPACING);
+	sf::Vector2f offset = Screen::toPixels(STAT_TEXT_OFFSET);
 
 	for (int i = 0; i < STAT_ICONS; i++) {
 		statIcons[i].setPosition(iconPos);
 		statTexts[i].setPosition(iconPos + offset);
-		iconPos += inc;
+		iconPos += spacing;
 	}
 
 	set_unit_anim_btn_positions();
@@ -139,7 +140,7 @@ void WorkshopMenu::set_unit_anim_btn_positions() {
 	sf::Vector2f animPos = UNIT_ANIMATION_BTN_POS;
 
 	for (int i = 0; i < 6; i++) {
-		animation_btn(i).set_norm_pos(animPos, cam);
+		animation_btn(i).set_pos(Screen::toPixels(animPos));
 		animPos += UNIT_ANIMATION_BTN_INCREMENT;
 	}
 
@@ -147,7 +148,7 @@ void WorkshopMenu::set_unit_anim_btn_positions() {
 
 	for (const auto& [animState, anim] : unitAnimMap) {
 		if (isDefaultUnitAnim(animState)) continue;
-		animation_btn(animState).set_norm_pos(animPos, cam);
+		animation_btn(animState).set_pos(Screen::toPixels(animPos));
 		animPos += UNIT_ANIMATION_BTN_INCREMENT;
 	}
 }
@@ -177,7 +178,7 @@ void WorkshopMenu::draw() {
 	draw_unit_hitboxs();
 }
 void WorkshopMenu::draw_unit_hurtbox() {
-	sf::Vector2f size = cam.norm_to_pixels(UNIT_ANIMATION_BTN_SIZE);
+	sf::Vector2f size = Screen::toPixels(UNIT_ANIMATION_BTN_SIZE);
 	sf::RectangleShape hurtbox(size);
 	sf::Vector2f origin = { (!unitStats.is_player() ? 0.f : size.x) , size.y };
 

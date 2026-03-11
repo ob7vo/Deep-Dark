@@ -22,7 +22,12 @@ public:
 	void render() override;
 	void on_enter(OnStateEnterData* enterData) override;
 	void on_exit() override;
+
 	void update_ui(float deltaTime) override;
+	void transition_from_results_screen(float deltaTime);
+	void transition_to_results_screen(float deltaTime);
+	void test_stage_ui_transition(float deltaTime);
+	void check_transition(float deltaTime) override;
 
 	void handle_events(sf::Event event) override;
 
@@ -33,7 +38,8 @@ public:
 	/// </summary>
 	void quit_stage();
 	void end_current_stage_set(bool playerWon);
-	void enter_next_stage_set();
+	// Enters armory menu where the player will equip new units for the next phase (set)
+	void enter_armory();
 };
 
 struct StageEnterData : public OnStateEnterData {

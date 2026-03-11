@@ -120,7 +120,7 @@ void StageManager::handle_events(sf::Event event) {
 
 	if (auto keyEvent = event.getIf<sf::Event::KeyPressed>()) {
 		if (keyEvent->code == Key::Escape) {
-			ui.pause();
+			ui.set_pause_state(!ui.paused);
 			return;
 		}
 

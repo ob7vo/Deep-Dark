@@ -17,7 +17,7 @@ namespace Textures {
 
 	bool loadTexture(sf::Texture& tex, std::string_view path) {
 		if (!tex.loadFromFile(path)) {
-			tex = defTex;
+			tex = defaultTexture;
 			return false;
 		}
 

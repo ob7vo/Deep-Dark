@@ -8,7 +8,7 @@ class Camera;
 struct ArmorySlot {
     sf::Vector2f pos = { 0.f,0.f };
     sf::Vector2f bounds = { 0.f,0.f };
-    sf::Sprite sprite = sf::Sprite(defTex);
+    sf::Sprite sprite = sf::Sprite(defaultTexture);
 
     int id = -1; // -1 = invalid id
     int gear = 1; // 1 = base form

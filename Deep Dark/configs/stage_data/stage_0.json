@@ -2,7 +2,7 @@
   "name": "Entry Point",
   "sets": [
     {
-      "set_name": "Opening Act (Set 1)", 
+      "set_name": "Opening Act (Set 1)",
       "enemy_base": {
         "hp": 5000,
         "x_position": 800,
@@ -48,7 +48,7 @@
           }
         }
       ],
-      "enemy_spawns": [
+      "enemy_spawns -": [
         {
           "unit_id": 102,
           "unit_gear": 1,
@@ -71,21 +71,21 @@
           "spawn_delays": [ 2.29, 3.56 ],
           "lane_indexes": [ 2, 2, 1, 2, 0, 1 ]
         }
-      ],
-      "challenges": [
-        {
-          "description": "Don't trigger any traps",
-          "challenge_type": "traps_triggered",
-          "comparison": "<",
-          "value": 1
-        },
-        {
-          "challenge_type": "units_spawned",
-          "comparison": ">",
-          "team": 1,
-          "value": 2
-        }
       ]
+    }
+  ],
+  "challenges": [
+    {
+      "description": "Don't trigger any traps",
+      "challenge_type": "traps_triggered",
+      "comparison": "<",
+      "value": 1
+    },
+    {
+      "challenge_type": "units_spawned",
+      "comparison": ">",
+      "team": 1,
+      "value": 2
     }
   ]
 }

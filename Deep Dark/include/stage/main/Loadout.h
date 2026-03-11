@@ -4,7 +4,7 @@
 #include <deque>
 
 const sf::Vector2f FIRST_SLOT_POS = { 0.278f, 0.84375f };
-const sf::Vector2f SLOT_INCREMENT = { 0.089f, 0.0625f };
+const sf::Vector2f SLOT_SPACING = { 0.089f, 0.0625f };
 
 class Camera;
 struct ArmorySlot;
@@ -17,7 +17,7 @@ struct LoadoutSlot {
 	float cooldown = 0.f;
 	float spawnTimer = 0.f;
 
-	sf::Sprite slotSprite = sf::Sprite(defTex);
+	sf::Sprite slotSprite = sf::Sprite(defaultTexture);
 
 	UnitStats unitStats = {};
 
@@ -42,6 +42,7 @@ struct Loadout{
 	void set_slot(const ArmorySlot& equipSlot, int loadoutSlot);
 
 	void draw_slots(Camera& cam, int currentParts);
+	void slide_ui(float t);
 
 	inline bool empty_slot(int slot) { return slots[slot].empty; }
 };

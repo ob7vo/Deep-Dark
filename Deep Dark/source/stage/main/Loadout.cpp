@@ -4,6 +4,10 @@
 #include "ArmorySlot.h"
 #include "UnitConfig.h"
 #include "UITextures.h"
+#include "Utils.h"
+
+constexpr int DIST_OFFSCREEN = 0.2f;
+using enum Direction;
 
 LoadoutSlot::LoadoutSlot(const nlohmann::json& file, const ArmorySlot& equipSlot)
 	: empty(false), 
@@ -36,8 +40,8 @@ void Loadout::set_slot(const ArmorySlot& equipSlot, int loadoutSlotInd) {
 	slots[loadoutSlotInd] = LoadoutSlot(unitJson, equipSlot);
 }
 void Loadout::set_slot_positions(const Camera& cam) {
-	sf::Vector2f pos = cam.norm_to_pixels(FIRST_SLOT_POS);
-	sf::Vector2f inc = cam.norm_to_pixels(SLOT_INCREMENT);
+	sf::Vector2f pos = Screen::toPixels(FIRST_SLOT_POS);
+	sf::Vector2f inc = Screen::toPixels(SLOT_SPACING);
 	float startX = pos.x;
 
 	for (int i = 0; i < 2; i++) {
@@ -58,6 +62,30 @@ void Loadout::draw_slots(Camera& cam, int currentParts) {
 	for (int i = 0; i < 10; i++)
 		slots[i].draw(cam, currentParts);
 }
+void Loadout::slide_ui(float t) {
+	sf::Vector2f slotPos = FIRST_SLOT_POS;
+	sf::Vector2f spacing = SLOT_SPACING;
+	float startX = slotPos.x;
+
+	// Turned into a regular float so it can be modified for the second row
+	float distOffscreen = DIST_OFFSCREEN;
+
+	for (int i = 0; i < 2; i++) {
+		for (int j = 0; j < 5; j++) {
+			sf::Vector2f finalPos = Screen::lerpOffscreen(slotPos, distOffscreen, t, Down);
+
+			slots[i * 5 + j].slotSprite.setPosition(finalPos);
+
+			slotPos.x += spacing.x;
+		}
+
+		distOffscreen += spacing.y;
+
+		slotPos.x = startX;
+		slotPos.y += spacing.y;
+	}
+}
+
 void LoadoutSlot::draw(Camera& cam, int curParts) {
 	cam.renderer.queue_ui_draw(&slotSprite);
 

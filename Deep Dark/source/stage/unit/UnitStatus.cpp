@@ -104,7 +104,7 @@ std::optional<StatusEffect> UnitStatus::get_status_effect(AugmentType effType) c
 	return std::nullopt;
 }
 // Linking is when a unit applies there status affect to another unit
-// Linked boolena is needed to stop infinite linking
+// Linked boolean is needed to stop infinite linking
 void UnitStatus::process_new_status_effect(const Augment& aug, bool fromLink) {
 	// Remove existing effect of same type (so new slow overrides old)
 	if (!aug.is_status_effect()) {

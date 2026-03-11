@@ -201,6 +201,9 @@
     <ClCompile Include="source\menus\StageResultsScreen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="source\visuals\ModularAnimation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\game_states\GameState.h">
@@ -371,7 +374,7 @@
     <ClInclude Include="include\utilities\json_fwd.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\utilities\CustomErrors.hpp">
+    <ClInclude Include="include\utilities\main\CustomErrors.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\stage\unit\UnitTween.h">
@@ -453,6 +456,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\menus\StageResultsScreen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\enums\TransitionID.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\visuals\ModularAnimation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

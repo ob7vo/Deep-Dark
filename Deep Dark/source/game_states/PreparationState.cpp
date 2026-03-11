@@ -22,6 +22,7 @@ void PreparationState::setup_button_functions() {
 		if (m1) {
 			stageSelect.selectedStage = stageID;
 			stageSelect.stageNodeBtn(stageID).sprite.setColor(sf::Color::White);
+			std::cout << Printing::vec2(Screen::size) << std::endl;
 
 			stageSelect.stageNodeMenu.clickable = stageSelect.paused = true;
 			stageSelect.start_stage_node_menu_transition();

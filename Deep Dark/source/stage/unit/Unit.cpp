@@ -53,7 +53,8 @@ float calc_phase_timer(float distance, float speed) {
 	return (distance / speed);
 }
 void Unit::try_knockback(int oldHp, int enemyHitIndex, const UnitStats* enemyStats) {
-	if (anim.in_knockback() || status.is_bolted()) return;
+	if (anim.in_knockback()) return;
+	if (status.is_bolted() && status.hp > 0) return; // BOLT prevents knockbacks, but if the Unit died, do it anyway
 
 	if (status.met_knockback_threshold(oldHp)) 
 	{

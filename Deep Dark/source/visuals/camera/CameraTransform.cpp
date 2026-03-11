@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "CameraTransform.h"
 #include "Camera.h"
+#include "Utils.h"
+
 using Key = sf::Keyboard::Key;
 
 const float MIN_ZOOM = 0.6f;

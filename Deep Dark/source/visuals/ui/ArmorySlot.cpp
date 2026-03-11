@@ -40,9 +40,7 @@ std::array<ArmorySlot, 10> ArmorySlot::default_armory_loadout(Camera& cam) {
 	for (int i = 0; i < EQUIP_SLOTS; i++) {
 		slots[i].set_unit(-1, 1, true);
 
-		sf::Vector2f scale = cam.get_norm_sprite_scale(slots[i].sprite, EQUIP_SLOT_SCALE);
-		slots[i].sprite.setScale(scale);
-
+		slots[i].sprite.setScale(Screen::getSpriteScale(slots[i].sprite, EQUIP_SLOT_SCALE) );
 		slots[i].sprite.setOrigin(slots[i].sprite.getLocalBounds().size * 0.5f);
 	}
 

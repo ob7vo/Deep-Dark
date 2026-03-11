@@ -3,7 +3,7 @@
 #include <SFML\Graphics\Rect.hpp>
 #include <span>
 
-const sf::Texture defTex("sprites/defaults/defaultTexture.png");
+const sf::Texture defaultTexture("sprites/defaults/defaultTexture.png");
 
 namespace Textures {
 	void initializeAll();

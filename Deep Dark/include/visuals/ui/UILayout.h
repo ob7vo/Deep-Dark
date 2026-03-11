@@ -28,12 +28,12 @@ namespace ArmoryMenu {
 	constexpr int BTN_COUNT = UnitConfig::TOTAL_PLAYER_UNITS + 2;
 
 	constexpr sf::Vector2f FIRST_EQUIP_SLOT_POS = { 0.225f, 0.15f };
-	constexpr sf::Vector2f EQUIP_SLOT_POS_INCREMENT = { 0.15f, 0.1f };
+	constexpr sf::Vector2f EQUIP_SLOT_SPACING = { 0.15f, 0.1f };
 	constexpr sf::Vector2f EQUIP_SLOT_SCALE = { 0.08f, 0.08f };
 	constexpr int EQUIP_SLOTS = 10;
 
 	constexpr sf::Vector2f FIRST_INVENTORY_SLOT_POS = { 0.1f, 0.8f };
-	constexpr sf::Vector2f INVENTORY_SLOT_POS_INCREMENT = { 0.1f, 0.f };
+	constexpr sf::Vector2f INVENTORY_SLOT_SPACING = { 0.1f, 0.f };
 	constexpr sf::Vector2f INVENTORY_SLOT_SCALE = { 0.08f, 0.08f };
 
 	constexpr sf::Vector2f DRAG_SLOT_ORIGIN = { 0.5f, 0.5f };
@@ -41,7 +41,7 @@ namespace ArmoryMenu {
 
 	constexpr sf::Vector2f SLIDER_POS = { 0.1f, 0.6f };
 	constexpr sf::Vector2f SLIDER_SIZE = { 0.2f, 0.1f };
-	constexpr sf::Vector2f SLIDER_AXIS_BOUNDS = { 0.1f, 0.9f };
+	constexpr std::pair<float,float> SLIDER_RANGE = { 0.1f, 0.9f };
 
 	constexpr sf::Vector2f RETURN_BTN_POS = { 0.9f, 0.1f };
 	constexpr sf::Vector2f RETURN_BTN_SIZE = { 0.08f, 0.08f };
@@ -113,25 +113,28 @@ namespace StartMenu {
 
 namespace StageUI {
 	constexpr int BTN_COUNT = 3;
+
+	// How far UI slides offscreen during transitions
+	constexpr float DIST_OFFSCREEN = 0.2f; //norm value of screen position
+
 	// Buttons
-	constexpr sf::Vector2f PAUSE_BTN_POS = { 0.15f,0.25f };
+	constexpr sf::Vector2f PAUSE_BTN_POS = { 0.15f,0.125f };
 	constexpr sf::Vector2f PAUSE_BTN_SIZE = { 0.1f,0.1f };
 
-	constexpr sf::Vector2f CANNON_BTN_POS = { 0.8f,0.8f };
-	constexpr sf::Vector2f CANNON_BTN_SIZE = { 0.1f,0.1f };
+	constexpr sf::Vector2f FIRE_CANNON_BTN_POS = { 0.8f,0.8f };
+	constexpr sf::Vector2f FIRE_CANNON_BTN_SIZE = { 0.1f,0.1f };
 
-	constexpr sf::Vector2f BAG_BTN_POS = { 0.12f,0.85f };
-	constexpr sf::Vector2f BAG_BTN_SIZE = { 0.1f,0.1f };
+	constexpr sf::Vector2f UPGRADE_BAG_BTN_POS = { 0.12f,0.85f };
+	constexpr sf::Vector2f UPGRADE_BAG_BTN_SIZE = { 0.1f,0.1f };
 
 	// Texts
 	constexpr sf::Vector2f PARTS_TEXT_POS = { 0.1f,0.1f };
-	constexpr sf::Vector2f CHALLENGES_TEXT_POS = { 0.7f,0.8f };
-	constexpr sf::Vector2f BAG_COST_TEXT_POS = { 0.05f,0.9f };
-	constexpr sf::Vector2f PAUSE_TEXT_POS = { 0.5f, 0.35f };
+	constexpr sf::Vector2f CLEARED_CHALLENGES_TEXT_POS = { 0.7f,0.8f };
+	constexpr sf::Vector2f BAG_UPGRADE_COST_TEXT_POS = { 0.05f,0.9f };
 
 	// Sprites
 	constexpr sf::Vector2f FIRST_UNIT_SLOT_POS = { 0.278f, 0.84375f };
-	constexpr sf::Vector2f UNIT_SLOT_INCREMENT = { 0.089f, 0.0625f };
+	constexpr sf::Vector2f UNIT_SLOT_SPACING = { 0.089f, 0.0625f };
 
 	enum class ButtonIndex {
 		PAUSE,
@@ -150,6 +153,7 @@ namespace StageUI {
 
 		constexpr sf::Vector2f PAUSE_MENU_POS = { 0.5f,0.5f };
 		constexpr sf::Vector2f PAUSE_MENU_SIZE = { 0.2f,0.2f };
+		constexpr sf::Vector2f PAUSE_MENU_TEXT_POS = { 0.5f, 0.35f };
 
 		enum class ButtonIndex {
 			CLOSE_GAME,
@@ -179,7 +183,7 @@ namespace StageUI {
 namespace StageSelect {
 	constexpr int BTN_COUNT = StageConfig::TOTAL_STAGES + 1;
 
-	constexpr float SLIDE_OFFSET = 0.2f;
+	constexpr float DIST_OFFSCREEN = 0.2f;
 
 	constexpr sf::Vector2f RETURN_BTN_POS = { .1f,.1f };
 	constexpr sf::Vector2f RETURN_BTN_SIZE = { .1f, .1f };
@@ -199,7 +203,7 @@ namespace StageSelect {
 	namespace StageNode {
 		constexpr int BTN_COUNT = 3;
 
-		constexpr sf::Vector2f SLIDE_AMOUNT = { 0.5f, 0.0f };
+		constexpr float TRANSITION_SLIDE_DISTANCE = 0.5f;
 
 		constexpr sf::Vector2f MENU_POS = { 0.75f, 0.5f };
 		constexpr sf::Vector2f MENU_SIZE = { 0.5f, 1.f };
@@ -232,7 +236,7 @@ namespace Workshop {
 
 	constexpr sf::Vector2f STAT_ICON_POS = { 0.2f, 0.75f };
 	constexpr sf::Vector2f STAT_ICON_SIZE = { 0.07f, 0.07f };
-	constexpr sf::Vector2f STAT_ICON_INCREMENT = { 0.15f, 0.f };
+	constexpr sf::Vector2f STAT_ICON_SPACING = { 0.15f, 0.f };
 	constexpr sf::Vector2f STAT_TEXT_OFFSET = { 0.03f, 0.f };
 	constexpr float STAT_TEXT_SIZE = 0.025f;
 

@@ -1,5 +1,6 @@
 #pragma once
 #include "Camera.h"
+#include "TransitionID.h"
 #include <memory>
 
 struct OnStateEnterData;
@@ -12,8 +13,11 @@ public:
 	std::unique_ptr<OnStateEnterData> nextStateEnterData = nullptr;
 
 	bool readyToEndState = false;
-	bool transitioning = false;
 	bool clicked = false;
+
+	TransitionID currentTransition;
+	float transitionTimer = 0.f;
+	float transitionTimeElapsed = 0.f;
 
 	explicit GameState(Camera& cam) : cam(cam) {};
 	virtual ~GameState() = default;
@@ -24,6 +28,7 @@ public:
 	virtual void on_enter(OnStateEnterData* enterData) = 0;
 	virtual void on_exit() = 0;
 	virtual void update_ui(float deltaTime) {};
+	virtual void check_transition(float deltaTime) {};
 
 	enum class Type {
 		MAIN_MENU = 0,
@@ -35,6 +40,26 @@ public:
 		nextStateEnterData = nullptr;
 		readyToEndState = false;
 	}
+	// Sets the new transition (timer, enum, and resets timeElapsed)
+	inline void start_transition(TransitionID newTransition) {
+		transitionTimeElapsed = 0.f;
+		currentTransition = newTransition;
+
+		switch (newTransition) {
+		case TransitionID::StageUIToResultsScreen:
+			transitionTimer = 0.4f;
+		case TransitionID::ResultsScreenToArmory:
+		case TransitionID::ResultsScreenToStageSelect:
+		case TransitionID::TestStageUISliding:
+			transitionTimer = 0.5f;
+		}
+	}
+	inline float updateTransitionTime(float deltaTime) {
+		transitionTimeElapsed += deltaTime;
+		return std::min((transitionTimeElapsed / transitionTimer), 1.f);
+	}
+	inline bool isTransitioning() const { return currentTransition == TransitionID::None; }
+
 	inline OnStateEnterData* get_next_state() {
 		return readyToEndState ? nextStateEnterData.get() : nullptr;
 	}

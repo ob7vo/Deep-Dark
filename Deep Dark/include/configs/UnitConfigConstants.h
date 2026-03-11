@@ -26,6 +26,8 @@ namespace UnitConfig {
 	inline constexpr int SPECIAL_ANIM_COUNT = 4; // # of Unit animations for specific Abilities(Augments). They are Jump, Phase(windup and windown), Transform, and Summon.
 	inline constexpr int TOTAL_ANIM_COUNT = BASE_ANIM_COUNT + SPECIAL_ANIM_COUNT; // Total # of different Unit animations
 
+	inline constexpr int MAX_EQUIP_SLOTS = 10;
+
 	// Augment Constants
 	inline constexpr float CHARGE_RELEASE_RANGE_BOOST = 1.33f;
 	// Knockback Forces

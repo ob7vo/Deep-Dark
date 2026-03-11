@@ -23,7 +23,7 @@ struct WorkshopMenu : public Menu<UI::Workshop::BTN_COUNT> {
 
 	sf::Text unitNameText = sf::Text(baseFont);
 	sf::Text unitDescText = sf::Text(baseFont);
-	sf::Sprite unitSprite = sf::Sprite(defTex);
+	sf::Sprite unitSprite = sf::Sprite(defaultTexture);
 	std::vector<sf::RectangleShape> unitHitboxes;
 
 	AnimationPlayer unitAnimPlayer;
@@ -35,7 +35,7 @@ struct WorkshopMenu : public Menu<UI::Workshop::BTN_COUNT> {
 	std::array<sf::Sprite, STAT_ICONS> statIcons;
 	std::array<sf::Text, STAT_ICONS> statTexts;
 
-	sf::Sprite scrapPartsIcon = sf::Sprite(defTex);
+	sf::Sprite scrapPartsIcon = sf::Sprite(defaultTexture);
 	sf::Text scrapPartsText = sf::Text(baseFont);
 	sf::Text upgradeCostText = sf::Text(baseFont);
 

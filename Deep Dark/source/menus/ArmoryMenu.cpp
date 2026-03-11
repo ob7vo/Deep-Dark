@@ -14,19 +14,18 @@ using namespace UnitConfig;
 ArmoryMenu::ArmoryMenu(Camera& cam) : Menu(cam), stagePreviewMenu(cam) {
 	// Inventory of Units
 	for (int id = 0; id < TOTAL_PLAYER_UNITS; id++) {
-		inventorySlotBtn(id).setup(UI::ZERO, INVENTORY_SLOT_SCALE, 
-			cam, Textures::UI::getUnitSlot(id, 1));
+		inventorySlotBtn(id).setup(UI::ZERO, INVENTORY_SLOT_SCALE, Textures::UI::getUnitSlot(id, 1));
 	}
 
 	// Slider
-	inventorySlider.setup(SLIDER_POS, SLIDER_SIZE, cam, Textures::UI::t_slider);
-	inventorySlider.setup_slider(false, cam.norm_to_pixels_pair(SLIDER_AXIS_BOUNDS));
+	inventorySlider.setup(SLIDER_POS, SLIDER_SIZE, Textures::UI::t_slider);
+	inventorySlider.setup_slider(false, Screen::toPixels(SLIDER_RANGE));
 
 	// Equip/Armory Slots
 	for (int i = 0; i < EQUIP_SLOTS; i++) {
 		equipSlots[i].set_unit(-1, 1, true);
 
-		sf::Vector2f scale = cam.get_norm_sprite_scale(equipSlots[i].sprite, EQUIP_SLOT_SCALE);
+		sf::Vector2f scale = Screen::getSpriteScale(equipSlots[i].sprite, EQUIP_SLOT_SCALE);
 		equipSlots[i].sprite.setScale(scale);
 
 		equipSlots[i].sprite.setOrigin(equipSlots[i].sprite.getLocalBounds().size * 0.5f);
@@ -34,8 +33,8 @@ ArmoryMenu::ArmoryMenu(Camera& cam) : Menu(cam), stagePreviewMenu(cam) {
 	equipSlots = ArmorySlot::default_armory_loadout(cam);
 
 	// Other Buttons
-	returnBtn().setup(RETURN_BTN_POS, RETURN_BTN_SIZE, cam, Textures::UI::t_returnBtn);
-	openStageSetBtn().setup(STAGE_SET_BTN_POS, STAGE_SET_BTN_SIZE, cam, Textures::UI::t_enterStageSetBtn);
+	returnBtn().setup(RETURN_BTN_POS, RETURN_BTN_SIZE, Textures::UI::t_returnBtn);
+	openStageSetBtn().setup(STAGE_SET_BTN_POS, STAGE_SET_BTN_SIZE, Textures::UI::t_enterStageSetBtn);
 	openStageSetBtn().onClick = [this](bool m1) {if (m1) mode = Mode::ViewingStagePreview; };
 
 	stagePreviewMenu.closeBtn().onClick = [this](bool m1) {
@@ -61,8 +60,8 @@ void ArmoryMenu::on_enter() {
 	reset_positions();
 }
 void ArmoryMenu::reset_positions() {
-	sf::Vector2f equippedUnitPos = cam.norm_to_pixels(FIRST_EQUIP_SLOT_POS);
-	sf::Vector2f equippedUnitPosIncrement = cam.norm_to_pixels(EQUIP_SLOT_POS_INCREMENT);
+	sf::Vector2f equippedUnitPos = Screen::toPixels(FIRST_EQUIP_SLOT_POS);
+	sf::Vector2f equippedUnitPosIncrement = Screen::toPixels(EQUIP_SLOT_SPACING);
 	float startX = equippedUnitPos.x;
 
 	for (int i = 0; i < 2; i++) {
@@ -75,8 +74,8 @@ void ArmoryMenu::reset_positions() {
 		equippedUnitPos.y += equippedUnitPosIncrement.y;
 	}
 
-	sf::Vector2f unitSelectionBtnPos = cam.norm_to_pixels(FIRST_INVENTORY_SLOT_POS);
-	float unitBtnSelectionPosIncrement = cam.norm_to_pixels(INVENTORY_SLOT_POS_INCREMENT).x;
+	sf::Vector2f unitSelectionBtnPos = Screen::toPixels(FIRST_INVENTORY_SLOT_POS);
+	float unitBtnSelectionPosIncrement = Screen::toPixels(INVENTORY_SLOT_SPACING).x;
 
 	for (int id = 0; id < TOTAL_PLAYER_UNITS; id++) {
 		if (!unitIsOwned(id)) continue;
@@ -85,10 +84,10 @@ void ArmoryMenu::reset_positions() {
 		unitSelectionBtnPos.x += unitBtnSelectionPosIncrement;
 	}
 
-	inventorySlider.set_norm_pos(SLIDER_POS, cam);
+	inventorySlider.set_pos(Screen::toPixels(SLIDER_POS));
 	inventorySlider.reset_offsets();
-	returnBtn().set_norm_pos(RETURN_BTN_POS, cam);
-	openStageSetBtn().set_norm_pos(STAGE_SET_BTN_POS, cam);
+	returnBtn().set_pos(Screen::toPixels(RETURN_BTN_POS));
+	openStageSetBtn().set_pos(Screen::toPixels(STAGE_SET_BTN_POS));
 
 	stagePreviewMenu.reset_positions();
 }

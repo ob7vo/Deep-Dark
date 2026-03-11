@@ -17,16 +17,16 @@ constexpr sf::Vector2f TRANSITION_CAM_POS_OFFEST = { 50.f, 0.f };
 
 StageSelect::StageSelect(Camera& cam) : Menu(cam), stageNodeMenu(cam) {
 	for (int i = 0; i < TOTAL_STAGES; i++) 
-		stageNodeBtn(i).setup(STAGE_NODE_POS_ARR[i], STAGE_NODE_SIZE, cam, t_stageNodeBtn);
+		stageNodeBtn(i).setup(STAGE_NODE_POS_ARR[i], STAGE_NODE_SIZE, t_stageNodeBtn);
 	
-	returnBtn().setup(RETURN_BTN_POS, RETURN_BTN_SIZE, cam, t_returnBtn);
+	returnBtn().setup(RETURN_BTN_POS, RETURN_BTN_SIZE, t_returnBtn);
 }
 
 void StageSelect::reset_positions() {
 	for (int i = 0; i < TOTAL_STAGES; i++)
 		stageNodeBtn(i).set_pos(STAGE_NODE_POS_ARR[i]);
 
-	returnBtn().set_norm_pos(RETURN_BTN_POS, cam);
+	returnBtn().set_pos(Screen::toPixels(RETURN_BTN_POS));
 }
 
 void StageSelect::update(float deltaTime) {
@@ -52,8 +52,8 @@ void StageSelect::transition_stage_node_menu(float deltaTime) {
 	sf::Vector2f newPos = camStartingPos + (targetPos - camStartingPos) * t;
 	cam.transform.update_pos(newPos);
 
-	stageNodeMenu.slide_menu_to_point(t);
-	slide_ui_to_point(t);
+	stageNodeMenu.slide(t);
+	slide(t);
 
 	if (t >= 1.f) {
 		isTransitioning = false;
@@ -65,11 +65,11 @@ void StageSelect::transition_stage_node_menu(float deltaTime) {
 		}
 	}
 }
-void StageSelect::slide_ui_to_point(float t) {
-	float slideOffset = SLIDE_OFFSET * (!zoomedInOnNode() ? (1.f - t) : t);
+void StageSelect::slide(float t) {
+	float slideOffset = DIST_OFFSCREEN * (!zoomedInOnNode() ? (1.f - t) : t);
 	sf::Vector2f offsetUP = { 0.f, slideOffset };
 
-	returnBtn().set_pos(cam.norm_to_pixels(RETURN_BTN_POS - offsetUP));
+	returnBtn().set_pos(Screen::toPixels(RETURN_BTN_POS - offsetUP));
 }
 void StageSelect::start_stage_node_menu_transition() {
 	std::cout << "starting transition" << std::endl;

@@ -30,7 +30,7 @@ struct StageSelect : public Menu<UI::StageSelect::BTN_COUNT> {
 
     void start_stage_node_menu_transition();
     void transition_stage_node_menu(float deltaTime);
-    void slide_ui_to_point(float t);
+    void slide(float t) final;
 
     inline Button& stageNodeBtn(int stage) {
         return buttonManager.buttons[stage];

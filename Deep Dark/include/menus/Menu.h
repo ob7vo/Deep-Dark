@@ -31,7 +31,10 @@ struct MenuBase
 	virtual bool on_mouse_press(bool isM1) = 0; 
 	virtual bool on_mouse_release(bool isM1) { return true; }
 	virtual void check_mouse_hover() = 0;
+
 	virtual void reset_positions() = 0;
+	virtual void slide(float t) {};
+
 	virtual void update(float dt) {}
 
 	virtual void on_enter() { reset_positions(); };

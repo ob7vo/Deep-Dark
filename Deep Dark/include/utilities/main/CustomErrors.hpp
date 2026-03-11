@@ -14,7 +14,13 @@ public:
         : std::runtime_error("Cell Size " + Printing::vec2(cellSize) +
             " did not line up with the Texture " + Printing::vec2(texSize)) {}
     InvalidCellSizeError()
-        : std::runtime_error("Invalid cell size: One or mreo Component is less than 0") {}
+        : std::runtime_error("Invalid cell size: One or more Component is less than 0") {}
     InvalidCellSizeError(int frames, int cells)
         : std::runtime_error(std::format("Warning: frameCount [{}] exceeds available cells [{}]", frames, cells)) {}
+};
+
+class StageUIClickableState : public std::runtime_error {
+public:
+    StageUIClickableState()
+        : std::runtime_error("Both StageUI and ResultsScreen aren't clickable. When StageUI is unclickable, ResultsScreen should be clickable") {}
 };

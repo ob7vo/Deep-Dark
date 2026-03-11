@@ -1,13 +1,15 @@
 #include "pch.h"
 #include "Button.h"
 #include "Camera.h"
+#include "Utils.h"
+
+using namespace Math;
 
 const float PADDING = 8.0f;
 const sf::Color highlightColor = sf::Color::Yellow;
 
-void Button::setup(sf::Vector2f uiPos, sf::Vector2f normScale,
-	const Camera& cam, const sf::Texture& texture, sf::IntRect rect) {
-	ui = cam.setup_sprite(uiPos, normScale, sprite, texture, rect);
+void Button::setup(sf::Vector2f uiPos, sf::Vector2f normScale, const sf::Texture& texture, sf::IntRect rect) {
+	Visual::setupSprite(uiPos, normScale, sprite, texture, rect);
 	pos = sprite.getPosition();
 	bounds = sprite.getGlobalBounds().size * 1.05f;
 }
@@ -50,8 +52,8 @@ void Button::set_pos(sf::Vector2f newPos) {
 	pos = newPos;
 	sprite.setPosition(newPos);
 }
-void Button::set_norm_pos(sf::Vector2f norm, const Camera& cam) {
-	sf::Vector2f newPos = cam.norm_to_pixels(norm);
+void Button::set_norm_pos(sf::Vector2f norm) {
+	sf::Vector2f newPos = Screen::toPixels(norm);
 	set_pos(newPos);
 }
 

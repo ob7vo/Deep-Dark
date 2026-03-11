@@ -12,7 +12,7 @@ private:
 	AnimationPlayer player = {};
 	UnitAniMap* aniMap; // Owned by Enemy Spawners and Loadout slots
 
-	sf::Sprite sprite = sf::Sprite(defTex);
+	sf::Sprite sprite = sf::Sprite(defaultTexture);
 	sf::RectangleShape hurtbox;
 public:
 

@@ -9,7 +9,7 @@ struct StageUI;
 struct StagePauseMenu : public Menu<UI::StageUI::PauseMenu::BTN_COUNT> {
 	StageUI& stageUI;
 	sf::Text pauseText = sf::Text(baseFont);
-	sf::Sprite pauseMenuSprite = sf::Sprite(defTex);
+	sf::Sprite pauseMenuSprite = sf::Sprite(defaultTexture);
 	
 	StagePauseMenu(Camera& cam, StageUI& ui);
 	~StagePauseMenu() final = default;
@@ -38,6 +38,7 @@ struct StageUI : public Menu<UI::StageUI::BTN_COUNT> {
 	explicit StageUI(Camera& cam);
 	~StageUI() final = default;
 
+	void on_enter() final;
 	void set_texts();
 	void update_texts();
 	void create_buttons();
@@ -47,9 +48,9 @@ struct StageUI : public Menu<UI::StageUI::BTN_COUNT> {
 	void check_mouse_hover() final;
 	void reset_positions() final;
 
-	void lerp_ui(float t);
+	void slide(float t) final;
 
-	void pause();
+	void set_pause_state(bool pause);
 	void upgrade_bag();
 	void fire_cannon();
 

@@ -9,7 +9,7 @@ public:
 	sf::Vector2f worldPos = { 0.f, 0.f };
 	sf::Vector2i screenPos = { 0,0 };
 
-	sf::Sprite ui = sf::Sprite(defTex);
+	sf::Sprite ui = sf::Sprite(defaultTexture);
 	sf::Texture UITexture;
 
 	sf::Vector2f dragOrigin{ 0.f,0.f };

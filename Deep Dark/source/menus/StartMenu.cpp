@@ -3,27 +3,28 @@
 #include "Camera.h"
 #include "UILayout.h"
 #include "UITextures.h"
+#include "Utils.h"
 
 using namespace Textures::UI;
 using namespace UI::StartMenu;
 
 StartMenu::StartMenu(Camera& cam) : Menu(cam) {
-	startText.setPosition(cam.norm_to_pixels(START_TEXT_POS));
+	startText.setPosition(Screen::toPixels(START_TEXT_POS));
 	startText.setString("DEEP DARK");
 
 	settingsBtn().onClick = [this](bool m1) { if (m1) open_settings(); };
 	quitBtn().onClick = [this](bool m1) { if (m1) quit_game(); };
 
-	startBtn().setup(START_BTN_POS, START_BTN_SIZE, cam, t_startGameBtn);
-	settingsBtn().setup(SETTINGS_BTN_POS, SETTINGS_BTN_SIZE, cam, t_settingsBtn);
-	quitBtn().setup(QUIT_BTN_POS, QUIT_BTN_SIZE, cam, t_quitBtn);
+	startBtn().setup(START_BTN_POS, START_BTN_SIZE, t_startGameBtn);
+	settingsBtn().setup(SETTINGS_BTN_POS, SETTINGS_BTN_SIZE, t_settingsBtn);
+	quitBtn().setup(QUIT_BTN_POS, QUIT_BTN_SIZE, t_quitBtn);
 }
 void StartMenu::reset_positions() {
-	startText.setPosition(cam.norm_to_pixels(START_TEXT_POS));
+	startText.setPosition(Screen::toPixels(START_TEXT_POS));
 
-	startBtn().sprite.setPosition(cam.norm_to_pixels(START_BTN_POS));
-	settingsBtn().sprite.setPosition(cam.norm_to_pixels(SETTINGS_BTN_POS));
-	quitBtn().sprite.setPosition(cam.norm_to_pixels(QUIT_BTN_POS));
+	startBtn().set_pos(Screen::toPixels(START_BTN_POS));
+	settingsBtn().set_pos(Screen::toPixels(SETTINGS_BTN_POS));
+	quitBtn().set_pos(Screen::toPixels(QUIT_BTN_POS));
 }
 
 void StartMenu::draw() {

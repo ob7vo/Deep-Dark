@@ -43,14 +43,6 @@ public:
 	void change_lock(bool lock);
 	void set_cursor_ui(const sf::Texture& uiTex, sf::Vector2f normOrigin, float opacity, sf::Vector2f normScale);
 
-	sf::Vector2f norm_to_pixels(sf::Vector2f norm) const;
-	sf::Vector2f norm_to_pixels_size(sf::Vector2f norm) const;
-	sf::Vector2f get_norm_sprite_scale(const sf::Sprite& sprite, sf::Vector2f normScale) const;
-	unsigned int get_norm_font_size(sf::Text& text, float normHeight) const;
-	bool setup_sprite(sf::Vector2f normPos, sf::Vector2f scale, sf::Sprite& sprite, 
-		const sf::Texture& texture, sf::IntRect textureRect = {}) const;
-	std::pair<float, float> norm_to_pixels_pair(sf::Vector2f norm) const;
-
 	inline void close_window() { window.close(); }
 	inline sf::RenderWindow& getWindow() const { return window; }
 	inline const sf::Vector2f& getMouseWorldPos() const { return cursor.worldPos; }

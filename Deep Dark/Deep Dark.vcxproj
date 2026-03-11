@@ -198,6 +198,7 @@
     <ClCompile Include="source\visuals\Animation.cpp" />
     <ClCompile Include="source\visuals\camera\CameraRenderercpp.cpp" />
     <ClCompile Include="source\visuals\camera\CameraTransform.cpp" />
+    <ClCompile Include="source\visuals\ModularAnimation.cpp" />
     <ClCompile Include="source\visuals\ui\ArmorySlot.cpp" />
     <ClCompile Include="source\visuals\ui\Button.cpp" />
     <ClCompile Include="source\visuals\textures\BaseTextures.cpp" />
@@ -209,6 +210,7 @@
   <ItemGroup>
     <ClInclude Include="Class.h" />
     <ClInclude Include="include\enums\EventTypes.h" />
+    <ClInclude Include="include\enums\TransitionID.h" />
     <ClInclude Include="include\menus\StageNodeMenu.h" />
     <ClInclude Include="include\menus\StageResultsScreen.h" />
     <ClInclude Include="include\saves\PlayerSaveData.h" />
@@ -238,7 +240,7 @@
     <ClInclude Include="include\configs\UnitConfigConstants.h" />
     <ClInclude Include="include\systems\observers\Scheduler.h" />
     <ClInclude Include="include\systems\observers\UnitAbilityObserver.h" />
-    <ClInclude Include="include\utilities\CustomErrors.hpp" />
+    <ClInclude Include="include\utilities\main\CustomErrors.hpp" />
     <ClInclude Include="include\configs\EntityConfigs.h" />
     <ClInclude Include="include\utilities\json.hpp" />
     <ClInclude Include="include\stage\entities\StageEntity.h" />
@@ -255,6 +257,7 @@
     <ClInclude Include="include\stage\unit\UnitMovement.h" />
     <ClInclude Include="include\visuals\camera\CameraRenderer.h" />
     <ClInclude Include="include\visuals\camera\CameraTransform.h" />
+    <ClInclude Include="include\visuals\ModularAnimation.h" />
     <ClInclude Include="include\visuals\ui\ArmorySlot.h" />
     <ClInclude Include="include\stage\mechanics\Augment.h" />
     <ClInclude Include="include\utilities\json_fwd.hpp" />
