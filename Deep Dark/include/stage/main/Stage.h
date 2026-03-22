@@ -9,6 +9,7 @@
 #include "Projectile.h"
 #include "Surge.h"
 #include "UnitPool.h"
+#include "StageStatus.h"
 #include "observers/UnitAbilityObserver.h"
 #include <iostream>
 #include <functional>
@@ -19,7 +20,6 @@ const float FLOOR = 900;
 const float HITBOX_TIMER = 0.5f;
 const float HITBOX_HEIGHT = 60.f;
 const sf::Color HITBOX_COLOR(235, 24, 9, 128);
-
 
 class Unit;
 struct Stage;
@@ -72,11 +72,11 @@ struct Stage
 	/// Once a team wins, the losing team's units cannot exist.
 	/// 0 = ongoing, 1 = PLAYER victory, -1 = ENEMY victory 
 	/// </summary>
-	int victoriousTeam = 0;
+	StageStatus status;
 	std::function<void(bool)> onStageCompletion;
 
 	Stage() = default;
-	Stage(const nlohmann::json& stageSetJson, StageRecord* recorder);
+	Stage(const nlohmann::json& stagePhaseJson, StageRecord* recorder);
 	Lane& get_closest_lane(float y);
 
 	void break_spawner_thresholds();

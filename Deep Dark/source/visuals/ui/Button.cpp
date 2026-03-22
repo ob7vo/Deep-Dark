@@ -9,7 +9,7 @@ const float PADDING = 8.0f;
 const sf::Color highlightColor = sf::Color::Yellow;
 
 void Button::setup(sf::Vector2f uiPos, sf::Vector2f normScale, const sf::Texture& texture, sf::IntRect rect) {
-	Visual::setupSprite(uiPos, normScale, sprite, texture, rect);
+	Visual::setupUI(uiPos, normScale, sprite, texture, rect);
 	pos = sprite.getPosition();
 	bounds = sprite.getGlobalBounds().size * 1.05f;
 }

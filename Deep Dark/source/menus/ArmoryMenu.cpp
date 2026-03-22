@@ -31,6 +31,8 @@ ArmoryMenu::ArmoryMenu(Camera& cam) : Menu(cam), stagePreviewMenu(cam) {
 		equipSlots[i].sprite.setOrigin(equipSlots[i].sprite.getLocalBounds().size * 0.5f);
 	}
 	equipSlots = ArmorySlot::default_armory_loadout(cam);
+	filledUnitSlots = std::count_if(equipSlots.begin(), equipSlots.end(),
+		[](const ArmorySlot& slot) { return slot.id != -1; });
 
 	// Other Buttons
 	returnBtn().setup(RETURN_BTN_POS, RETURN_BTN_SIZE, Textures::UI::t_returnBtn);
@@ -44,12 +46,13 @@ ArmoryMenu::ArmoryMenu(Camera& cam) : Menu(cam), stagePreviewMenu(cam) {
 void ArmoryMenu::on_enter() {
 	openStageSetBtn().visible = (mode == Mode::StagePreparation);
 
+	// Re-setup the buttons for the slider
 	inventorySlider.get_buttons().clear();
 	std::vector<Button*> newSliderBtns = {};
 	for (int id = 0; id < TOTAL_PLAYER_UNITS; id++) {
 		displayedGears[id] = UnitSaveData::GetMaxGear(id);
-
 		inventorySlotBtn(id).visible = unitIsOwned(id);
+
 		if (unitIsOwned(id)) {
 			inventorySlotBtn(id).set_texture(Textures::UI::getUnitSlot(id, displayedGears[id]));
 			newSliderBtns.push_back(&inventorySlotBtn(id));
@@ -64,10 +67,11 @@ void ArmoryMenu::reset_positions() {
 	sf::Vector2f equippedUnitPosIncrement = Screen::toPixels(EQUIP_SLOT_SPACING);
 	float startX = equippedUnitPos.x;
 
-	for (int i = 0; i < 2; i++) {
-		for (int j = 0; j < 5; j++) {
-			int k = i * 5 + j;
-			equipSlots[k].set_pos(equippedUnitPos);
+	int columns = UnitConfig::MAX_EQUIP_SLOTS * 0.5f;
+
+	for (int row = 0; row < 2; row++) {
+		for (int col = 0; col < columns; col++) {
+			equipSlots[row * columns + col].set_pos(equippedUnitPos);
 			equippedUnitPos.x += equippedUnitPosIncrement.x;
 		}
 		equippedUnitPos.x = startX;
@@ -126,6 +130,7 @@ void ArmoryMenu::draw() {
 	if (mode == Mode::ViewingStagePreview) stagePreviewMenu.draw();
 }
 
+#pragma region Mouse
 bool ArmoryMenu::check_mouse_press_for_equip_slots(bool isM1, sf::Vector2i mouseScreenPos) {
 	// The Armory slots can be clicked and right clicked
 	// Checking if a Unit is unusable is unnecessary, they can't be equipped otherwise
@@ -194,6 +199,7 @@ void ArmoryMenu::check_mouse_hover() {
 	// Checking the rest of the buttons
 	buttonManager.check_mouse_hover(mScreenPos);
 }
+#pragma endregion
 
 #pragma region Unit Slots and Dragging
 void ArmoryMenu::drag_unit_into_slot() {

@@ -64,8 +64,8 @@ namespace ArmoryMenu {
 		constexpr sf::Vector2f TEXT_POS = { .5f, 0.25f };
 		constexpr float TEXT_HEIGHT = 0.035f;
 
-		constexpr sf::Vector2f ENEMY_UNITS_CENTER = { 0.5f, 0.325f };
-		constexpr sf::Vector2f ENEMY_UNITS_SPACING = { 0.1f, 0.f };
+		constexpr sf::Vector2f ENEMY_UNITS_CENTER_POS = { 0.5f, 0.325f };
+		constexpr sf::Vector2f ENEMY_UNITS_SPACING = { 0.05f, 0.f };
 		constexpr sf::Vector2f ENEMY_UNITS_SIZE = { 0.08f, 0.08f };
 
 		constexpr sf::Vector2f FIRST_UNIT_SLOT_POS = { 0.275f, 0.4f };
@@ -103,6 +103,7 @@ namespace StartMenu {
 
 	// Texts
 	constexpr sf::Vector2f START_TEXT_POS = { 0.5f, 0.35f };
+	constexpr float START_TEXT_SIZE = 0.005f;
 
 	enum class ButtonIndex {
 		START,
@@ -118,7 +119,7 @@ namespace StageUI {
 	constexpr float DIST_OFFSCREEN = 0.2f; //norm value of screen position
 
 	// Buttons
-	constexpr sf::Vector2f PAUSE_BTN_POS = { 0.15f,0.125f };
+	constexpr sf::Vector2f PAUSE_BTN_POS = { 0.075f,0.125f };
 	constexpr sf::Vector2f PAUSE_BTN_SIZE = { 0.1f,0.1f };
 
 	constexpr sf::Vector2f FIRE_CANNON_BTN_POS = { 0.8f,0.8f };
@@ -131,6 +132,7 @@ namespace StageUI {
 	constexpr sf::Vector2f PARTS_TEXT_POS = { 0.1f,0.1f };
 	constexpr sf::Vector2f CLEARED_CHALLENGES_TEXT_POS = { 0.7f,0.8f };
 	constexpr sf::Vector2f BAG_UPGRADE_COST_TEXT_POS = { 0.05f,0.9f };
+	constexpr float TEXT_SIZE = 0.03f;
 
 	// Sprites
 	constexpr sf::Vector2f FIRST_UNIT_SLOT_POS = { 0.278f, 0.84375f };
@@ -161,21 +163,23 @@ namespace StageUI {
 		};
 	} // namespace PauseMenu
 	namespace ResultsScreen {
-		constexpr int BTN_COUNT = 2;
+		constexpr int BTN_COUNT = 3;
+
+		constexpr sf::Vector2f MENU_POS = { 0.5f, 0.5f };
+		constexpr sf::Vector2f MENU_SIZE = { 0.4f, 0.3f };
 
 		constexpr sf::Vector2f VICTORY_TEXT_POS = { 0.5f, 0.25f };
-		constexpr float VICTORY_TEXT_SIZE = 0.1f;
+		constexpr float VICTORY_TEXT_SIZE = 0.004f;
 
-		constexpr sf::Vector2f QUIT_BTN_POS1 = { 0.45f, 0.55f }; // When "Next Stage" buttn is present
-		constexpr sf::Vector2f QUIT_BTN_POS2 = { 0.5f, 0.55f }; // When this button is alone
-		constexpr sf::Vector2f QUIT_BTN_SIZE = { 0.2f, 0.1f };
-
-		constexpr sf::Vector2f NEXT_STAGE_SET_BTN_POS = { 0.65f, 0.55f };
-		constexpr sf::Vector2f NEXT_STAGE_SET_BTN_SIZE = { 0.2f, 0.1f };
-
+		constexpr sf::Vector2f QUIT_BTN_POS_LEFT = { 0.35f, 0.55f }; // When "Next Stage" buttn is present
+		constexpr sf::Vector2f QUIT_BTN_POS_CENTER = { 0.5f, 0.55f }; // When this button is alone
+		constexpr sf::Vector2f SECOND_STAGE_BTN_POS = { 0.65f, 0.55f };
+		constexpr sf::Vector2f STAGE_BTNS_SIZE = { 0.13f, 0.13f };
+		
 		enum class VS_ButtonIndex {
-			QUIT_STAGE,
-			NEXT_STAGE_SET
+			QUIT_STAGE = 0,
+			NEXT_STAGE_SET,
+			RESTART_STAGE,
 		};
 	} // namespace VictoryScreen
 } //namespace Stage
@@ -201,7 +205,7 @@ namespace StageSelect {
 	};
 
 	namespace StageNode {
-		constexpr int BTN_COUNT = 3;
+		constexpr int BTN_COUNT = 3 + StageConfig::MAX_PHASES;
 
 		constexpr float TRANSITION_SLIDE_DISTANCE = 0.5f;
 
@@ -217,13 +221,19 @@ namespace StageSelect {
 		constexpr sf::Vector2f START_STAGE_BTN_POS = { .65f,.5f };
 		constexpr sf::Vector2f START_STAGE_BTN_SIZE = { .1f, .1f };
 
+		constexpr sf::Vector2f PRACTICE_SET_BTNS_CENTER_POS = { 0.75f, 0.8f };
+		constexpr sf::Vector2f PRACTICE_SET_BTNS_SPACING = { 0.04f, 0.f };
+		constexpr sf::Vector2f PRACTICE_SET_BTNS_SIZE = { 0.08f, 0.08f };
+
 		constexpr sf::Vector2f ARMORY_BTN_POS = { .85f,.5f };
 		constexpr sf::Vector2f ARMORY_BTN_SIZE = { .1f, .1f };
 
 		const enum SNM_ButtonIndex : int {
 			CLOSE = 0, // Button Index for the last stage
-			START_STAGE,
-			ENTER_ARMORY,
+			START_STAGE = 1,
+			ENTER_ARMORY = 2,
+			PRACTICE_SETS = 3,
+			END_OF_PRACTICE_SETS = 3 + StageConfig::MAX_PHASES - 1
 		};
 	} // namespace StageNode
 } // namespace StageSelect
@@ -285,5 +295,4 @@ namespace Workshop {
 		COUNT,
 	};
 } // namespace Workshop
-
 } // namespace UI

@@ -7,8 +7,8 @@
   "stats": {
     "hp": 30,
     "knockbacks": 3,
-    "dmg": 6,
-    "speed": 30,
+    "dmg": 20,
+    "speed": 15,
     "attack_time": 0.5,
     "sight_range": 50.0,
     "attack_range": [ 0, 50 ],
@@ -17,7 +17,7 @@
     "recharge_timer": 2.25
   },
   "hurtbox": {
-    "width": 35.0,
+    "width": 30.0,
     "height": 30.0
   },
   "animations": {

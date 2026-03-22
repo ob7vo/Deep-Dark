@@ -18,7 +18,7 @@ void UnitAnimation::setup(UnitAniMap* map, const UnitStats* stats) {
 	player.restart();
 	start(UnitAnimationState::MOVE);
 
-	// These are for the debuging/creation process to make configing
+	// These are for the debugging/creation process to make configuring
 	// Unit sprites easier. Will be removed in final build
 	if (UnitConfig::shouldFlipSprite(stats->id)) sprite.setScale({ -1, 1 });
 	sprite.setColor(UnitConfig::getGearColor(stats->id, stats->gear));
@@ -29,7 +29,7 @@ void UnitAnimation::draw(sf::RenderWindow& window) const {
 	window.draw(hurtbox);
 }
 void UnitAnimation::start(UnitAnimationState newState) {
-	std::cout << "staritng Unit animation: [" << stateToString(newState) << "]" << std::endl;
+	//std::cout << "starting Unit animation: [" << stateToString(newState) << "]" << std::endl;
 	state = newState;
 	player.start(&(*aniMap)[newState], sprite);
 

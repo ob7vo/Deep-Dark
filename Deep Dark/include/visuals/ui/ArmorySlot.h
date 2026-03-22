@@ -1,6 +1,7 @@
 #pragma once
 #include "TextureManager.h"
 #include <SFML/Graphics/Sprite.hpp>
+#include "UnitConfigConstants.h"
 
 class ArmoryMenu;
 class Camera;
@@ -33,5 +34,5 @@ struct ArmorySlot {
     bool hovered_over(sf::Vector2i mPos) const;
     inline bool empty() const { return id == -1; }
 
-    static std::array<ArmorySlot, 10> default_armory_loadout(Camera& cam);
+    static std::array<ArmorySlot, UnitConfig::MAX_EQUIP_SLOTS> default_armory_loadout(Camera& cam);
 };

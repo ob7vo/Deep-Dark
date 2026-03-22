@@ -34,9 +34,9 @@ namespace Textures {
 			throw InvalidCellSizeError();
 
 		size_t FRAMES = spanRects.size();
-		int columns = texSize.x / cellSize.x;
-		int rows = texSize.y / cellSize.y;
-		int totalCells = columns * rows;
+		size_t columns = texSize.x / cellSize.x;
+		size_t rows = texSize.y / cellSize.y;
+		size_t totalCells = columns * rows;
 
 		if (texSize.x % cellSize.x != 0 || texSize.y % cellSize.y != 0)
 			throw InvalidCellSizeError(cellSize, texSize);
@@ -44,7 +44,7 @@ namespace Textures {
 			throw InvalidCellSizeError(FRAMES, totalCells);
 
 
-		int frame = 0;
+		size_t frame = 0;
 		for (int row = 0; row < rows && frame < FRAMES; row++) {
 			for (int col = 0; col < columns && frame < FRAMES; col++) {
 				sf::IntRect rect({ col * cellSize.x, row * cellSize.y }, cellSize);

@@ -5,7 +5,7 @@
 #include "WorkshopMenu.h"
 
 struct PrepEnterData;
-struct StageSetPrepEnterData;
+struct EntryOnStagePhaseClear;
 
 class PreparationState : public GameState {
 private:
@@ -27,17 +27,20 @@ public:
 	void handle_events(sf::Event event) override;
 	void on_enter(OnStateEnterData* enterData) override;
 	void on_exit() override;
-	void start_stage_set(int stage, int set);
-	
-	/// <summary> Spefically when clearing a stage and moving onto the next phase </summary>
-	void on_enter_from_stage_set_completion(const StageSetPrepEnterData* setEnterData);
+
+	void start_stage_phase(int stage, int phase, bool isPracticing = false);
+	void exit_stage_preparation();
+
+	/// <summary> Specifically when clearing a stage and moving onto the next phase </summary>
+	void on_enter_from_stage_phase_completion(const EntryOnStagePhaseClear* phaseClearData);
 	/// <summary> Generic entry into Prep Phase </summary>
-	void on_enter_normal(const PrepEnterData* prepData);
+	void on_generic_entry(const PrepEnterData* prepData);
 
 	MenuBase* get_menu();
 	void switch_menu(MenuType newMenu);
 };
 
+// Entering any other way
 struct PrepEnterData : public OnStateEnterData {
 	MenuType prevMenuType = MenuType::STAGE_SELECT;
 	MenuType newMenuType = MenuType::STAGE_SELECT;
@@ -45,11 +48,12 @@ struct PrepEnterData : public OnStateEnterData {
 	PrepEnterData(MenuType cur, MenuType prev) : OnStateEnterData(GameState::Type::PREP), 
 		prevMenuType(prev), newMenuType(cur) { }
 };
-struct StageSetPrepEnterData : public OnStateEnterData {
-	std::vector<int> usedUnitIDs;
-	int stageId;
-	int nextStageSet;
+// For when you enter from completing a stage
+struct EntryOnStagePhaseClear : public OnStateEnterData {
+	Loadout& usedLoadout;
+	int stageID;
+	int nextPhase;
 
-	StageSetPrepEnterData(const std::vector<int>& ids, int id, int set) : OnStateEnterData(GameState::Type::PREP),
-		usedUnitIDs(ids), stageId(id), nextStageSet(set) {}
+	EntryOnStagePhaseClear(Loadout& loadout, int ID, int phase) : OnStateEnterData(GameState::Type::PREP),
+		usedLoadout(loadout), stageID(ID), nextPhase(phase) {}
 };

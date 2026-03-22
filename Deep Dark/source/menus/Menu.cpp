@@ -12,6 +12,7 @@ std::string MenuBase::GetMenuName(MenuType type) {
 	case MenuType::STAGE_SET: return "[STAGE_SET]";
 	case MenuType::ARMORY_EQUIP: return "[ARMORY_EQUIP]";
 	case MenuType::WORKSHOP_MENU: return "[WORKSHOP_MENU]";
+	default: return "[NO_MENU?]";
 	}
 }
 

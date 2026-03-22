@@ -7,7 +7,9 @@
         false
       ],
       "clear_time": 0.0,
-      "clears": 0
+      "clears": 0,
+      "highest_cleared_phase": 1,
+      "is_unlocked": true
     },
     {
       "challenge_status": [
@@ -16,7 +18,9 @@
         false
       ],
       "clear_time": 0.0,
-      "clears": 0
+      "clears": 0,
+      "highest_cleared_phase": 1,
+      "is_unlocked": false
     },
     {
       "challenge_status": [
@@ -25,7 +29,9 @@
         false
       ],
       "clear_time": 0.0,
-      "clears": 0
+      "clears": 0,
+      "highest_cleared_phase": 1,
+      "is_unlocked": false
     }
   ]
 }

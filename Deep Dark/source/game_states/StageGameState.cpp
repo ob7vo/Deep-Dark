@@ -27,26 +27,25 @@ StageState::StageState(Camera& cam) :
 			start_transition(TransitionID::ResultsScreenToStageSelect);
 		}
 		};
-
-	// CHANGE THIS. stage is a pointer that will be destroyed
-	/*
-	stageManager.stage->onStageCompletion = [this](bool victorious) {
-		end_current_stage_set(victorious);
+	stageUI.resultsScreen.restartStageSetBtn().onClick = [this](bool isM1) {
+		std::cout << "restarting" << std::endl;
+		if (isM1) restart_stage_phase();
 		};
-		*/
 }
-StageEnterData::StageEnterData(const std::string& path, int set, 
-	const std::array<ArmorySlot, 10>& slots) :
+StageEnterData::StageEnterData(int stageID, int phase, const std::array<ArmorySlot, UnitConfig::MAX_EQUIP_SLOTS>& slots, bool practice) :
 	OnStateEnterData(GameState::Type::STAGE), 
-	stageJsonPath(path), 
-	stageSet(set), 
-	slots(slots) {}
+	stageID(stageID), 
+	stagePhase(phase), 
+	slots(slots),
+	inPracticeMode(practice)
+	{}
 
 void StageState::update_ui(float deltaTime) {
 	for (int i = 0; i < loadout.filledSlots; i++)
 		loadout.slots[i].cooldown -= deltaTime;
 
-	stageUI.partsCountText.setString(std::format("#{}/{}", stageManager.wallet.parts, stageManager.wallet.partsCap));
+	stageUI.partsCountText.setString(std::format("${}", stageManager.wallet.parts));
+	stageUI.bagUpgradeCostText.setString(std::format("#{}/{}", stageManager.wallet.parts, stageManager.wallet.partsCap));
 }
 void StageState::update(float deltaTime) {
 	stageUI.check_mouse_hover();
@@ -64,6 +63,7 @@ void StageState::render() {
 	stageUI.draw();
 }
 void StageState::handle_events(sf::Event event) {
+	// Won't run if the stage is finished
 	stageManager.handle_events(event);
 
 	if (auto click = event.getIf<sf::Event::MouseButtonPressed>())
@@ -100,6 +100,7 @@ void StageState::transition_to_results_screen(float deltaTime) {
 	// Will add animation of the results screen opening when I can actually draw and animation
 	// For now, just pop the results onscreen after the stageUI is done sliding offscreen
 	if (t >= 1.f) {
+		std::cout << Printing::vec2(stageUI.resultsScreen.resultsMenu.getPosition()) << std::endl;
 		stageUI.resultsScreen.activate();
 
 		// At this points, we do nothing but wait for the pLAyer to click a button to move on
@@ -124,7 +125,7 @@ void StageState::transition_from_results_screen(float deltaTime) {
 			quit_stage();
 		// If the plater pressed the
 		else if (currentTransition == TransitionID::ResultsScreenToArmory)
-			enter_armory();
+			enter_armory_from_results_screen();
 
 		currentTransition = TransitionID::None;
 	}
@@ -147,9 +148,11 @@ void StageState::quit_stage() {
 	MenuType cur = MenuType::STAGE_SELECT;
 	MenuType prev = MenuType::HOME_BASE;
 
-	curStageSet = 0;
-	stageSetCount = 1;
-	stageManager.unload();
+	curStagePhase = 0;
+	stagePhasesCount = 1;
+
+	stageManager.challenges.clear();
+	stageManager.stageRecorder = {};
 
 	nextStateEnterData = std::make_unique<PrepEnterData>(cur, prev);
 	readyToEndState = true;
@@ -167,53 +170,80 @@ void StageState::handle_stage_victory() {
 		if (stageManager.challenges[i].cleared) 
 			StageSaveData::ClearChallenge(curStageID, i);
 }
-void StageState::end_current_stage_set(bool playerWon) {
+void StageState::end_current_stage_phase(bool playerWon) {
 	// Deactivate the UI's usability and move it offscreen
 	stageUI.set_pause_state(false);
 	stageUI.clickable = false;
 	start_transition(TransitionID::StageUIToResultsScreen);
 
-	// Update the set if the player won.
-	if (playerWon) curStageSet++;
-	bool completedAllSets = curStageSet >= stageSetCount;
+	if (inPracticeMode) {
+		stageUI.resultsScreen.setup_results_screen(playerWon, false, inPracticeMode);
+		std::cout << curStagePhase << std::endl;
+		return; 
+	}
+	else if (playerWon) curStagePhase++;
+
+	bool completedAllPhases = curStagePhase >= stagePhasesCount;
+	StageSaveData::SetHighestPhaseCleared(curStageID, curStagePhase);
 
 	// Handle results
-	stageUI.resultsScreen.setup_results_screen(playerWon, completedAllSets);
-	if (completedAllSets) {
-		handle_stage_victory();
+	std::cout << Printing::vec2(stageUI.resultsScreen.resultsMenu.getPosition()) << std::endl;
+	stageUI.resultsScreen.setup_results_screen(playerWon, completedAllPhases, inPracticeMode);
+
+	if (completedAllPhases) {
+		handle_stage_victory(); // Saves new data
 		return;
 	}
-	
 }
-void StageState::enter_armory() {
+void StageState::enter_armory_from_results_screen() {
 	/*
-	* When a stage set (phase) is completed, if there is more sets available,
+	* When a stage phase is completed, if there is more sets available,
 	* the game will go to PrepState. In this case, PrepState needs to know
 	* The list of units used during this set, so that they may not be reused in the next set
 	*
 	* StageState will handle keeping the wallet, challenges, and stageRecord intact.
 	*/
-	std::vector<int> usedUnits;
-	for (int i = 0; i < loadout.filledSlots; i++)
-		usedUnits.push_back(loadout.slots[i].unitStats.id);
-
-	nextStateEnterData = std::make_unique<StageSetPrepEnterData>(usedUnits, curStageID, curStageSet);
+	nextStateEnterData = std::make_unique<EntryOnStagePhaseClear>(loadout, curStageID, curStagePhase);
 	readyToEndState = true;
+}
+
+void StageState::start_stage_phase(const StageEnterData* stageEntry) {
+	curStageID = stageEntry->stageID;
+	curStagePhase = stageEntry->stagePhase;
+	nlohmann::json stageJson = StageConfig::getStageJson(curStageID);
+
+	loadout.create_loadout(stageEntry->slots);
+	loadout.set_slot_positions(cam);
+
+	stageManager.create_stage(stageJson, stageEntry->stagePhase, stageEntry->inPracticeMode);
+	stageManager.stage->onStageCompletion = [this](bool victorious) {
+		end_current_stage_phase(victorious);
+		};
+
+	stageUI.on_enter();
+
+	inPracticeMode = stageEntry->inPracticeMode;
+
+	cam.reset();
+	cam.change_lock(false);
+}
+void StageState::restart_stage_phase() {
+	nlohmann::json stageJson = StageConfig::getStageJson(curStageID);
+	stageManager.create_stage(stageJson, curStagePhase, inPracticeMode);
+	stageManager.stage->onStageCompletion = [this](bool victorious) {
+		end_current_stage_phase(victorious);
+		};
+
+	loadout.set_slot_positions(cam);
+	stageUI.on_enter();
+
+	cam.reset();
+	cam.change_lock(false);
 }
 
 void StageState::on_enter(OnStateEnterData* enterData) {
 	if (auto stageData = dynamic_cast<StageEnterData*>(enterData)) {
-		std::ifstream stageFile(stageData->stageJsonPath);
-		nlohmann::json stageJson = nlohmann::json::parse(stageFile);
-		stageFile.close();
-
-		loadout.create_loadout(stageData->slots);
-		loadout.set_slot_positions(cam);
-		stageManager.create_stage(stageJson);
-		stageUI.on_enter();
-
-		cam.reset();
-		cam.change_lock(false);
+		start_stage_phase(stageData);
 	}
 	else {
 		std::cout << "enterData is not of type [StageEnterData]" << std::endl;
@@ -222,7 +252,7 @@ void StageState::on_enter(OnStateEnterData* enterData) {
 }
 void StageState::on_exit() {
 	std::cout << "unloading stage" << std::endl;
-	stageManager.stage = {};
+	stageManager.stage = nullptr;
 
 	stageUI.paused = false;
 	for (int i = 0; i < UI::StageUI::BTN_COUNT; i++)

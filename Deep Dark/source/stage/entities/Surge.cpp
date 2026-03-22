@@ -143,7 +143,7 @@ void Surge::attack_units(Stage& stage) {
 	}
 }
 int Surge::calculate_damage_and_effects(Unit& unit) const {
-	int dmg = get_dmg();
+	float dmg = (float)get_dmg();
 
 	dmg *= unit.status.get_corrosion_multiplier();
 	dmg *= unit.status.get_reinforcement_multiplier();
@@ -158,7 +158,7 @@ int Surge::calculate_damage_and_effects(Unit& unit) const {
 	if (targeted_by_unit(unit.stats->targetTypes))
 		dmg *= unit.status.calculate_damage_reduction(unit.stats->augments);
 
-	// if the unit has a sheild and it did not break, then return.
+	// if the unit has a shield and it did not break, then return.
 	if (unit.status.has_shield_up() && !unit.status.damage_shield(dmg, stats)) return 0;
 
 	// These effects are based around the Unit's current HP, 

@@ -11,23 +11,23 @@ const int MAX_PROJECTILES = 10;
 
 using json = nlohmann::json;
 
-Stage::Stage(const json& stageSetJson, StageRecord* rec) : unitPool(this), unitAbilityObserver(&unitPool), recorder(rec),
-	enemyBase(stageSetJson["enemy_base"], -1), playerBase(stageSetJson["player_base"], 1)
+Stage::Stage(const json& stagePhaseJson, StageRecord* rec) : unitPool(this), unitAbilityObserver(&unitPool), recorder(rec),
+	enemyBase(stagePhaseJson["enemy_base"], -1), playerBase(stagePhaseJson["player_base"], 1)
 {
-	laneCount = (int)stageSetJson["lanes"].size();
+	laneCount = (int)stagePhaseJson["lanes"].size();
 	lanes.reserve(laneCount);
 	surges.reserve(MAX_SURGES);
 	projectiles.reserve(MAX_PROJECTILES);
 
 	for (int i = 0; i < laneCount; i++) 
-		lanes.emplace_back(stageSetJson["lanes"][i], i);
+		lanes.emplace_back(stagePhaseJson["lanes"][i], i);
 
 	std::sort(lanes.begin(), lanes.end(), [](const Lane& a, const Lane& b) {
 		return a.yPos > b.yPos;
 	});
 
-	if (stageSetJson.contains("teleporters")) {
-		for (auto& tp : stageSetJson["teleporters"]) {
+	if (stagePhaseJson.contains("teleporters")) {
+		for (auto& tp : stagePhaseJson["teleporters"]) {
 			int lane = tp["lane"];
 			sf::Vector2f tpPos = { tp["x_position"], lanes[lane].yPos };
 
@@ -35,8 +35,8 @@ Stage::Stage(const json& stageSetJson, StageRecord* rec) : unitPool(this), unitA
 		}
 	}
 
-	if (stageSetJson.contains("traps")) {
-		for (auto& trap : stageSetJson["traps"]) {
+	if (stagePhaseJson.contains("traps")) {
+		for (auto& trap : stagePhaseJson["traps"]) {
 			int lane = trap["lane"];
 			sf::Vector2f trapPos = { trap["x_position"], lanes[lane].yPos };
 
@@ -44,20 +44,19 @@ Stage::Stage(const json& stageSetJson, StageRecord* rec) : unitPool(this), unitA
 		}
 	}
 	
-	if (!stageSetJson.contains("enemy_spawns")) {
+	if (!stagePhaseJson.contains("enemy_spawns")) {
 		std::cout << "For testing purposes, no enemy spawns are active for this set." << std::endl;
 		return;
 	}
 
-	
-	enemySpawners.reserve(stageSetJson["enemy_spawns"].size());
-	for (auto& spawnData : stageSetJson["enemy_spawns"]) {
+	enemySpawners.reserve(stagePhaseJson["enemy_spawns"].size());
+	for (auto& spawnData : stagePhaseJson["enemy_spawns"]) {
 		enemySpawners.emplace_back(spawnData);
 	}
 	// Creat Unit Data after full vector construction to avoid
 	// dangling pointers for the UnitAniMap
 	for (size_t i = 0; i < enemySpawners.size(); i++) {
-		enemySpawners[i].create_unit_data(stageSetJson["enemy_spawns"][i]);
+		enemySpawners[i].create_unit_data(stagePhaseJson["enemy_spawns"][i]);
 
 		for (const auto& aug : enemySpawners[i].enemyStats.augments)
 			if (has(aug.augType & AugmentType::PROJECTILE))
@@ -79,19 +78,25 @@ UnitMoveRequest::UnitMoveRequest(const Unit& unit, int newLane, float axisPos, U
 void Stage::break_spawner_thresholds() {
 	float percentage = enemyBase.get_hp_percentage();
 
-	std::cout << "break spawner thresholds" << std::endl;
+	//std::cout << "break spawner thresholds" << std::endl;
 	for (auto& spawner : enemySpawners) {
 		// if the spawner is already active or cannot be activated, continue
-		if (spawner.currentSpawnIndex >= 0 || percentage > spawner.percentThreshold) continue;
+		if (spawner.currentSpawnIndex >= 0 || percentage > spawner.percentThreshold) 
+			continue;
 
 		spawner.currentSpawnIndex = 0;
 		spawner.nextSpawnTime = recorder->timeSinceStart + spawner.firstSpawnTime;
+		std::cout << "Spawner Threshold has been broken" << std::endl;
 	}
 }
 void Stage::destroy_base(int destroyedBaseTeam) {
-	victoriousTeam = -destroyedBaseTeam;
+	status = destroyedBaseTeam == UnitConfig::PLAYER_TEAM ?
+		StageStatus::PLAYER_VICTORY : StageStatus::ENEMY_VICTORY;
 
-	// Destory all of the losing team's units and their spawners
+	remove(status, StageStatus::ONGOING);
+	status |= StageStatus::FINISHED;
+
+	// Destroy all of the losing team's units and their spawners
 	for (auto& lane : lanes) {
 		for (const auto& index : lane.getAllyUnits(destroyedBaseTeam)) {
 			auto& unit = getUnit(index);
@@ -112,8 +117,7 @@ void Stage::destroy_base(int destroyedBaseTeam) {
 		return moveRequest.team == destroyedBaseTeam;
 		});
 
-	bool playerTeamWon = victoriousTeam == 1;
-	onStageCompletion(playerTeamWon);
+	onStageCompletion(has(status, StageStatus::PLAYER_VICTORY));
 }
 
 Lane& Stage::get_closest_lane(float y) {

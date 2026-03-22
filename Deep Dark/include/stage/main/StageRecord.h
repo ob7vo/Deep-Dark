@@ -51,13 +51,13 @@ struct UnitRecord {
 
 struct StageRecord
 {
-	// :( = Likely wont be used for a challange
+	// :( = Likely wont be used for a challenge
 	mutable UnitRecord enemyRecorder;
 	mutable UnitRecord playerRecorder;
 
 	float timeSinceStart = 0.f;
 	float curPhaseElapsedTime = 0.f;
-	int currentStageSet = 0;
+	int currentStagePhase = 0;
 
 	int partsEarned = 0;
 	int partsSpent = 0;

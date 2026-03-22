@@ -25,6 +25,11 @@ namespace Textures::UI {
 	sf::Texture t_upgradeWalletBtn = createTexture(path(stageUIPath, "upgrade_bag.png"));
 	sf::Texture t_fireCannonBtn = createTexture(path(stageUIPath, "fire_cannon.png"));
 
+	// Results Screen
+	sf::Texture t_quitStageBtn = createTexture(path(uiPath, "return_btn.png"));
+	sf::Texture t_startNextStageSetBtn = createTexture(path(uiPath, "start_btn.png"));
+	sf::Texture t_restartStageSetBtn = createTexture(path(uiPath, "settings_btn.png"));;
+
 	// Start Menu
 	sf::Texture t_quitBtn = createTexture(path(startMenuPath, "quit_btn.png"));
 	sf::Texture t_startGameBtn = createTexture(path(startMenuPath, "start_btn.png"));

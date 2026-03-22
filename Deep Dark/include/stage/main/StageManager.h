@@ -29,9 +29,7 @@ struct StageManager
 		for (int i = 0; i < 8; i++) effectSprites[i].setOrigin({ 16.f,16.f });
 	};
 
-	void unload();
-
-	void create_stage(const nlohmann::json& stageSetJson, int stageSet = 0);
+	void create_stage(const nlohmann::json& stageSetJson, int stagePhase, bool inPracticeMode);
 	void create_challenges(const nlohmann::json& stageSetJson);
 
 	void tick(float deltaTime);
@@ -66,10 +64,6 @@ struct StageManager
 
 	inline bool try_fire_cannon() { return stage->playerBase.try_fire_cannon(); }
 	inline bool can_fire_cannon() const { return !stage->playerBase.on_cooldown(); }
-
-	inline bool player_won() const { return stage->victoriousTeam == 1; }
-	inline bool enemies_won() const { return stage->victoriousTeam == -1; }
-	inline bool game_is_ongoing() const { return stage->victoriousTeam == 0; }
 
 	const std::array<Key, 10> numberKeys = {
 		Key::Num1,

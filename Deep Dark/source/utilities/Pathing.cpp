@@ -17,17 +17,22 @@ PathingType Pathing::string_to_type(std::string& str) {
 	return PathingType::CIRCULAR;
 }
 sf::Vector2f CirclePathing::move(float deltaTime) {
-	float angleRad = angleDeg * (M_PI * 0.01f);
+	float angleRad = angleDeg * (M_PI / 180.f);
 
 	pos.x = center.x + radius * cos(angleRad);
 	pos.y = center.y + radius * sin(angleRad);
+
 	angleDeg += speed * deltaTime;
 
 	return pos;
 }
 sf::Vector2f ProjectilePathing::move(float dt) {
+	// If this is gravity, there should either be a constant G value
+	// or "mass" should be renamed to some gravity variable
+	// since mass is canceled out when turning Fg into acceleration
+	velocity.y -= mass * dt; 
+
 	pos.x += velocity.x * dt;
-	velocity.y -= mass * dt;
 	pos.y -= velocity.y * dt;
 
 	return pos;

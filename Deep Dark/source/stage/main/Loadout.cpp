@@ -6,7 +6,7 @@
 #include "UITextures.h"
 #include "Utils.h"
 
-constexpr int DIST_OFFSCREEN = 0.2f;
+constexpr float DIST_OFFSCREEN = 0.2f;
 using enum Direction;
 
 LoadoutSlot::LoadoutSlot(const nlohmann::json& file, const ArmorySlot& equipSlot)
@@ -22,8 +22,8 @@ Loadout::Loadout(const Camera& cam) {
 	set_slot_positions(cam);
 }
 
-void Loadout::create_loadout(const std::array<ArmorySlot, 10>& armorySlots) {
-	for (int i = 0; i < 10; i++) {
+void Loadout::create_loadout(const std::array<ArmorySlot, UnitConfig::MAX_EQUIP_SLOTS>& armorySlots) {
+	for (int i = 0; i < UnitConfig::MAX_EQUIP_SLOTS; i++) {
 		if (armorySlots[i].id == -1) {
 			filledSlots = i;
 			break;
@@ -31,7 +31,7 @@ void Loadout::create_loadout(const std::array<ArmorySlot, 10>& armorySlots) {
 
 		set_slot(armorySlots[i], i);
 	}
-	for (int j = filledSlots; j < 10; j++)
+	for (int j = filledSlots; j < UnitConfig::MAX_EQUIP_SLOTS; j++)
 		slots[j] = LoadoutSlot(Textures::UI::t_defaultUnitSlot);
 }
 void Loadout::set_slot(const ArmorySlot& equipSlot, int loadoutSlotInd) {
@@ -41,20 +41,22 @@ void Loadout::set_slot(const ArmorySlot& equipSlot, int loadoutSlotInd) {
 }
 void Loadout::set_slot_positions(const Camera& cam) {
 	sf::Vector2f pos = Screen::toPixels(FIRST_SLOT_POS);
-	sf::Vector2f inc = Screen::toPixels(SLOT_SPACING);
+	sf::Vector2f spacing = Screen::toPixels(SLOT_SPACING);
 	float startX = pos.x;
 
-	for (int i = 0; i < 2; i++) {
-		for (int j = 0; j < 5; j++) {
-			int ind = i * 5 + j;
-			LoadoutSlot& slot = slots[ind];
+	int columns = UnitConfig::MAX_EQUIP_SLOTS * 0.5f; 
+
+	for (int row = 0; row < 2; row++) {
+		for (int col = 0; col < columns; col++) {
+			int ind = row * columns + col;
+			LoadoutSlot& slot = slots[row * columns + col];
 			slot.slotSprite.setPosition(pos);
 			slot.slotSprite.setScale({ 2.5f,2.5f });
 
-			pos.x += inc.x;
+			pos.x += spacing.x;
 		}
 		pos.x = startX;
-		pos.y += inc.y;
+		pos.y += spacing.y;
 	}
 }
 
@@ -69,12 +71,12 @@ void Loadout::slide_ui(float t) {
 
 	// Turned into a regular float so it can be modified for the second row
 	float distOffscreen = DIST_OFFSCREEN;
+	int columns = UnitConfig::MAX_EQUIP_SLOTS * 0.5f;
 
-	for (int i = 0; i < 2; i++) {
-		for (int j = 0; j < 5; j++) {
+	for (int row = 0; row < 2; row++) {
+		for (int col = 0; col < columns; col++) {
 			sf::Vector2f finalPos = Screen::lerpOffscreen(slotPos, distOffscreen, t, Down);
-
-			slots[i * 5 + j].slotSprite.setPosition(finalPos);
+			slots[row * columns + col].slotSprite.setPosition(finalPos);
 
 			slotPos.x += spacing.x;
 		}

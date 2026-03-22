@@ -15,7 +15,7 @@ public:
 	bool readyToEndState = false;
 	bool clicked = false;
 
-	TransitionID currentTransition;
+	TransitionID currentTransition = TransitionID::None;
 	float transitionTimer = 0.f;
 	float transitionTimeElapsed = 0.f;
 
@@ -47,11 +47,13 @@ public:
 
 		switch (newTransition) {
 		case TransitionID::StageUIToResultsScreen:
-			transitionTimer = 0.4f;
+			transitionTimer = 0.5f;
+			break;
 		case TransitionID::ResultsScreenToArmory:
 		case TransitionID::ResultsScreenToStageSelect:
 		case TransitionID::TestStageUISliding:
 			transitionTimer = 0.5f;
+			break;
 		}
 	}
 	inline float updateTransitionTime(float deltaTime) {

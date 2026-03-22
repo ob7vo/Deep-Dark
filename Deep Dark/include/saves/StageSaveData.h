@@ -16,6 +16,8 @@ struct StageSaveData {
 	static float GetClearTime(int stageID);
 	/// <summary> Sets and Returns the fastest time (old vs new) </summary>
 	static float SetClearTime(int stageID, float newTime); 
+	static void SetHighestPhaseCleared(int stageID, int phase);
+	static int GetHighestPhaseCleared(int stageID);
 	static std::bitset<StageConfig::CHALLENGES_PER_STAGE> GetChallengeStatus(int stageID);
 	static void ClearChallenge(int stageID, int challengeIndex);
 	static void UnlockStages(int stageID);

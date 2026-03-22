@@ -30,15 +30,17 @@ struct LoadoutSlot {
 
 	void draw(Camera& cam, int curParts);
 	inline bool can_afford_unit(int parts) const { return unitStats.parts <= parts; }
+
+	inline std::pair<int, int> getUnitIDandGear() { return { unitStats.id, unitStats.gear }; }
 };
 struct Loadout{
-	std::array<LoadoutSlot, 10> slots;
+	std::array<LoadoutSlot, UnitConfig::MAX_EQUIP_SLOTS> slots;
 	int filledSlots = 0;
 
 	explicit Loadout(const Camera& cam);
 
 	void set_slot_positions(const Camera& cam);
-	void create_loadout(const std::array<ArmorySlot, 10>& armorySlots);
+	void create_loadout(const std::array<ArmorySlot, UnitConfig::MAX_EQUIP_SLOTS>& armorySlots);
 	void set_slot(const ArmorySlot& equipSlot, int loadoutSlot);
 
 	void draw_slots(Camera& cam, int currentParts);

@@ -22,6 +22,10 @@ namespace Textures::UI {
 	// Stage UI
 	extern sf::Texture t_upgradeWalletBtn;
 	extern sf::Texture t_fireCannonBtn;
+	// Results Screen
+	extern sf::Texture t_quitStageBtn;
+	extern sf::Texture t_startNextStageSetBtn;
+	extern sf::Texture t_restartStageSetBtn;
 	// Start Menu
 	extern sf::Texture t_quitBtn;
 	extern sf::Texture t_startGameBtn;

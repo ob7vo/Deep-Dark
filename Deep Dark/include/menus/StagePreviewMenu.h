@@ -14,20 +14,22 @@
 // BTN #2: Cancel. Closes StageSetMenu and goes back to armory
 // BTN #3: Exit. Completely closes StageSet section and goes to stage Select screen.
 
+struct Loadout;
+
 struct StagePreviewMenu : public Menu<UI::ArmoryMenu::StagePreview::BTN_COUNT> {
     std::bitset<UnitConfig::TOTAL_PLAYER_UNITS> usedUnits;
     // First index is the specific Unit Id, the bitset is its gear (form)
     UnitRestrictions unitRestrictions;
 
-    int stageId = 0;
-    int stageSet = 0;
+    int stageID = 0;
+    int stagePhase = 0;
     
     sf::Sprite backgroundSprite = sf::Sprite(defaultTexture);
 
-    sf::Text startStageSetText = sf::Text(baseFont);
+    sf::Text startStagePhaseText = sf::Text(baseFont);
     std::vector<sf::Texture> enemyUnitTextures = {};
     std::vector<sf::Sprite> enemyUnitSprites = {};
-    std::array<sf::Sprite, 10> usedUnitsSlotSprites = make_unitSlotSprites();
+    std::array<sf::Sprite, UnitConfig::MAX_EQUIP_SLOTS> usedUnitsSlotSprites = make_unitSlotSprites();
 
     explicit StagePreviewMenu(Camera& cam);
     ~StagePreviewMenu() final = default;
@@ -35,7 +37,7 @@ struct StagePreviewMenu : public Menu<UI::ArmoryMenu::StagePreview::BTN_COUNT> {
     void reset_positions() final;
     void draw() final;
 
-    void setup_menu(int stage, int set = {}, const std::array<std::pair<int,int>, 10>& units = emptyUnits());
+    void setup_menu(int stage, int phase = {}, Loadout* usedLoadout = nullptr);
     void create_enemy_sprites(const nlohmann::json& stageSetJson);
 
     void reset_sprites();
@@ -45,11 +47,11 @@ struct StagePreviewMenu : public Menu<UI::ArmoryMenu::StagePreview::BTN_COUNT> {
     inline Button& closeBtn() { return buttonManager.buttons[static_cast<int>(UI::ArmoryMenu::StagePreview::SP_ButtonIndex::CLOSE)]; }
     inline Button& exitStageBtn() { return buttonManager.buttons[static_cast<int>(UI::ArmoryMenu::StagePreview::SP_ButtonIndex::EXIT_STAGE)]; }
 
-    static std::array<sf::Sprite, 10> make_unitSlotSprites();
+    static std::array<sf::Sprite, UnitConfig::MAX_EQUIP_SLOTS> make_unitSlotSprites();
     /// <summary> Exists so I dont get the 'Invalid Gear Value' error </summary>
-    static std::array<std::pair<int, int>, 10> emptyUnits(){
-        std::array<std::pair<int,int>, 10> units;
-        for (int i = 0; i < 10; i++) units[i] = { -1, 1 };
+    static std::array<std::pair<int, int>, UnitConfig::MAX_EQUIP_SLOTS> emptyUnits(){
+        std::array<std::pair<int,int>, UnitConfig::MAX_EQUIP_SLOTS> units;
+        for (int i = 0; i < UnitConfig::MAX_EQUIP_SLOTS; i++) units[i] = { -1, 1 };
         return units;
     }
 };

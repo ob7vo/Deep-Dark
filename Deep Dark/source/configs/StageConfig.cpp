@@ -2,7 +2,7 @@
 #include "StageConfig.h"
 
 namespace StageConfig {
-	nlohmann::json getStageData(int stageID) {
+	nlohmann::json getStageJson(int stageID) {
 		std::string jsonPath = std::format("configs/stage_data/stage_{}.json", stageID);
 		std::ifstream stageFile(jsonPath);
 

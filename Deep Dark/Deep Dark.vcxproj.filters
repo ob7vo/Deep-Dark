@@ -464,6 +464,9 @@
     <ClInclude Include="include\visuals\ModularAnimation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\enums\StageStatus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="configs\base _data\player_bases\p_wave_base.json" />

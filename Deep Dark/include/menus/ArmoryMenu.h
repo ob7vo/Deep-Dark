@@ -3,9 +3,9 @@
 #include "Slider.h"
 #include "ArmorySlot.h"
 #include "StagePreviewMenu.h"
+#include "UnitConfigConstants.h"
 #include <bitset>
 #include <iostream>
-
 
 class ArmoryMenu : public Menu<UI::ArmoryMenu::BTN_COUNT> {
 public:
@@ -22,7 +22,7 @@ public:
     sf::Text armoryText = sf::Text(baseFont);
     Slider inventorySlider = {};
     
-    std::array<ArmorySlot, 10> equipSlots;
+    std::array<ArmorySlot, UnitConfig::MAX_EQUIP_SLOTS> equipSlots;
     int filledUnitSlots = 0;
 
     /// <summary> first = unit ID. second = unit form/gear </summary>

@@ -21,6 +21,7 @@ void StageSaveData::CreateSaveData() {
     stageData["is_unlocked"] = false;
     stageData["clears"] = 0;
     stageData["clear_time"] = 0.f;
+    stageData["highest_cleared_phase"] = 1;
 
     stageData["challenge_status"] = json::array();
     for (int i = 0; i < StageConfig::CHALLENGES_PER_STAGE; i++)
@@ -66,6 +67,13 @@ float StageSaveData::SetClearTime(int stageID, float newTime) {
         return newTime;
     }
 }
+void StageSaveData::SetHighestPhaseCleared(int stageID, int phase) {
+    if (data["stages"][stageID]["highest_cleared_phase"].get<int>() < phase)
+        data["stages"][stageID]["highest_cleared_phase"] = phase;
+}
+int StageSaveData::GetHighestPhaseCleared(int stageID) {
+    return data["stages"][stageID]["highest_cleared_phase"].get<int>();
+}
 std::bitset<StageConfig::CHALLENGES_PER_STAGE> StageSaveData::GetChallengeStatus(int stageID) {
     std::bitset<StageConfig::CHALLENGES_PER_STAGE> result;
     auto challenges = data["stages"][stageID]["challenge_status"];
@@ -79,7 +87,7 @@ void StageSaveData::ClearChallenge(int stageID, int chalIndex) {
     data["stages"][stageID]["challenge_status"][chalIndex] = true;
 }
 void StageSaveData::UnlockStages(int stageID) {
-    nlohmann::json stageJson = StageConfig::getStageData(stageID);
+    nlohmann::json stageJson = StageConfig::getStageJson(stageID);
 
     for (const auto& adjacentStageID : stageJson["adjacent_stages"].get<std::vector<int>>()) {
         data["stages"][adjacentStageID]["is_unlocked"] = true;

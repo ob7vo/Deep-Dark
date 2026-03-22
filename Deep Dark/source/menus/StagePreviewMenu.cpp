@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "StagePreviewMenu.h"
+#include "Loadout.h"
 #include "Camera.h"
 #include "UITextures.h"
 #include "Utils.h"
@@ -11,8 +12,8 @@ StagePreviewMenu::StagePreviewMenu(Camera& cam) : Menu(cam) {
 	backgroundSprite.setTexture(t_menuBG1);
 	backgroundSprite.setScale(Screen::getSpriteScale(backgroundSprite, BACKGROUND_SIZE));
 
-	startStageSetText.setString("beebee next stage");
-	Screen::setFontSize(startStageSetText, TEXT_HEIGHT);
+	startStagePhaseText.setString("beebee next stage");
+	Screen::setFontSize(startStagePhaseText, TEXT_HEIGHT);
 
 	for (int i = 0; i < 10; i++) {
 		sf::Vector2f scale = Screen::getSpriteScale(usedUnitsSlotSprites[i], UNIT_SLOT_SCALE);
@@ -23,21 +24,21 @@ StagePreviewMenu::StagePreviewMenu(Camera& cam) : Menu(cam) {
 	exitStageBtn().setup(EXIT_BTN_POS, ENEMY_UNITS_SIZE, t_returnBtn);
 	closeBtn().setup(CLOSE_MENU_BTN_POS, CLOSE_MENU_BTN_SIZE, t_closeBtn);
 }
-void StagePreviewMenu::setup_menu(int stage, int set, const std::array<std::pair<int, int>, 10>& newUsedUnits) {
+void StagePreviewMenu::setup_menu(int stage, int phase, Loadout* usedLoadout) {
 	reset_sprites();
 
-	stageId = stage;
-	stageSet = set;
+	stageID = stage;
+	stagePhase = phase;
 
-	std::ifstream file(std::format("configs/stage_data/stage_{}.json", stageId));
-	const nlohmann::json stageSetJson = nlohmann::json::parse(file)["sets"][set];
+	std::ifstream file(std::format("configs/stage_data/stage_{}.json", stageID));
+	const nlohmann::json stageSetJson = nlohmann::json::parse(file)["phases"][phase];
 
 	create_enemy_sprites(stageSetJson);
 
 	// The positions of the Slot Sprites are already set in reset_positions()
 	// Just set the Textures to the slots of the Units used in the last Stage Set (which if none, if entering from StageSelectMenu)
 	for (int i = 0; i < 10; i++) {
-		const auto [id, gear] = newUsedUnits[i];
+		const auto [id, gear] = usedLoadout->slots[i].getUnitIDandGear();
 
 		usedUnitsSlotSprites[i].setTexture(getUnitSlot(id, gear), true);
 		if (id != -1) usedUnits[id] = true;
@@ -87,8 +88,8 @@ void StagePreviewMenu::create_enemy_sprites(const nlohmann::json& stageSetJson) 
 	}
 
 	// Moving the enemy sprites into place
-	sf::Vector2f center = Screen::toPixels(ENEMY_UNITS_CENTER);
-	sf::Vector2f spacing = Screen::toPixels(ENEMY_UNITS_SPACING); // y == 0
+	sf::Vector2f center = Screen::toPixels(ENEMY_UNITS_CENTER_POS);
+	sf::Vector2f spacing = Screen::getSpacing(ENEMY_UNITS_SIZE, ENEMY_UNITS_SPACING); // y == 0
 	sf::Vector2f left = { center.x - (spacing.x * ((float)uniqueEnemyCount - 1.f) * 0.5f), center.y};
 
 	for (size_t i = 0; i < uniqueEnemyCount; i++)
@@ -104,11 +105,11 @@ void StagePreviewMenu::reset_positions() {
 	sf::Vector2f slotInc = Screen::toPixels(UNIT_SLOT_INCREMENT);
 	float startX = slotPos.x;
 
-	for (int i = 0; i < 2; i++) {
-		for (int j = 0; j < 5; j++) {
-			int k = i * 5 + j;
+	int columns = UnitConfig::MAX_EQUIP_SLOTS * 0.5f;
 
-			usedUnitsSlotSprites[k].setPosition(slotPos);
+	for (int row = 0; row < 2; row++) {
+		for (int col = 0; col < columns; col++) {
+			usedUnitsSlotSprites[row * columns + col].setPosition(slotPos);
 			slotPos.x += slotInc.x;
 		}
 
@@ -116,18 +117,19 @@ void StagePreviewMenu::reset_positions() {
 		slotPos.y += slotInc.y;
 	}
 
-	startStageSetText.setPosition(Screen::toPixels(TEXT_POS));
+	startStagePhaseText.setPosition(Screen::toPixels(TEXT_POS));
 	backgroundSprite.setPosition(Screen::toPixels(BACKGROUND_POS));
 }
 void StagePreviewMenu::reset_sprites() {
 	enemyUnitTextures = {};
 	enemyUnitSprites = {};
 
-	for (int i = 0; i < 10; i++) usedUnitsSlotSprites[i].setTexture(t_defaultUnitSlot);
+	for (int i = 0; i < 10; i++) 
+		usedUnitsSlotSprites[i].setTexture(t_defaultUnitSlot);
 }
 void StagePreviewMenu::full_reset() {
-	stageId = 0;
-	stageSet = 0;
+	stageID = 0;
+	stagePhase = 0;
 
 	usedUnits.reset();
 	unitRestrictions.reset();
@@ -140,7 +142,7 @@ void StagePreviewMenu::draw() {
 	buttonManager.draw(cam);
 
 	cam.renderer.queue_ui_draw(&backgroundSprite);
-	cam.renderer.queue_ui_draw(&startStageSetText);
+	cam.renderer.queue_ui_draw(&startStagePhaseText);
 
 	// Drawing Units
 	for (int i = 0; i < 10; i++) cam.renderer.queue_ui_draw(&usedUnitsSlotSprites[i]);
@@ -149,7 +151,7 @@ void StagePreviewMenu::draw() {
 
 
 // Static Methods
-std::array<sf::Sprite, 10> StagePreviewMenu::make_unitSlotSprites() {
+std::array<sf::Sprite, UnitConfig::MAX_EQUIP_SLOTS> StagePreviewMenu::make_unitSlotSprites() {
 	const sf::Texture& tex = t_defaultUnitSlot;
 	return {
 		sf::Sprite(tex), sf::Sprite(tex),sf::Sprite(tex),sf::Sprite(tex),

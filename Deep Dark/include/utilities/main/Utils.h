@@ -146,6 +146,16 @@ namespace Screen {
         return toPixels(normTargetPosition);
     }
 
+    inline sf::Vector2f getSpacing(sf::Vector2f uiSize, sf::Vector2f spacing) {
+        // Assumes that the UI with uiSize is centered
+        sf::Vector2f newSpacing = Screen::toPixels((uiSize * 0.5f) + spacing);
+
+        if (spacing.x == 0.f) newSpacing.x = 0;
+        else if (spacing.y == 0.f) newSpacing.y = 0;
+
+        return newSpacing;
+    }
+
     inline sf::Vector2f getSpriteScale(const sf::Sprite& sprite, sf::Vector2f normScale) {
         // Get the sprite's original pixel dimensions
         sf::FloatRect bounds = sprite.getLocalBounds();
@@ -179,18 +189,26 @@ namespace Screen {
     }
 }
 namespace Visual {
-    inline void setupSprite(sf::Vector2f uiPos, sf::Vector2f normScale, sf::Sprite& sprite,
+    inline void centerText(sf::Text& text) {
+        text.setOrigin(text.getLocalBounds().position + text.getGlobalBounds().size * 0.5f);
+    }
+    inline void setupUI(sf::Vector2f uiPos, sf::Vector2f normScale, sf::Sprite& sprite,
         const sf::Texture& texture, sf::IntRect textureRect = {})
     {
         if (textureRect.size.x == 0 || textureRect.size.y == 0) textureRect.size = (sf::Vector2i)texture.getSize();
-        bool isUI = std::abs(uiPos.x) <= 1.f && std::abs(uiPos.y) <= 1.f;
+        bool worldSpace = std::abs(uiPos.x) > 1.f && std::abs(uiPos.y) > 1.f;
 
         sprite.setTexture(texture);
         sprite.setTextureRect(textureRect);
 
         sprite.setScale(Screen::getSpriteScale(sprite, normScale));
-        sprite.setPosition((isUI ? Screen::toPixels(uiPos) : uiPos));
+        sprite.setPosition((worldSpace ? uiPos : Screen::toPixels(uiPos)));
         sprite.setOrigin(sprite.getLocalBounds().size * 0.5f);
+    }
+    inline void setupText(sf::Text& text, sf::Vector2f normPos, float height, bool center = false) {
+        text.setPosition(Screen::toPixels(normPos));
+        Screen::setFontSize(text, height);
 
+        if (center) centerText(text);
     }
 }

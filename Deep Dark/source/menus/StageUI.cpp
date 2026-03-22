@@ -3,6 +3,7 @@
 #include "StageManager.h"
 #include "UILayout.h"
 #include "UITextures.h"
+#include "Utils.h"
 
 using enum Direction;
 
@@ -11,9 +12,9 @@ using namespace UI::StageUI;
 using namespace Screen;
 
 StageUI::StageUI(Camera& cam) : Menu(cam), pauseMenu(cam, *this), resultsScreen(cam){
-	partsCountText.setPosition(toPixels(PARTS_TEXT_POS));
-	bagUpgradeCostText.setPosition(toPixels(BAG_UPGRADE_COST_TEXT_POS));
-	clearedChallengesText.setPosition(toPixels(CLEARED_CHALLENGES_TEXT_POS));
+	Visual::setupText(partsCountText, PARTS_TEXT_POS, TEXT_SIZE);
+	Visual::setupText(bagUpgradeCostText, BAG_UPGRADE_COST_TEXT_POS, TEXT_SIZE);
+	Visual::setupText(clearedChallengesText, CLEARED_CHALLENGES_TEXT_POS, TEXT_SIZE);
 
 	create_buttons();
 }
@@ -49,8 +50,13 @@ void StageUI::slide(float t) {
 }
 void StageUI::on_enter() {
 	reset_positions();
-	visible = true;
+	visible = clickable = true;
+
+	paused = false;
 	resultsScreen.visible = false;
+
+	cam.reset();
+	cam.change_lock(false);
 }
 
  // Texts
@@ -101,11 +107,8 @@ void StageUI::draw() {
 }
 
 bool StageUI::on_mouse_press(bool isM1) {
-	if (!clickable) {
-		if (resultsScreen.clickable) return resultsScreen.on_mouse_press(isM1);
-		else throw std::runtime_error("Both StageUI and ResultsScreen aren't clickable.When StageUI is unclickable, ResultsScreen should be clickable");
-	}
-
+	if (!clickable) return resultsScreen.on_mouse_press(isM1);
+		
 	if (paused)
 		return pauseMenu.on_mouse_press(isM1);
 	else
@@ -114,6 +117,8 @@ bool StageUI::on_mouse_press(bool isM1) {
 void StageUI::check_mouse_hover() {
 	if (paused)
 		pauseMenu.check_mouse_hover();
+	else if (!clickable && resultsScreen.clickable)
+		resultsScreen.check_mouse_hover();
 	else
 		buttonManager.check_mouse_hover(cam.getMouseScreenPos());
 }
@@ -148,7 +153,7 @@ Menu(cam), stageUI(ui) {
 	closeGameBtn().onClick = [this](bool m1) { if (m1) close_game(); };
 	closeMenuBtn().onClick = [this](bool m1) { if (m1) close_menu(); };
 
-	Visual::setupSprite(PauseMenu::PAUSE_MENU_POS, PauseMenu::PAUSE_MENU_SIZE, pauseMenuSprite, t_menuBG1);
+	Visual::setupUI(PauseMenu::PAUSE_MENU_POS, PauseMenu::PAUSE_MENU_SIZE, pauseMenuSprite, t_menuBG1);
 }
 void StagePauseMenu::reset_positions() {
 	pauseText.setPosition(toPixels(PauseMenu::PAUSE_MENU_TEXT_POS));

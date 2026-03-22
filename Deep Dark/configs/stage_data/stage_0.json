@@ -1,6 +1,6 @@
 {
   "name": "Entry Point",
-  "sets": [
+  "phases": [
     {
       "set_name": "Opening Act (Set 1)",
       "enemy_base": {
@@ -28,7 +28,7 @@
       "teleporters -": [
         {
           "lane": 0,
-          "connected_lane": 2,
+          "connected_lane": 1,
           "team": 1,
           "x_position": 230,
           "x_destination": 400
@@ -70,6 +70,53 @@
           "first_spawn_time": 100.5,
           "spawn_delays": [ 2.29, 3.56 ],
           "lane_indexes": [ 2, 2, 1, 2, 0, 1 ]
+        }
+      ]
+    },
+    {
+      "set_name": "My folly",
+      "enemy_base": {
+        "hp": 50,
+        "x_position": 375,
+        "cannon_json_path": "configs/base_data/enemy_bases/orbital_base.json"
+      },
+      "player_base": {
+        "hp": 7500,
+        "x_position": 175
+      },
+      "lanes": [
+        {
+          "player_spawn_position": 200,
+          "enemy_spawn_position": 400,
+          "y_position": 400.0,
+          "gaps": [ [ 250.0, 320.0 ] ]
+        },
+        {
+          "player_spawn_position": 200,
+          "enemy_spawn_position": 400,
+          "y_position": 600.0
+        }
+      ],
+      "teleporters": [
+        {
+          "lane": 1,
+          "connected_lane": 1,
+          "team": 1,
+          "x_position": 230,
+          "x_destination": 350
+        }
+      ],
+      "enemy_spawns -": [
+        {
+          "unit_id": 102,
+          "unit_gear": 1,
+
+          "total_spawns": 5,
+          "magnification": 1.5,
+
+          "first_spawn_time": 15.0,
+          "spawn_delays": [ 30.67, 50.21 ],
+          "lane_indexes": [ 1, 2, 2, 1, 0 ]
         }
       ]
     }

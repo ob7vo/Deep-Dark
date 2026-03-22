@@ -6,6 +6,7 @@
 
 using json = nlohmann::json;
 using namespace Textures::Effects;
+using enum StageStatus;
 
 float random_float(float min, float max) {
 	if (min == max) return min;
@@ -28,22 +29,22 @@ std::array<sf::Sprite, 8> StageManager::make_effSpriteArr() {
 	return effArr;
 }
 
-void StageManager::create_stage(const json& stageJson, int stageSet) {
-	const json& stageSetJson = stageJson["sets"][stageSet];
-	auto lanes = static_cast<int>(stageSetJson["lanes"].size());
+void StageManager::create_stage(const json& stageJson, int stagePhase, bool inPracticeMode) {
+	const json& stagePhaseJson = stageJson["phases"][stagePhase];
+	auto lanes = static_cast<int>(stagePhaseJson["lanes"].size());
 
-	// First set, so the stage was just entered into
-	if (stageSet == 0) {
+	// First phase, meaning there is no persistent data yet for the recorder and challenges
+	if (stagePhase == 0 || inPracticeMode) {
 		stageRecorder = StageRecord(lanes);
 
 		challenges.clear();
 		create_challenges(stageJson);
 	}
 
-	stageRecorder.currentStageSet = stageSet;
+	stageRecorder.currentStagePhase = stagePhase;
 	stageRecorder.curPhaseElapsedTime = 0.f;
 
-	stage = std::make_unique<Stage>(stageSetJson, &stageRecorder);
+	stage = std::make_unique<Stage>(stagePhaseJson, &stageRecorder);
 	wallet = {};
 	
 	stage->selectedLane = &selectedLane;
@@ -56,12 +57,6 @@ void StageManager::create_challenges(const json& stageJson) {
 		StageChallenge& chal = challenges.emplace_back(chalJson);
 		chal.pTarget = chal.get_target_ptr(*this);
 	}
-}
-void StageManager::unload() {
-	challenges.clear();
-	stageRecorder = {};
-	stage = nullptr;
-	wallet = {};
 }
 
 #pragma region Creating Entities
@@ -116,7 +111,7 @@ void StageManager::call_one_second_updates(float deltaTime) {
 #pragma region Inputs
 void StageManager::handle_events(sf::Event event) {
 	// If the stage set has ended at all, don't read inputs
-	if (stage->victoriousTeam != 0) return;
+	if (has(stage->status, StageStatus::FINISHED)) return;
 
 	if (auto keyEvent = event.getIf<sf::Event::KeyPressed>()) {
 		if (keyEvent->code == Key::Escape) {
@@ -334,7 +329,7 @@ void StageManager::tick(float deltaTime) {
 	stage->effectSpritePositions.clear();
 
 	// If the stage set is ongoing or enemies won, keeps spawning them in.
-	if (!stage->reached_unit_capacity(UnitConfig::ENEMY_TEAM) && !player_won())
+	if (!stage->reached_unit_capacity(UnitConfig::ENEMY_TEAM) && has(stage->status, PLAYER_VICTORY))
 		spawn_enemies();
 
 	update_lanes(deltaTime); 

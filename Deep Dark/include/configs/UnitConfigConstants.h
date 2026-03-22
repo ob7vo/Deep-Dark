@@ -55,6 +55,6 @@ namespace UnitConfig {
 
 	inline bool isEnemy(int unitID) { return unitID >= 100; }
 	inline int GetUpgradeCost(int curLevel) { 
-		return static_cast<int>(std::round(BASE_UPGRADE_COST * std::powf(UPGRADE_COST_MULTIPLIER, curLevel - 1)));
+		return static_cast<int>(std::round(BASE_UPGRADE_COST * std::powf(UPGRADE_COST_MULTIPLIER, (float)(curLevel - 1.f))));
 	}
 }

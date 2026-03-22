@@ -44,8 +44,8 @@ int main()
         sf::Style::Titlebar | sf::Style::Close);
  
     bool overwritePlayerSave = false;
-    bool overwriteStageSave = false; 
-    bool overwriteUnitSave = true;
+    bool overwriteStageSave = true; 
+    bool overwriteUnitSave = false;
     SaveSystem::Initialize(overwritePlayerSave, overwriteStageSave, overwriteUnitSave);
 
     Textures::initializeAll();
@@ -59,9 +59,8 @@ int main()
     StateManager stateManager(cam);
 
     /**/
-    std::array<ArmorySlot, 10> slots = ArmorySlot::default_armory_loadout(cam);
-    std::string stageJsonPath = "configs/stage_data/stage_0.json";
-    StageEnterData stageEnterData(stageJsonPath, 0, slots);
+    std::array<ArmorySlot, UnitConfig::MAX_EQUIP_SLOTS> slots = ArmorySlot::default_armory_loadout(cam);
+    StageEnterData stageEnterData(0, 0, slots, false);
     //*/
 
     PrepEnterData prepData(MenuType::STAGE_SELECT, MenuType::ARMORY_EQUIP);

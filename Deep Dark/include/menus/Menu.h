@@ -40,6 +40,9 @@ struct MenuBase
 	virtual void on_enter() { reset_positions(); };
 	virtual void on_exit() {};
 
+	virtual void activate() { visible = clickable = true; }
+	virtual void deactivate() { visible = clickable = false; }
+
 	static std::string GetMenuName(MenuType type);
 };
 

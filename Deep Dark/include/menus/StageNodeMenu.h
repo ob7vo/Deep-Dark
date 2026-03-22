@@ -8,6 +8,8 @@ struct StageNodeMenu : Menu<UI::StageSelect::StageNode::BTN_COUNT> {
 	sf::Sprite menuSprite = sf::Sprite(defaultTexture);
     sf::Text stageNameText = sf::Text(baseFont);
 
+    int practicableStagePhases = 0; // # of Stage Sets that can be practiced (essentially, the ones that were seen)
+
     explicit StageNodeMenu(Camera& cam);
     ~StageNodeMenu() final = default;
 
@@ -15,9 +17,10 @@ struct StageNodeMenu : Menu<UI::StageSelect::StageNode::BTN_COUNT> {
     void reset_positions() final;
 
     void slide(float t) final;
-    void set_stage_name_text(int stageID);
+    void set_up_menu(int stageID);
 
     inline Button& closeBtn() { return buttonManager.buttons[static_cast<int>(UI::StageSelect::StageNode::SNM_ButtonIndex::CLOSE)]; }
     inline Button& startStageBtn() { return buttonManager.buttons[static_cast<int>(UI::StageSelect::StageNode::SNM_ButtonIndex::START_STAGE)]; }
     inline Button& enterArmoryBtn() { return buttonManager.buttons[static_cast<int>(UI::StageSelect::StageNode::SNM_ButtonIndex::ENTER_ARMORY)]; }
+    inline Button& startPracticingBtns(int phase) { return buttonManager.buttons[static_cast<int>(UI::StageSelect::StageNode::SNM_ButtonIndex::PRACTICE_SETS) + phase]; }
 };

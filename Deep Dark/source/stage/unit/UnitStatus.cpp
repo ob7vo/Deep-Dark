@@ -78,20 +78,20 @@ int UnitStatus::calculate_damage_and_effects(const Unit& attacker) {
 
 	// return if the unit has a shield and it is not broken vis "PIRECE" augment
 	// Try break the Shield BEFORE void and Terminate, as they do NOT go through shields
-	if (has_shield_up() && !damage_shield(dmg, attacker.stats)) return 0;
+	if (has_shield_up() && !damage_shield((int)dmg, attacker.stats)) return 0;
 
 	// These effects are based around the Unit's current HP, 
 	// so they are run after all calculations
 	if (owner.targeted_by_unit(attacker)) {
 		// Run VOID check
 		if (attacker.stats->try_proc_augment(AugmentType::VOID, attacker.combat.hitIndex))
-			dmg += owner.stats->maxHp * attacker.stats->get_augment(AugmentType::VOID)->value;
+			dmg += (float)owner.stats->maxHp * attacker.stats->get_augment(AugmentType::VOID)->value;
 		// Run TERMINATE check
 		if (attacker.combat.try_terminate_unit(owner, dmg))
-			dmg += owner.stats->maxHp;
+			dmg += (float)owner.stats->maxHp;
 	}
 
-	return dmg;
+	return static_cast<int>(dmg);
 }
 #pragma endregion
 

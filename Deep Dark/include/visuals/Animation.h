@@ -57,7 +57,7 @@ struct AnimationPlayer {
 	void reset(sf::Sprite& sprite);
 	
 	// Sets only the TIME and CURFFRAME to 0
-	inline void restart() { time = currentFrame = 0; }
+	inline void restart() { time = currentFrame = 0.f; }
 	inline AnimationEvent get_events() const { return clip->frames[currentFrame].eventsMask; }
 	inline bool onFirstFrame() const { return currentFrame == 0; }
 	inline bool onFinalFrame() const { return currentFrame == clip->frames.size() - 1; }

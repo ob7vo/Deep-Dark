@@ -34,8 +34,8 @@ bool ArmorySlot::hovered_over(sf::Vector2i mPos) const {
 		&& static_cast<float>(mPos.y) >= pos.y - bounds.y * 0.5f
 		&& static_cast<float>(mPos.y) <= pos.y + bounds.y * 0.5f;
 }
-std::array<ArmorySlot, 10> ArmorySlot::default_armory_loadout(Camera& cam) {
-	std::array<ArmorySlot, 10> slots;
+std::array<ArmorySlot, UnitConfig::MAX_EQUIP_SLOTS> ArmorySlot::default_armory_loadout(Camera& cam) {
+	std::array<ArmorySlot, UnitConfig::MAX_EQUIP_SLOTS> slots;
 
 	for (int i = 0; i < EQUIP_SLOTS; i++) {
 		slots[i].set_unit(-1, 1, true);

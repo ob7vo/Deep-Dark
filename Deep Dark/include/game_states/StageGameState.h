@@ -2,9 +2,13 @@
 #include "GameState.h"
 #include "StageManager.h"
 
-struct ArmoryMenu;
+class ArmoryMenu;
 struct ArmorySlot;
+struct StageEnterData;
 
+// State for when a stage is being played
+// When exiting this state, the only data changed is the stage itself (set to nullptr), and it being unpaused.
+// It will keep the stageManager intact so that challenges and the recorder will persist between phases
 class StageState : public GameState {
 private:
 	StageUI stageUI;
@@ -12,8 +16,9 @@ private:
 	StageManager stageManager;
 public:
 	int curStageID = 0;
-	int curStageSet = 0;
-	int stageSetCount = 1;
+	int curStagePhase = 0;
+	int stagePhasesCount = 1;
+	bool inPracticeMode = false;
 
 	explicit StageState(Camera& cam);
 	~StageState() override = default;
@@ -37,17 +42,21 @@ public:
 	/// from the quit button in the armory when preparing for the next stage set
 	/// </summary>
 	void quit_stage();
-	void end_current_stage_set(bool playerWon);
+	void end_current_stage_phase(bool playerWon);
 	// Enters armory menu where the player will equip new units for the next phase (set)
-	void enter_armory();
+	void enter_armory_from_results_screen();
+
+	void start_stage_phase(const StageEnterData* stageEntry);
+	void restart_stage_phase();
 };
 
 struct StageEnterData : public OnStateEnterData {
-	std::string stageJsonPath;
-	int stageSet;
-	const std::array<ArmorySlot, 10>& slots;
+	int stageID;
+	int stagePhase;
+	const std::array<ArmorySlot, UnitConfig::MAX_EQUIP_SLOTS>& slots;
+	bool inPracticeMode = false;
 
-	StageEnterData(const std::string& path, int set, const std::array<ArmorySlot, 10>& slots);
+	StageEnterData(int stageID, int phase, const std::array<ArmorySlot, UnitConfig::MAX_EQUIP_SLOTS>& slots, bool practice);
 
 	~StageEnterData() override = default;
 };
