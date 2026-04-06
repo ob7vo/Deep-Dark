@@ -28,7 +28,6 @@ StageState::StageState(Camera& cam) :
 		}
 		};
 	stageUI.resultsScreen.restartStageSetBtn().onClick = [this](bool isM1) {
-		std::cout << "restarting" << std::endl;
 		if (isM1) restart_stage_phase();
 		};
 }
@@ -56,12 +55,14 @@ void StageState::update(float deltaTime) {
 
 	check_transition(deltaTime);
 }
+
 void StageState::render() {
 	stageManager.draw(cam.getWindow());
 	loadout.draw_slots(cam, stageManager.wallet.parts);
 
 	stageUI.draw();
 }
+
 void StageState::handle_events(sf::Event event) {
 	// Won't run if the stage is finished
 	stageManager.handle_events(event);
@@ -100,7 +101,6 @@ void StageState::transition_to_results_screen(float deltaTime) {
 	// Will add animation of the results screen opening when I can actually draw and animation
 	// For now, just pop the results onscreen after the stageUI is done sliding offscreen
 	if (t >= 1.f) {
-		std::cout << Printing::vec2(stageUI.resultsScreen.resultsMenu.getPosition()) << std::endl;
 		stageUI.resultsScreen.activate();
 
 		// At this points, we do nothing but wait for the pLAyer to click a button to move on
@@ -228,6 +228,8 @@ void StageState::start_stage_phase(const StageEnterData* stageEntry) {
 	cam.change_lock(false);
 }
 void StageState::restart_stage_phase() {
+	std::cout << "restarting stage" << std::endl;
+
 	nlohmann::json stageJson = StageConfig::getStageJson(curStageID);
 	stageManager.create_stage(stageJson, curStagePhase, inPracticeMode);
 	stageManager.stage->onStageCompletion = [this](bool victorious) {

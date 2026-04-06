@@ -5,6 +5,8 @@
 
 
 UnitType UnitStats::convert_string_to_type(std::string_view str) {
+    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+
     static const std::unordered_map<std::string, UnitType> typeMap = {
         {"typeless", UnitType::TYPELESS},
         {"steel", UnitType::STEEL},

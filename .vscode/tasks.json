@@ -1,0 +1,28 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cmake",
+			"label": "CMake: configure",
+			"command": "configure",
+			"args":[
+				"/EHsc",
+                "Deep Dark.cpp",
+
+				"/I", "C:\\Users\\amaec\\source\\SFML-3.0.0\\include",
+
+                "/link",
+                "/LIBPATH:C:\\Users\\amaec\\source\\SFML-3.0.0\\lib",
+                "sfml-graphics-d.lib",
+                "sfml-window-d.lib",
+                "sfml-system-d.lib"
+			],
+			"problemMatcher": ["$msCompile"],
+			"detail": "CMake template configure task",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		}
+	]
+}

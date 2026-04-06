@@ -37,6 +37,14 @@ namespace Converting {
     inline int cast_i(T var) {
         return static_cast<int>(var);
     }
+    template<typename T>
+    inline sf::Vector2i cast_Vec2i(sf::Vector2<T> vec) {
+        return new sf::Vector2i(static_cast<int>(vec.x), static_cast<int>(vec.y));
+    }
+    template<typename T>
+    inline sf::Vector2f cast_Vec2f(sf::Vector2<T> vec) {
+        return new sf::Vector2f(static_cast<float>(vec.x), static_cast<float>(vec.y));
+    }
 }
 namespace Printing {
     // Wrap a string in square brakets []
@@ -210,5 +218,20 @@ namespace Visual {
         Screen::setFontSize(text, height);
 
         if (center) centerText(text);
+    }
+}
+namespace Arrays {
+    template<int SIZE>
+    inline std::array<sf::Text, SIZE> createTextArr() {
+        std::array<sf::Text, SIZE> arr;
+        for (auto& text : arr)
+            text.setFont(baseFont);
+        return arr;
+
+        /*
+        return[&]<std::size_t... I>(std::index_sequence<I...>) {
+            return std::array<sf::Text, SIZE>{ (void(I), sf::Text(baseFont))... };
+        }(std::make_index_sequence<SIZE>{});
+        */
     }
 }

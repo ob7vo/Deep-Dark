@@ -12,7 +12,7 @@ namespace UnitConfig {
 	/// <summary> Get only the general folder of the Unit </summary>
 	std::string getUnitFolderPath(int id);
 	/// <summary> Get the specific unit files. (The ID folder path + the gear folder) </summary>
-	std::string getUnitGearPath(int id, int gear, bool throwError = true);
+	std::string getUnitFullPath(int id, int gear, bool throwError = true);
 	nlohmann::json createUnitJson(int id, int gear);
 	nlohmann::json createSummonJson(int id);
 	sf::Texture createSlotTexture(int id, int gear);
@@ -20,7 +20,7 @@ namespace UnitConfig {
 	int getMaxGear(int id, bool useEnemyCheck = false);
 
 	// Overloads
-	std::string getUnitGearPath(std::pair<int, int> unit);
+	std::string getUnitFullPath(std::pair<int, int> unit);
 	nlohmann::json createUnitJson(std::pair<int, int> unit);
 	sf::Texture createSlotTexture(std::pair<int, int> unit);
 

@@ -76,7 +76,7 @@ void StagePreviewMenu::create_enemy_sprites(const nlohmann::json& stageSetJson) 
 		// Get and use the json for the Enemies Idle Sprite Sheet
 		// The Sprites will be of the enemy's first Idle  frame 
 		const nlohmann::json idleAnimConfig = UnitConfig::createUnitJson(id, gear)["animations"]["idle"];
-		std::string idleAnimPath = UnitConfig::getUnitGearPath(id, gear) + "idle.png";
+		std::string idleAnimPath = UnitConfig::getUnitFullPath(id, gear) + "idle.png";
 		sf::Vector2i cellSize = { idleAnimConfig["cell_size"][0], idleAnimConfig["cell_size"][1] };
 
 		Textures::loadTexture(unitTexture, idleAnimPath);

@@ -2,6 +2,7 @@
 #include "Camera.h"
 #include "TransitionID.h"
 #include <memory>
+#include <functional>
 
 struct OnStateEnterData;
 const auto M1 = sf::Mouse::Button::Left;
@@ -11,6 +12,7 @@ class GameState {
 public:
 	Camera& cam;
 	std::unique_ptr<OnStateEnterData> nextStateEnterData = nullptr;
+	std::function<sf::Text*> textBoxCallback = nullptr;
 
 	bool readyToEndState = false;
 	bool clicked = false;

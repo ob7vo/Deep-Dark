@@ -204,6 +204,15 @@
     <ClCompile Include="source\visuals\ModularAnimation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="source\debug\UnitCreatorMenu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\debug\StageCreatorMenu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\debug\DebugGameState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\game_states\GameState.h">
@@ -449,9 +458,6 @@
     <ClInclude Include="include\visuals\camera\CameraRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Class.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\menus\StageNodeMenu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -465,6 +471,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\enums\StageStatus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\debug\UnitCreatorMenu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\debug\StageCreatorMenu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\debug\DebugGameState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

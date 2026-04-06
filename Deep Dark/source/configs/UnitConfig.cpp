@@ -6,14 +6,14 @@ namespace UnitConfig {
     std::string getUnitFolderPath(int id) {
         return std::format("configs/unit_data/{}/", id);
     }
-    std::string getUnitGearPath(int id, int gear, bool throwError) {
+    std::string getUnitFullPath(int id, int gear, bool throwError) {
         if ((gear < 1 || gear > 3) && throwError)
             throw InvalidGearError(gear, id);
 
         return std::format("configs/unit_data/{}/gear{}/", id, gear);
     }
     nlohmann::json createUnitJson(int id, int gear)  {
-        const std::string path = getUnitGearPath(id, gear) + "unit_data.json";
+        const std::string path = getUnitFullPath(id, gear) + "unit_data.json";
         std::ifstream file(path);
 
         try {
@@ -37,7 +37,7 @@ namespace UnitConfig {
         }
     }
     sf::Texture createSlotTexture(int id, int gear) {
-        const std::string path = id >= 0 ? getUnitGearPath(id, gear) + "slot.png" :
+        const std::string path = id >= 0 ? getUnitFullPath(id, gear) + "slot.png" :
             "sprites/defaults/empty_slot.png";
 
         sf::Texture slotTex;
@@ -52,7 +52,7 @@ namespace UnitConfig {
         // If its an enemy
         if (id >= 100 || useEnemyCheck) {
             int gears = 1;
-            while (std::filesystem::exists(getUnitGearPath(id, gears + 1, false)))
+            while (std::filesystem::exists(getUnitFullPath(id, gears + 1, false)))
                 gears++;
 
             return gears;
@@ -61,8 +61,8 @@ namespace UnitConfig {
     }
 
     // Overloadss
-    std::string getUnitGearPath(std::pair<int, int> unit) {
-        return getUnitGearPath(unit.first, unit.second);
+    std::string getUnitFullPath(std::pair<int, int> unit) {
+        return getUnitFullPath(unit.first, unit.second);
     }
     nlohmann::json createUnitJson(std::pair<int, int> unit) {
         return createUnitJson(unit.first, unit.second);

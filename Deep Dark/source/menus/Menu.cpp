@@ -61,6 +61,8 @@ template struct ButtonManager<UI::StageUI::PauseMenu::BTN_COUNT>;
 template struct ButtonManager<UI::StageUI::ResultsScreen::BTN_COUNT>;
 template struct ButtonManager<UI::StartMenu::BTN_COUNT>;
 template struct ButtonManager<UI::Workshop::BTN_COUNT>;
+template struct ButtonManager<UI::Creator::Unit::BTN_COUNT>;
+template struct ButtonManager<UI::Creator::Stage::BTN_COUNT>;
 
 template struct Menu<UI::ArmoryMenu::BTN_COUNT>;
 template struct Menu<UI::StageSelect::BTN_COUNT>;
@@ -71,3 +73,6 @@ template struct Menu<UI::StageUI::PauseMenu::BTN_COUNT>;
 template struct Menu<UI::StageUI::ResultsScreen::BTN_COUNT>;
 template struct Menu<UI::StartMenu::BTN_COUNT>;
 template struct Menu<UI::Workshop::BTN_COUNT>;
+template struct Menu<UI::Creator::Unit::BTN_COUNT>;
+template struct Menu<UI::Creator::Stage::BTN_COUNT>;
+

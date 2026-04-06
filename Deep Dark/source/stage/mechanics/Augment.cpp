@@ -34,6 +34,8 @@ Augment Augment::from_json(AugmentType augType, const nlohmann::json& augJson) {
     return Augment(augType, val, val2, percentage, activeHits, lvl);
 }
 AugmentType Augment::string_to_augment_type(std::string_view str) {
+	std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+
 	static const std::unordered_map<std::string, AugmentType> augmentMap = {
 		{"none", AugmentType::NONE},
 		{"slow", AugmentType::SLOW},

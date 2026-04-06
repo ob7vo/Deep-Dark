@@ -197,7 +197,7 @@ namespace StageSelect {
 		{350.f,350.f},
 		{1400.f, 250.f},
 		{350.f, 1400.f}
-	} };
+	} }; 
 
 	const enum ButtonIndex : int {
 		LAST_STAGE = 3, // Button Index for the last stage
@@ -295,4 +295,51 @@ namespace Workshop {
 		COUNT,
 	};
 } // namespace Workshop
+
+namespace Creator {
+	namespace Unit {
+		constexpr int BTN_COUNT = 3;
+		constexpr int CLICKABLE_TEXT_COUNT = 12;
+
+		/*"hp": 30,
+    "knockbacks": 3,
+    "dmg": 20,
+    "speed": 15,
+    "attack_time": 0.5,
+    "sight_range": 50.0,
+    "attack_range": [ 0, 50 ],
+    "single_target": true,
+    "parts_cost": 5,
+    "recharge_timer": 2.25
+  },
+  "hurtbox": {
+    "width": 30.0,
+    "height": 30.0*/
+		// Hit Data (dmg, attack range, attack reach) are in vectors
+		
+		enum class TextIndex {
+			STATS_START = 0,
+			//ints
+			HP = 0,
+			KNOCKBACKS = 1,
+			PARTS_COST = 2,
+			// floats
+			SPEED = 3,
+			SIGHT_RANGE = 4,
+			ATTACK_COOLDOWN = 5,
+			RECHARGE_TIMER = 6,
+			// pair<int,int>
+			LANE_SIGHT = 7,
+			// bool
+			SINGLE_TARGET = 8,
+			STATS_END = 8,
+			UNIT_ID = 9,
+			UNIT_GEAR = 10,
+			UNIT_NAME = 11
+		};
+	};
+	namespace Stage {
+		constexpr int BTN_COUNT = 4;
+	};
+}
 } // namespace UI

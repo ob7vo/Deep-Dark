@@ -1,6 +1,7 @@
 #pragma once
 #include <string_view>
 #include <EnumFunctions.h>
+#include <vector>
 
 enum class AnimationEvent : std::uint32_t {
 	EMPTY_EVENT = 0,

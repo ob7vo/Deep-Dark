@@ -137,7 +137,7 @@ void AnimationClip::setup_unit_animation_map(const json& unitFile, UnitAniMap& a
     for (const auto& [animName, animData] : unitFile["animations"].items()) {
         auto [aniState, doesLoop] = get_unit_ani_state(animName);
 
-        std::string path = UnitConfig::getUnitGearPath(unitFile["unit_id"], unitFile.value("gear", 1));
+        std::string path = UnitConfig::getUnitFullPath(unitFile["unit_id"], unitFile.value("gear", 1));
         std::string fullPath = path + animName + ".png";
         Textures::loadTexture(unitTextures[curAnim], fullPath);
 
