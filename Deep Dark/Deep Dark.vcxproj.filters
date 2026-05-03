@@ -213,6 +213,12 @@
     <ClCompile Include="source\debug\DebugGameState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="source\systems\managers\TextboxManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\menus\Window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\game_states\GameState.h">
@@ -480,6 +486,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\debug\DebugGameState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\systems\managers\TextboxManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\menus\Window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

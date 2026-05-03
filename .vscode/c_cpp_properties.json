@@ -5,6 +5,7 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "C:\\Users\\amaec\\source\\SFML-3.0.0\\include"
+                
             ],
             "defines": [
                 "_DEBUG",

@@ -227,16 +227,6 @@ void WorkshopMenu::update_unit_animation(float deltaTime) {
 		create_hitbox_visualizer();
 }
 
-void WorkshopMenu::check_mouse_hover() {
-	buttonManager.check_mouse_hover(cam.getMouseScreenPos());
-}
-bool WorkshopMenu::on_mouse_press(bool isM1) {
-	return buttonManager.on_mouse_press(cam.getMouseScreenPos(), isM1);
-}
-bool WorkshopMenu::on_mouse_release(bool isM1) {
-	return true;
-}
-
 void WorkshopMenu::switch_unit_gear() {
 	unitGear = std::clamp((unitGear + 1), 1, highestGear);
 	setup_workshop_unit(unitId, unitGear);

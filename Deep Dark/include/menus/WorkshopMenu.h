@@ -56,9 +56,6 @@ struct WorkshopMenu : public Menu<UI::Workshop::BTN_COUNT> {
 	void set_team_specific_ui_visibility();
 
 	void draw() final;
-	void check_mouse_hover() final;
-	bool on_mouse_press(bool isM1) final;
-	bool on_mouse_release(bool isM1) final;
 
 	void reset_positions() final;
 	void set_unit_anim_btn_positions();

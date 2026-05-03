@@ -17,15 +17,15 @@ std::string MenuBase::GetMenuName(MenuType type) {
 }
 
 template<int BUTTONS>
-void Menu<BUTTONS>::draw() { buttonManager.draw(cam); }
+void Menu<BUTTONS>::draw() { if (visible) buttonManager.draw(cam); }
 template<int BUTTONS>
-bool Menu<BUTTONS>::on_mouse_press(bool isM1) {
+bool ButtonMenu<BUTTONS>::on_mouse_press(bool isM1) {
 	if (!clickable) return false;
 
 	return buttonManager.on_mouse_press(cam.getMouseScreenPos(), isM1);
 }
 template<int BUTTONS>
-void Menu<BUTTONS>::check_mouse_hover()  {
+void ButtonMenu<BUTTONS>::check_mouse_hover()  {
 	buttonManager.check_mouse_hover(cam.getMouseScreenPos());
 }
 
@@ -76,3 +76,14 @@ template struct Menu<UI::Workshop::BTN_COUNT>;
 template struct Menu<UI::Creator::Unit::BTN_COUNT>;
 template struct Menu<UI::Creator::Stage::BTN_COUNT>;
 
+template struct ButtonMenu<UI::ArmoryMenu::BTN_COUNT>;
+template struct ButtonMenu<UI::StageSelect::BTN_COUNT>;
+template struct ButtonMenu<UI::StageSelect::StageNode::BTN_COUNT>;
+template struct ButtonMenu<UI::ArmoryMenu::StagePreview::BTN_COUNT>;
+template struct ButtonMenu<UI::StageUI::BTN_COUNT>;
+template struct ButtonMenu<UI::StageUI::PauseMenu::BTN_COUNT>;
+template struct ButtonMenu<UI::StageUI::ResultsScreen::BTN_COUNT>;
+template struct ButtonMenu<UI::StartMenu::BTN_COUNT>;
+template struct ButtonMenu<UI::Workshop::BTN_COUNT>;
+template struct ButtonMenu<UI::Creator::Unit::BTN_COUNT>;
+template struct ButtonMenu<UI::Creator::Stage::BTN_COUNT>;

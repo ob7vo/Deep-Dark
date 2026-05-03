@@ -147,6 +147,7 @@
     <ClCompile Include="source\debug\UnitCreatorMenu.cpp" />
     <ClCompile Include="source\menus\StageNodeMenu.cpp" />
     <ClCompile Include="source\menus\StageResultsScreen.cpp" />
+    <ClCompile Include="source\menus\Window.cpp" />
     <ClCompile Include="source\saves\PlayerSaveData.cpp" />
     <ClCompile Include="source\saves\SaveSystem.cpp" />
     <ClCompile Include="Deep Dark.cpp" />
@@ -181,6 +182,7 @@
     <ClCompile Include="source\stage\main\UnitPool.cpp" />
     <ClCompile Include="source\stage\unit\Unit.cpp" />
     <ClCompile Include="source\stage\unit\UnitTween.cpp" />
+    <ClCompile Include="source\systems\managers\TextboxManager.cpp" />
     <ClCompile Include="source\visuals\camera\Camera.cpp" />
     <ClCompile Include="source\systems\observers\Observer.cpp" />
     <ClCompile Include="source\stage\main\StageManager.cpp" />
@@ -219,6 +221,7 @@
     <ClInclude Include="include\enums\TransitionID.h" />
     <ClInclude Include="include\menus\StageNodeMenu.h" />
     <ClInclude Include="include\menus\StageResultsScreen.h" />
+    <ClInclude Include="include\menus\Window.h" />
     <ClInclude Include="include\saves\PlayerSaveData.h" />
     <ClInclude Include="include\saves\SaveSystem.h" />
     <ClInclude Include="include\saves\StageSaveData.h" />
@@ -244,6 +247,7 @@
     <ClInclude Include="include\stage\mechanics\StageRestrictions.h" />
     <ClInclude Include="include\stage\mechanics\UnitMoveRequest.h" />
     <ClInclude Include="include\configs\UnitConfigConstants.h" />
+    <ClInclude Include="include\systems\managers\TextboxManager.h" />
     <ClInclude Include="include\systems\observers\Scheduler.h" />
     <ClInclude Include="include\systems\observers\UnitAbilityObserver.h" />
     <ClInclude Include="include\utilities\main\CustomErrors.hpp" />

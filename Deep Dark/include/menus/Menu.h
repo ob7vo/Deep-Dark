@@ -3,7 +3,6 @@
 #include <SFML/Graphics/Font.hpp>
 #include "ButtonManager.h"
 #include "UILayout.h"
-#include <functional>
 
 const sf::Font baseFont("fonts/KOMIKAX_.ttf");
 
@@ -20,10 +19,6 @@ struct MenuBase
 {
 	Camera& cam;
 
-	std::function<void(sf::Text*)> textBoxCallback;
-	/// <summary> Used to revert text box when an invalid string is inputted </summary>
-	std::string prevTextBoxStr;
-
 	bool paused = false;
 	bool visible = true;
 	bool clickable = true;
@@ -36,7 +31,6 @@ struct MenuBase
 	virtual bool on_mouse_press(bool isM1) = 0; 
 	virtual bool on_mouse_release(bool isM1) { return true; }
 	virtual void check_mouse_hover() = 0;
-	virtual void on_text_submit(sf::Text* textPtr) {};
 
 	virtual void reset_positions() = 0;
 	virtual void slide(float t) {};
@@ -53,17 +47,23 @@ struct MenuBase
 };
 
 template<int BUTTONS>
-struct Menu : public MenuBase
+struct ButtonMenu : public MenuBase
 {
 	ButtonManager<BUTTONS> buttonManager;
+	explicit ButtonMenu(Camera& cam) : MenuBase(cam) {}
 
-	explicit Menu(Camera& cam) : MenuBase(cam) {};
+	// Virtual with default — subclasses can extend
+	bool on_mouse_press(bool isM1) override;
+	bool on_mouse_release(bool isM1) override { return true; }
+	void check_mouse_hover() override;
+};
+
+template<int BUTTONS>
+struct Menu : public ButtonMenu<BUTTONS>
+{
+	explicit Menu(Camera& cam) : ButtonMenu<BUTTONS>(cam) {};
 	~Menu() override = default;
 
 	void draw() override;
-	/// <summary>Return value prevents camera drag when buttons are clicked</summary>
-	bool on_mouse_press(bool isM1) override;
-	inline bool on_mouse_release(bool isM1) override { return true; }
-	void check_mouse_hover() override;
 };
 

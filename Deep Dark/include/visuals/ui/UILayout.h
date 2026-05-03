@@ -300,42 +300,34 @@ namespace Creator {
 	namespace Unit {
 		constexpr int BTN_COUNT = 3;
 		constexpr int CLICKABLE_TEXT_COUNT = 12;
-
-		/*"hp": 30,
-    "knockbacks": 3,
-    "dmg": 20,
-    "speed": 15,
-    "attack_time": 0.5,
-    "sight_range": 50.0,
-    "attack_range": [ 0, 50 ],
-    "single_target": true,
-    "parts_cost": 5,
-    "recharge_timer": 2.25
-  },
-  "hurtbox": {
-    "width": 30.0,
-    "height": 30.0*/
-		// Hit Data (dmg, attack range, attack reach) are in vectors
 		
+		constexpr sf::Vector2f MULTI_HIT_DATA_POS = { 0.0f, 0.0f };
+		// How far the clickable text is from the Stat Icons
+		constexpr sf::Vector2f MULTI_HIT_DATA_TEXT_OFFSET = { 0.0f, 0.0f };
+		constexpr sf::Vector2f MULTI_HIT_DATA_SPACING = { 0.0f, 0.0f };
+
 		enum class TextIndex {
-			STATS_START = 0,
 			//ints
-			HP = 0,
-			KNOCKBACKS = 1,
-			PARTS_COST = 2,
+			UNIT_ID = 0,
+			UNIT_GEAR = 1,
+			HP = 2,
+			KNOCKBACKS = 3,
+			PARTS_COST = 4,
 			// floats
-			SPEED = 3,
-			SIGHT_RANGE = 4,
-			ATTACK_COOLDOWN = 5,
-			RECHARGE_TIMER = 6,
+			SPEED = 5,
+			SIGHT_RANGE = 6,
+			ATTACK_COOLDOWN = 7,
+			RECHARGE_TIMER = 8,
+			HITBOX_WIDTH = 9,
+			HITBOX_HEIGHT = 10,
 			// pair<int,int>
-			LANE_SIGHT = 7,
+			LANE_SIGHT = 11,
 			// bool
-			SINGLE_TARGET = 8,
-			STATS_END = 8,
-			UNIT_ID = 9,
-			UNIT_GEAR = 10,
-			UNIT_NAME = 11
+			SINGLE_TARGET = 12,
+			UNIT_NAME = 13
+		};
+		enum class ButtonIndex {
+			ADD_MULTI_HIT = 0
 		};
 	};
 	namespace Stage {
