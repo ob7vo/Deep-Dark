@@ -1,0 +1,21 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug DeepDark",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/home/deck/Desktop/vs-code-projects/Deep-Dark/build/DeepDark",
+            "args": [],
+            "cwd": "/home/deck/Desktop/vs-code-projects/Deep-Dark/build",
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing",
+                    "text": "-enable-pretty-printing"
+                }
+            ]
+        }
+    ]
+}

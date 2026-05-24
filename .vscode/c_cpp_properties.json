@@ -1,22 +1,35 @@
 {
     "configurations": [
         {
-            "name": "Win32",
+            "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**",
-                "C:\\Users\\amaec\\source\\SFML-3.0.0\\include"
-                
+                "${workspaceFolder}/Deep_Dark/include",
+                "${workspaceFolder}/Deep_Dark/include/configs",
+                "${workspaceFolder}/Deep_Dark/include/enums",
+                "${workspaceFolder}/Deep_Dark/include/game_states",
+                "${workspaceFolder}/Deep_Dark/include/menus",
+                "${workspaceFolder}/Deep_Dark/include/saves",
+                "${workspaceFolder}/Deep_Dark/include/stage/entities",
+                "${workspaceFolder}/Deep_Dark/include/stage/main",
+                "${workspaceFolder}/Deep_Dark/include/stage/mechanics",
+                "${workspaceFolder}/Deep_Dark/include/stage/unit",
+                "${workspaceFolder}/Deep_Dark/include/systems",
+                "${workspaceFolder}/Deep_Dark/include/systems/managers",
+                "${workspaceFolder}/Deep_Dark/include/systems/observers",
+                "${workspaceFolder}/Deep_Dark/include/utilities",
+                "${workspaceFolder}/Deep_Dark/include/utilities/main",
+                "${workspaceFolder}/Deep_Dark/include/visuals",
+                "${workspaceFolder}/Deep_Dark/include/visuals/camera",
+                "${workspaceFolder}/Deep_Dark/include/visuals/textures",
+                "${workspaceFolder}/Deep_Dark/include/visuals/ui",
+                "/home/deck/Desktop/vs-code-projects/SFML-3.1.0/include"
             ],
-            "defines": [
-                "_DEBUG",
-                "UNICODE",
-                "_UNICODE"
-            ],
-            "windowsSdkVersion": "10.0.26100.0",
-            "compilerPath": "cl.exe",
+            "defines": [],
+            "compilerPath": "/usr/bin/g++",
             "cStandard": "c17",
-            "cppStandard": "c++17",
-            "intelliSenseMode": "windows-msvc-x64"
+            "cppStandard": "c++20",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+            "intelliSenseMode": "linux-gcc-x64"        
         }
     ],
     "version": 4
