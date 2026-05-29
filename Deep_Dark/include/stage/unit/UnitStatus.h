@@ -32,7 +32,7 @@ struct UnitStatus {
     /// <param name="fromLink"></param> Needed to avoid multiple linkers infintely repeating links
     void process_new_status_effect(const Augment& aug, bool linked = false);
     void add_status_effect(const StatusEffect& statusEffect);
-    void apply_on_hit_effects(const std::vector<Augment>& augments, int hitIndex);
+    void apply_on_hit_status_effects(const std::vector<Augment>& augments, int hitIndex);
     void trigger_health_threshold_augments(); // called after taking damage
     void link_augment(const Augment& status);
     void update_status_effects(float deltaTime);

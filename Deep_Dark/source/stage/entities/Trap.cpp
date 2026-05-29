@@ -18,7 +18,7 @@ Trap::Trap(const nlohmann::json& trap, sf::Vector2f pos, int lane) : StageEntity
 	if (trap.contains("augment")) {
 		AugmentType augType = Augment::string_to_augment_type(trap["augment"]["augment_type"].get<std::string>());
 		float statusTime = trap["augment"]["status_time"];
-		aug = Augment::status(augType, statusTime);
+		aug = Augment::create_status(augType, statusTime);
 	}
 
 	animating = false;

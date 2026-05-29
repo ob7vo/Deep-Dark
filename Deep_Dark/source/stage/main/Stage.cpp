@@ -59,8 +59,8 @@ Stage::Stage(const json& stagePhaseJson, StageRecord* rec) : unitPool(this), uni
 		enemySpawners[i].create_unit_data(stagePhaseJson["enemy_spawns"][i]);
 
 		for (const auto& aug : enemySpawners[i].enemyStats.augments)
-			if (has(aug.augType & AugmentType::PROJECTILE))
-				projDataMap[aug.intValue] = ProjectileData(aug.intValue, enemySpawners[i].unitMagnification);
+			if (has(aug.augType & AugmentType::PROJECTILE) && !projDataMap.contains(aug.data.projectile.id))
+				projDataMap[aug.data.projectile.id] = ProjectileData(aug.data.projectile.id, enemySpawners[i].unitMagnification);
 	}
 	
 	break_spawner_thresholds();
@@ -197,7 +197,7 @@ void Stage::try_revive_unit(UnitSpawner* spawner) {
 	Unit* newUnit = create_unit(spawner->laneInd, spawner->stats, spawner->aniMap);
 
 	if (newUnit) {
-		auto newHp = (int)((float)spawner->stats->maxHp * spawner->stats->get_augment(AugmentType::CLONE)->value);
+		auto newHp = (int)((float)spawner->stats->maxHp * spawner->stats->get_augment(AugmentType::CLONE)->data.unitSpawn.id);
 
 		newUnit->status.hp = newHp;
 		// Doing this will update the Units knockback index
@@ -208,10 +208,11 @@ void Stage::try_revive_unit(UnitSpawner* spawner) {
 		newUnit->anim.start(UnitAnimationState::MOVE);
 	}
 }
-void Stage::transform_unit(const Unit& unit) {
-	float magnification = unit.stats->get_augment(AugmentType::TRANSFORM)->value;
-	
-	if (auto transformation = get_unit_config(unit.stats->id, magnification, UnitSpawnType::TRANSFORMATION)) {
+//WORK THIS OUT
+void Stage::transfrm_unit(const Unit& unit) {	
+	// I guess I made a temp config to transform the unit to this units next gear
+	// Gears dont exist anymore though. make this its own union data in Augment
+	if (auto transformation = get_unit_config(unit.stats->id, 1.f, UnitSpawnType::TRANSFORMATION)) {
 		Unit* transformedUnit = create_unit(unit.get_lane(), unit.stats, unit.anim.get_ani_map());
 
 		if (transformedUnit) {

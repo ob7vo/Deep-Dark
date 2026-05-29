@@ -87,6 +87,7 @@ AnimationEvent Surge::update_animation(Stage& stage, float deltaTime) {
 
 //Check
 bool Surge::valid_target(const Unit& unit) const {
+	// Short handing conditions forif an enemy unit can be attacked
 	return !already_hit_unit(unit.spawnID) && !unit.anim.invincible()
 		&& in_range(unit.movement.pos.x);
 }
@@ -95,7 +96,8 @@ bool Surge::valid_target(const Unit& unit) const {
 bool Surge::try_terminate_unit(const Unit& enemyUnit, int dmg) const{
 	if (!stats->has_augment(AugmentType::TERMINATE)) return false;
 
-	float threshold = stats->get_augment(AugmentType::TERMINATE)->value;
+	// Kill unit if under the health threshold
+	float threshold = stats->get_augment(AugmentType::TERMINATE)->data.onHPThreshold.hpPercentage;
 	float curHpPercent = (float)(enemyUnit.status.hp - dmg) / (float)enemyUnit.stats->maxHp;
 
 	return curHpPercent <= threshold;
@@ -148,9 +150,9 @@ int Surge::calculate_damage_and_effects(Unit& unit) const {
 	dmg *= unit.status.get_corrosion_multiplier();
 	dmg *= unit.status.get_reinforcement_multiplier();
 
-	// If the surge targets the unit's trait, run its damage-augments
+	// If the surge targets the unit's trait, run its on hit-augments
 	if (unit.is_targeted(stats->targetTypes)) {
-		unit.status.apply_on_hit_effects(stats->augments, hitIndex);
+		unit.status.apply_on_hit_status_effects(stats->augments, hitIndex);
 		dmg *= unit.status.calculate_damage_boost(stats->augments);
 	}
 
@@ -165,7 +167,7 @@ int Surge::calculate_damage_and_effects(Unit& unit) const {
 	// so they are run after all calculations
 	if (unit.is_targeted(stats->targetTypes)) {
 		if (stats->try_proc_augment(AugmentType::VOID, hitIndex))
-			dmg += (float)unit.stats->maxHp * stats->get_augment(AugmentType::VOID)->value;
+			dmg += (float)unit.stats->maxHp * stats->get_augment(AugmentType::VOID)->data.general.magnitude;
 		if (try_terminate_unit(unit, dmg))
 			dmg += (float)unit.stats->maxHp;
 	}

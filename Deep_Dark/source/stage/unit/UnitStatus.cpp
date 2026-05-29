@@ -15,7 +15,7 @@ void UnitStatus::setup(const UnitStats* stats) {
 	kbIndex = 1;
 
 	if (auto shield = stats->get_augment(AugmentType::SHIELD))
-		shieldHp = static_cast<int>(shield->value);
+		shieldHp = static_cast<int>(shield->data.sheild.hp);
 	else shieldHp = 0;
 
 	//tries to get augment to flip status mask. If it doesnt have the Augment,
@@ -36,9 +36,9 @@ float UnitStatus::calculate_damage_reduction(const std::vector<Augment>& augment
 		if (!augment.is_damage_modifier()) continue;
 
 		if (has(augment.augType & AugmentType::RESIST))
-			boost *= augment.percentage;
+			boost *= augment.data.damage.dmgMultiplier;
 		else if (has(augment.augType & AugmentType::SUPERIOR))
-			boost /= augment.percentage;
+			boost /= augment.data.damage.dmgMultiplier;
 	}
 
 	return boost;
@@ -48,9 +48,9 @@ float UnitStatus::calculate_damage_boost(const std::vector<Augment>& augments) c
 
 	for (const Augment& augment : augments) {
 		if (augment.is_damage_modifier())
-			boost *= augment.percentage;
+			boost *= augment.data.damage.dmgMultiplier;
 		else if (has(augment.augType & AugmentType::CRITICAL)
-			&& Random::chance(augment.percentage))
+			&& Random::chance(augment.activationChance))
 			boost *= 2;
 	}
 	
@@ -68,7 +68,7 @@ int UnitStatus::calculate_damage_and_effects(const Unit& attacker) {
 
 	// If the ATTACKING Unit targets this unit's trait, run its damage-augments
 	if (owner.targeted_by_unit(attacker)) {
-		apply_on_hit_effects(attacker.stats->augments, attacker.combat.hitIndex);
+		apply_on_hit_status_effects(attacker.stats->augments, attacker.combat.hitIndex);
 		dmg *= calculate_damage_boost(attacker.stats->augments);
 	}
 
@@ -85,7 +85,7 @@ int UnitStatus::calculate_damage_and_effects(const Unit& attacker) {
 	if (owner.targeted_by_unit(attacker)) {
 		// Run VOID check
 		if (attacker.stats->try_proc_augment(AugmentType::VOID, attacker.combat.hitIndex))
-			dmg += (float)owner.stats->maxHp * attacker.stats->get_augment(AugmentType::VOID)->value;
+			dmg += (float)owner.stats->maxHp * attacker.stats->get_augment(AugmentType::VOID)->data.general.magnitude;
 		// Run TERMINATE check
 		if (attacker.combat.try_terminate_unit(owner, dmg))
 			dmg += (float)owner.stats->maxHp;
@@ -111,8 +111,10 @@ void UnitStatus::process_new_status_effect(const Augment& aug, bool fromLink) {
 		std::cout << "Augment type was not a status. Cannot add effect" << std::endl;
 		return;
 	}
-
-	StatusEffect newEffect(aug.augType, aug.value2, aug.value);
+	
+	float duration = aug.is_negative_status() ? aug.data.status.duration : 9999.f;
+	StatusEffect newEffect(aug.augType, aug.get_magnitude(), duration);
+	
 	add_status_effect(newEffect);
 
 	if (!fromLink && has(owner.stats->augmentsMask, AugmentType::LINK))
@@ -146,8 +148,7 @@ void UnitStatus::trigger_health_threshold_augments() {
 	float hpPercentage = static_cast<float>(hp) / static_cast<float>(owner.stats->maxHp);
 
 	for (const auto& augment : owner.stats->augments) {
-		if ((has(augment.augType, AugmentType::SCOPE), has(augment.augType, AugmentType::REINFORCE))
-			&& hpPercentage <= augment.value) {
+		if (augment.activates_via_health_threshold() && hpPercentage <= augment.data.onHPThreshold.hpPercentage) {
 			process_new_status_effect(augment);
 		}
 	}
@@ -198,10 +199,10 @@ void UnitStatus::update_status_effects(float deltaTime) {
 		}
 	}
 }
-void UnitStatus::apply_on_hit_effects(const std::vector<Augment>& augments,int attackersHitIndex) {
+void UnitStatus::apply_on_hit_status_effects(const std::vector<Augment>& augments,int attackersHitIndex) {
 	// called from attacked Unit, parameters are from the attackING unit.
 	for (const Augment& augment : augments) {
-		if (can_proc_status(augment, attackersHitIndex) && Random::chance(augment.percentage)) {
+		if (can_proc_status(augment, attackersHitIndex) && Random::chance(augment.activationChance)) {
 			process_new_status_effect(augment);
 		}
 	}
@@ -258,7 +259,7 @@ bool UnitStatus::take_damage(int dmg, bool shove) {
 	trigger_health_threshold_augments();
 
 	if (!owner.anim.in_knockback() && met_knockback_threshold(oldHp)) {
-		shieldHp = (int)owner.stats->get_augment(AugmentType::SHIELD)->value;
+		shieldHp = (int)owner.stats->get_augment(AugmentType::SHIELD)->data.sheild.hp;
 		owner.movement.knockback();
 	}
 	else if (shove) owner.movement.knockback(0.5f);
@@ -298,7 +299,7 @@ bool UnitStatus::try_proc_survive() {
 	return false;
 }
 void UnitStatus::syphon(const Augment* syphon) {
-	int prevKbIndex = std::max(kbIndex - (int)syphon->value, 1);
+	int prevKbIndex = std::max(kbIndex - (int)syphon->data.killStreak.effectMagnitude, 1);
 	int prevThroshold = owner.stats->maxHp - (owner.stats->maxHp * prevKbIndex / owner.stats->knockbacks);
 	
 	hp = prevThroshold + 1;
