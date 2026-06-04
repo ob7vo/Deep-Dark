@@ -87,6 +87,7 @@ AnimationEvent Surge::update_animation(Stage& stage, float deltaTime) {
 
 //Check
 bool Surge::valid_target(const Unit& unit) const {
+	// Short handing conditions forif an enemy unit can be attacked
 	return !already_hit_unit(unit.spawnID) && !unit.anim.invincible()
 		&& in_range(unit.movement.pos.x);
 }
@@ -95,7 +96,8 @@ bool Surge::valid_target(const Unit& unit) const {
 bool Surge::try_terminate_unit(const Unit& enemyUnit, int dmg) const{
 	if (!stats->has_augment(AugmentType::TERMINATE)) return false;
 
-	float threshold = stats->get_augment(AugmentType::TERMINATE)->value;
+	// Kill unit if under the health threshold
+	float threshold = stats->get_augment(AugmentType::TERMINATE)->data.onHPThreshold.hpPercentage;
 	float curHpPercent = (float)(enemyUnit.status.hp - dmg) / (float)enemyUnit.stats->maxHp;
 
 	return curHpPercent <= threshold;
@@ -110,7 +112,7 @@ void Surge::on_kill(Unit& unit) const {
 };
 void Surge::attack_units(Stage& stage) {
 	// lane is froms tage (passed in)
-	const auto& enemyUnitIndexes = stage.lanes[laneInd].getOpponentUnits(stats->team);
+	const auto& enemyUnitIndexes = stage.lanes[laneIdx].getOpponentUnits(stats->team);
 	std::vector<size_t> enemiesToAttack;
 
 	// Add in units to attack AFTER this loop to make Surge Blocking
@@ -142,30 +144,29 @@ void Surge::attack_units(Stage& stage) {
 			on_kill(enemyUnit);
 	}
 }
-int Surge::calculate_damage_and_effects(Unit& unit) const {
+int Surge::calculate_damage_taken_and_apply_augments(Unit& unit) const {
 	float dmg = (float)get_dmg();
 
 	dmg *= unit.status.get_corrosion_multiplier();
 	dmg *= unit.status.get_reinforcement_multiplier();
 
-	// If the surge targets the unit's trait, run its damage-augments
-	if (unit.is_targeted(stats->targetTypes)) {
-		unit.status.apply_on_hit_effects(stats->augments, hitIndex);
-		dmg *= unit.status.calculate_damage_boost(stats->augments);
-	}
-
 	// If the unit targets the surge's trait, run its defense-augments
 	if (targeted_by_unit(unit.stats->targetTypes))
-		dmg *= unit.status.calculate_damage_reduction(unit.stats->augments);
+		for (const Augment& augment : unit.stats->augments) {
+			if (has(augment.augType & AugmentType::RESIST))
+				dmg *= augment.data.damage.dmgMultiplier;
+		}
 
-	// if the unit has a shield and it did not break, then return.
-	if (unit.status.has_shield_up() && !unit.status.damage_shield(dmg, stats)) return 0;
 
-	// These effects are based around the Unit's current HP, 
-	// so they are run after all calculations
 	if (unit.is_targeted(stats->targetTypes)) {
+		unit.status.apply_on_hit_status_effects(stats->augments, hitIndex);
+		dmg *= unit.status.calculate_damage_boost(stats->augments);
+
+		// These effects are based around the Unit's current HP, 
+		// so they are run after all calculations
+
 		if (stats->try_proc_augment(AugmentType::VOID, hitIndex))
-			dmg += (float)unit.stats->maxHp * stats->get_augment(AugmentType::VOID)->value;
+			dmg += (float)unit.stats->maxHp * stats->get_augment(AugmentType::VOID)->data.general.magnitude;
 		if (try_terminate_unit(unit, dmg))
 			dmg += (float)unit.stats->maxHp;
 	}

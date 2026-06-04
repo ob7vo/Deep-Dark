@@ -13,7 +13,6 @@ struct UnitStatus {
     Unit& owner;
 
     int hp = 0;
-    int shieldHp = 0;
     int kbIndex = 1;
 
     std::vector<StatusEffect> activeStatuses = {};
@@ -24,15 +23,14 @@ struct UnitStatus {
 
     void setup(const UnitStats* stats);
 
-    float calculate_damage_reduction(const std::vector<Augment>& augments) const;
     float calculate_damage_boost(const std::vector<Augment>& augments) const;
-    int calculate_damage_and_effects(const Unit& attackingUnit);
+    int calculate_damage_taken_and_apply_augments(const Unit& attackingUnit);
 
     /// <summary> Process an augment to turn it to a status affect </summary>
     /// <param name="fromLink"></param> Needed to avoid multiple linkers infintely repeating links
     void process_new_status_effect(const Augment& aug, bool linked = false);
     void add_status_effect(const StatusEffect& statusEffect);
-    void apply_on_hit_effects(const std::vector<Augment>& augments, int hitIndex);
+    void apply_on_hit_status_effects(const std::vector<Augment>& augments, int hitIndex);
     void trigger_health_threshold_augments(); // called after taking damage
     void link_augment(const Augment& status);
     void update_status_effects(float deltaTime);
@@ -40,7 +38,6 @@ struct UnitStatus {
     /// <summary> Gets the matching active status effect if there is one </summary>
     std::optional<StatusEffect> get_status_effect(AugmentType effType) const;
 
-    bool damage_shield(int dmg, const UnitStats* _stats = nullptr);
     bool take_damage(const Unit& attackingUnit);
     bool take_damage(const Surge& surge);
     bool take_damage(int dmg, bool shove = false);
@@ -53,7 +50,6 @@ struct UnitStatus {
     inline bool can_transform() const { return has(statusFlags & AugmentType::TRANSFORM); }
 
     // Health
-    inline bool has_shield_up() const { return shieldHp > 0; }
     inline bool dead() const { return hp <= 0; }
 
     // Status Conditions

@@ -18,7 +18,7 @@ Trap::Trap(const nlohmann::json& trap, sf::Vector2f pos, int lane) : StageEntity
 	if (trap.contains("augment")) {
 		AugmentType augType = Augment::string_to_augment_type(trap["augment"]["augment_type"].get<std::string>());
 		float statusTime = trap["augment"]["status_time"];
-		aug = Augment::status(augType, statusTime);
+		aug = Augment::create_status(augType, statusTime);
 	}
 
 	animating = false;
@@ -41,10 +41,10 @@ bool Trap::valid_attack_target(const Unit& unit) const {
 		!unit.anim.invincible();
 }
 bool Trap::enemy_in_trigger_range(Stage& stage) const{
-	for (const auto& index : stage.lanes[laneInd].enemyUnitIndexes)
+	for (const auto& index : stage.lanes[laneIdx].enemyUnitIndexes)
 		if (in_trigger_range(stage.getUnit(index)))
 			return true;
-	for (const auto& index : stage.lanes[laneInd].playerUnitIndexes)
+	for (const auto& index : stage.lanes[laneIdx].playerUnitIndexes)
 		if (in_trigger_range(stage.getUnit(index)))
 			return true;
 	return false;
@@ -91,7 +91,7 @@ void Trap::action(Stage& stage) {
 
 #pragma region Trap Actions
 void Trap::trigger_launch_pad(Stage& stage) const {
-	const Lane& lane = stage.lanes[laneInd];
+	const Lane& lane = stage.lanes[laneIdx];
 
 	for (const auto& index : lane.enemyUnitIndexes) {
 		auto& unit = stage.getUnit(index);
@@ -105,7 +105,7 @@ void Trap::trigger_launch_pad(Stage& stage) const {
 	}
 }
 void Trap::trigger_trap_door(Stage& stage) {
-	Lane& lane = stage.lanes[laneInd];
+	Lane& lane = stage.lanes[laneIdx];
 
 	if (!triggered) {
 		lane.gaps.emplace_back(attackRange);
@@ -118,8 +118,8 @@ void Trap::trigger_trap_door(Stage& stage) {
 	triggered = !triggered;
 }
 void Trap::trigger_attack(Stage& stage) const {
-	attack_lane(stage, stage.lanes[laneInd].enemyUnitIndexes);
-	attack_lane(stage, stage.lanes[laneInd].playerUnitIndexes);
+	attack_lane(stage, stage.lanes[laneIdx].enemyUnitIndexes);
+	attack_lane(stage, stage.lanes[laneIdx].playerUnitIndexes);
 }
 void Trap::attack_lane(Stage& stage, const std::vector<size_t>& unitIndexes) const {
 	for (const auto& index : unitIndexes) {

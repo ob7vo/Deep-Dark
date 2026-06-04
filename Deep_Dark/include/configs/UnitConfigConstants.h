@@ -47,12 +47,21 @@ namespace UnitConfig {
 	const float FALL_DURATION = 1.0f; // How long it takes to fall through lanes
 	const float SQUASH_DURATION = 1.0f;
 	const float LAUNCH_DISTANCE = 75.f;
-	const float LAUNCH_DURATION = .45f;
-	const float DROP_FROM_LAUNCH_DURATION = .525f;
+	const float LAUNCH_TWEEN_DURATION = .45f;
+	const float DROP_FROM_LAUNCH_TWEEN_DURATION = .525f;
 
 	const float LEDGE_SNAP = 25.0f;
-	const float JUMP_DURATION = 1.f;
-	const float LEAP_DURATION = 0.7f;
+	const float JUMP_TWEEN_DURATION = 1.f;
+	const float LEAP_TWEEN_DURATION = 0.7f;
+
+	const float DROP_FROM_WARP_TWEEN_DURATION = .35f;
+	// Distance under the lanes when a unit is warped below lane 0
+	const float WARP_UNDER_LANES_DISTANCE = 50.f; 
+	const float WARP_ABOVE_LANES_DISTANCE = 75.f;
+	// Percentage of max HP taken as damage when falling from a warp
+	const float WARP_BASE_FALL_DAMAGE_PERCENTAGE = 0.33f;
+	// Additional percentage of max HP taken as damage for every lane fallen past the first one
+	const float WARP_FALL_DAMAGE_PER_LANE = 0.15f; 
 
 	inline bool isEnemy(int unitID) { return unitID >= 100; }
 	inline int GetUpgradeCost(int curLevel) { 

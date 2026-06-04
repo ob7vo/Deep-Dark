@@ -26,7 +26,7 @@ void UnitTween::update(sf::Vector2f& unitPos, float deltaTime) {
 }
 sf::Vector2f UnitTween::getEasedT() const {
 	float t = elapsedTime / duration;
-	const auto& [easeX, easeY] = unitTweenEasings[static_cast<int>(tweenType)];
+	const auto& [easeX, easeY] = unitTweenEasings.at(tweenType);
 
 	float tX = easeFuncArr[static_cast<int>(easeX)](t);
 	float tY = easeFuncArr[static_cast<int>(easeY)](t);

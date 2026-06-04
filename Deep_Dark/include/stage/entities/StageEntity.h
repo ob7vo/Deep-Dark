@@ -11,7 +11,7 @@ struct StageEntity {
 	AnimationPlayer animPlayer;
 	sf::Sprite sprite;
 
-	int laneInd = 0;
+	int laneIdx = 0;
 	sf::Vector2f pos;
 
 	StageEntity(sf::Vector2f _pos, int _lane);

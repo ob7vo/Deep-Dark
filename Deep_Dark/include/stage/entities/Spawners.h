@@ -23,7 +23,7 @@ struct UnitSpawner : public StageEntity {
 
 struct SurgeSpawner : public StageEntity {
 	const UnitStats* stats;
-	const Augment surge;
+	const Augment surgeAugment;
 
 	AnimationClip animClip;
 

@@ -16,7 +16,7 @@ class Unit;
 struct Stage;
 struct Lane;
 
-struct Surge : public StageEntity
+struct Surge : public StageEntity 
 {
 	bool createdByCannon = false;
 
@@ -37,7 +37,7 @@ struct Surge : public StageEntity
 
 	void attack_units(Stage& stage);
 	void on_kill(Unit& enemyUnit) const;
-	int calculate_damage_and_effects(Unit& unit) const;
+	int calculate_damage_taken_and_apply_augments(Unit& unit) const;
 	bool try_terminate_unit(const Unit& enemyUnit, int dmg = 0) const;
 		
 	bool valid_target(const Unit& unit) const;

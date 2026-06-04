@@ -10,13 +10,17 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
-#include <math.h>
+#include <cmath>
+#include <random>
 #include <format>
 #include <ranges>
 #include <CustomErrors.hpp>
 
 // Data Types
 #include <json.hpp>
+#include <string>
+#include <string_view>
+#include <optional>
 #include <memory>
 #include <map>
 #include <unordered_map>

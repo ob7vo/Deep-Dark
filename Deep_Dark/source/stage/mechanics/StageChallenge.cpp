@@ -6,7 +6,7 @@ StageChallenge::StageChallenge(const nlohmann::json& chalJson) :
 	description(chalJson.value("description", "")),
 	cleared(chalJson.value("clear_state_at_start", false)),
 	value(chalJson.value("value", 0)),
-	laneInd(chalJson.value("lane", -1)),
+	laneIdx(chalJson.value("lane", -1)),
 	challengeType(get_challenge_type(chalJson["challenge_type"])),
 	comparison(get_comparison_type(chalJson["comparison"].get<std::string>()[0])),
 	team(chalJson.value("team", 0))
@@ -63,11 +63,11 @@ const int* StageChallenge::get_target_ptr(const StageManager& manager) const {
 
 	switch (challengeType) {
 	case ChallengeType::UNIT_DEATHS:
-		if (laneInd <= 0 || laneInd >= rec.deaths.size()) return &rec.totalDeaths;
-		else return &rec.deaths[laneInd];
+		if (laneIdx <= 0 || laneIdx >= rec.deaths.size()) return &rec.totalDeaths;
+		else return &rec.deaths[laneIdx];
 	case ChallengeType::UNITS_SPAWNED:
-		if (laneInd <= 0 || laneInd >= rec.deaths.size()) return &rec.totalSpawns;
-		else return &rec.unitsSpawned[laneInd];
+		if (laneIdx <= 0 || laneIdx >= rec.deaths.size()) return &rec.totalSpawns;
+		else return &rec.unitsSpawned[laneIdx];
 	case ChallengeType::DEATHS_VIA_FALLING:
 		return &rec.deathsByFalling;
 	case ChallengeType::DEATHS_VIA_SURGES:
@@ -88,12 +88,12 @@ const int* StageChallenge::get_target_ptr(const StageManager& manager) const {
 size_t StageChallenge::get_current_unit_count(const StageManager& manager) const {
 	size_t total = 0;
 
-	if (laneInd < 0 || laneInd > manager.stage->laneCount) {
+	if (laneIdx < 0 || laneIdx > manager.stage->laneCount) {
 		for (const auto& lane : manager.stage->lanes)
 			total += lane.get_unit_count(team);
 	}
 	else
-		total = manager.stage->lanes[laneInd].get_unit_count(team);
+		total = manager.stage->lanes[laneIdx].get_unit_count(team);
 
 	return total;
 }

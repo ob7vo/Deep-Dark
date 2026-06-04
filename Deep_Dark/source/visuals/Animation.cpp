@@ -6,7 +6,7 @@
 using json = nlohmann::json;
 const float KNOCKBACK_DURATION = 1.4f;
 const float FALL_DURATION = 1.25f;
-const float JUMP_DURATION = 1.f;
+const float JUMP_TWEEN_DURATION = 1.f;
 
 AnimationFrame::AnimationFrame(sf::IntRect rect, float duration, AnimationEvent events) :
     eventsMask(events){
@@ -102,7 +102,7 @@ AnimationClip AnimationClip::create_unit_animation(const json& file, sf::Texture
 
     if (ani == UnitAnimationState::KNOCKBACK) clip.set_duration(KNOCKBACK_DURATION);
     else if (ani == UnitAnimationState::FALLING) clip.set_duration(FALL_DURATION);
-    else if (ani == UnitAnimationState::JUMPING) clip.set_duration(JUMP_DURATION);
+    else if (ani == UnitAnimationState::JUMPING) clip.set_duration(JUMP_TWEEN_DURATION);
 
     return clip;
 }

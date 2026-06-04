@@ -196,6 +196,25 @@ namespace Screen {
         // set the final size
         text.setCharacterSize(fontSize);
     }
+
+    template<typename T>
+    //With respect to the screen's coordinate system, where y increases downwards, this checks if a is above b
+    inline bool above(sf::Vector2<T> a, sf::Vector2<T> b) {
+        return a.y < b.y;
+    };
+    template<typename T>
+    //With respect to the screen's coordinate system, where y increases downwards, this checks if a is below b
+    inline bool below(sf::Vector2<T> a, sf::Vector2<T> b) {
+        return a.y > b.y;
+    };
+    //With respect to the screen's coordinate system, where y increases downwards, this checks if a is above b
+    inline bool above(float a, float b) {
+        return a < b;
+    };
+    //With respect to the screen's coordinate system, where y increases downwards, this checks if a is below b
+    inline bool below(float a, float b) {
+        return a > b;
+    };
 }
 namespace Visual {
     inline void centerText(sf::Text& text) {
@@ -235,4 +254,16 @@ namespace Arrays {
         }(std::make_index_sequence<SIZE>{});
         */
     }
+}
+namespace Vector2 {
+	template<typename T>
+	inline sf::Vector2<T> rotate(sf::Vector2<T> vec, float angleDegrees) {
+		float radians = angleDegrees * 3.14159265f / 180.f;
+		float cosA = std::cos(radians);
+		float sinA = std::sin(radians);
+		return sf::Vector2<T>(
+			vec.x * cosA - vec.y * sinA,
+			vec.x * sinA + vec.y * cosA
+		);
+	}
 }

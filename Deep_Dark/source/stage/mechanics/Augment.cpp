@@ -1,37 +1,116 @@
 #include "pch.h"
 #include "Augment.h"
+#include "Utils.h"
 
+/*
 Augment::Augment(AugmentType aug, float val, float val2, float percentage,
 	int hits, int lvl) :augType(aug), activeHits(hits), value(val), value2(val2),
 	percentage(percentage), surgeLevel(lvl) {
 }
-Augment Augment::status(AugmentType aug, float procTime, float chance, int hits) {
-	return Augment(aug, procTime, empty, chance, hits, empty);
+	*/
+Augment Augment::create_status(AugmentType augType, float procTime, float chance, int hits) {
+	Augment aug;
+	aug.data.status.duration = procTime;
+	aug.activationChance = chance;
+	aug.activeHits = hits;
+	aug.augType = augType;
+
+	return aug;
 }
-Augment Augment::surge(AugmentType aug, float dist, int lvl, float chance, int hits) {
-	return Augment(aug, dist, empty, chance, hits, lvl);
+Augment Augment::create_surge(AugmentType augType, float dist, int lvl, float chance, int hits) {
+	Augment aug;
+	aug.data.surge.spawnDistance = dist;
+	aug.data.surge.level = lvl;
+	aug.activationChance = chance;
+	aug.activeHits = hits;
+	aug.augType = augType;
+
+	return aug;
 }
-Augment Augment::cannon(AugmentType aug, int lvl) {
-	return Augment(aug, empty, empty, empty, ALL_HITS, lvl);
+Augment Augment::create_cannon(AugmentType augType, int lvl) {
+	Augment aug;
+	aug.augType = augType;
+	aug.data.cannon.level = lvl;
+	return aug;
 }
 
-Augment Augment::from_json(AugmentType augType, const nlohmann::json& augJson) {
-    float val = augJson.value("value", 0.0f);
-    float val2 = augJson.value("value2", 0.0f);
-    float percentage = augJson.value("percentage", 0.0f);
-	percentage = augJson.value("value3", percentage);
-
-    int activeHits = ALL_HITS;
+Augment Augment::create_from_json(AugmentType augType, const nlohmann::json& augJson) {
+	Augment aug = Augment(augType);
+	
     if (augJson.contains("active_hits")) {
-        activeHits = 0;
-        for (int hitIndex : augJson["active_hits"])
-            activeHits |= (1 << hitIndex);
+        aug.activeHits = 0;
+        for (int hitIndex : augJson["active_hits"].get<std::vector<int>>())
+            aug.activeHits |= (1 << hitIndex);
     }
-	 
-    int lvl = augJson.value("surge_level", 1);
-    lvl = augJson.value("int_value", lvl);
+	
+	aug.activationChance = augJson.value("activation_chance", 0.0f);
 
-    return Augment(augType, val, val2, percentage, activeHits, lvl);
+	// Find what specific type the augment is and fille out its union
+
+	// Start with the specific Augment Unions
+	switch (aug.augType) {
+	case AugmentType::DETONATE:
+		aug.data.detonate.hpPercentage = augJson["hp_threshold_percentage"].get<float>();
+		aug.data.detonate.explosionRange = augJson["explosion_range"].get<float>();
+		aug.data.detonate.duration = augJson["duration"].get<float>();
+		return aug;
+	case AugmentType::TRANSFORM:
+		aug.data.transform.ID = augJson["transform_id"].get<int>();
+		return aug;
+	case AugmentType::CLONE:
+		aug.data.clone.hpPercentage = augJson["hp_percentage"].get<float>();
+		aug.data.clone.spawnDisplacement = augJson["spawn_displacement"].get<float>();
+		aug.data.clone.duration = augJson["duration"].get<float>();
+		return aug;
+	case AugmentType::SELF_DESTRUCT:
+		aug.data.selfDestruct.explosionRange = augJson["explosion_range"].get<float>();
+		aug.data.selfDestruct.hitsAdjacentLanes = augJson["hits_adjacent_lanes"].get<bool>();
+		aug.data.selfDestruct.hpPercentage = augJson["hp_percentage"].get<float>();
+		return aug;
+	case AugmentType::PROJECTILE:
+		aug.data.projectile.ID = augJson["projectile_id"].get<int>();
+		return aug;
+	case AugmentType::LINK:
+		aug.data.link.range = augJson["range"].get<float>();
+		aug.data.link.reachesAdjacentLanes = augJson["reaches_adjacent_lanes"].get<bool>();
+		return aug;
+	case AugmentType::WARP:
+		aug.data.warp.distance = augJson["distance"].get<float>();
+		aug.data.warp.laneDisplacemnet = augJson["lane_displacement"].get<int>();
+		return aug;
+	}
+
+	// Then check the more general types of Augments
+	if (aug.is_negative_status()) {
+		aug.data.status.effectValue = augJson["effect_value"].get<float>();
+		aug.data.status.duration = augJson["duration"].get<float>();
+	}
+	else if (aug.activates_on_timer()) {
+		aug.data.onTimer.effectMagnitude = augJson["effect_magnitude"].get<float>();
+		aug.data.onTimer.interval = augJson["interval"].get<float>();
+	}
+	else if (aug.activates_via_health_threshold()) {
+		aug.data.onHPThreshold.hpPercentage = augJson["health_threshold_percentage"].get<float>();
+		aug.data.onHPThreshold.buffMagnitude = augJson["buff_magnitude"].get<float>();
+	}
+	else if (aug.is_damage_modifier()) {
+		aug.data.damage.dmgMultiplier = augJson["damage_multiplier"].get<float>();
+	}
+	else if (aug.is_surge()){
+		aug.data.surge.spawnDistance = augJson.value("spawn_distance", 0.0f);
+		aug.data.surge.level = augJson["surge_level"].get<int>();
+	}
+	else if (aug.is_mobility()) {
+		aug.data.mobility.distance = augJson["distance"].get<float>();
+	}
+	else if (aug.needs_kills()) {
+		aug.data.killStreak.requiredKills = augJson["required_kills"].get<int>();
+		aug.data.killStreak.effectMagnitude = augJson["effect_magnitude"].get<int>();
+	}
+	else {
+		aug.data.general.magnitude = augJson["magnitude"].get<float>();
+    	aug.data.general.magnitude2 = augJson.value("magnitude2", 0.0f);
+	}
 }
 AugmentType Augment::string_to_augment_type(std::string_view strView) {
 	std::string str(strView);
@@ -56,16 +135,11 @@ AugmentType Augment::string_to_augment_type(std::string_view strView) {
 		{"launch", AugmentType::LAUNCH},
 		{"plunder", AugmentType::PLUNDER},
 		{"void", AugmentType::VOID},
-		{"superior", AugmentType::SUPERIOR},
 		{"orbital_strike", AugmentType::ORBITAL_STRIKE},
 		{"shock_wave", AugmentType::SHOCK_WAVE},
 		{"fire_wall", AugmentType::FIRE_WALL},
 		{"surge_blocker", AugmentType::SURGE_BLOCKER},
-		{"death_surge", AugmentType::DEATH_SURGE},
-		{"counter_surge", AugmentType::COUNTER_SURGE},
 		{"shove", AugmentType::SHOVE},
-		{"shield", AugmentType::SHIELD},
-		{"shield_pierce", AugmentType::SHIELD_PIERCE},
 		{"critical", AugmentType::CRITICAL},
 		{"survivor", AugmentType::SURVIVOR},
 		{"phase", AugmentType::PHASE},
@@ -74,7 +148,6 @@ AugmentType Augment::string_to_augment_type(std::string_view strView) {
 		{"leap", AugmentType::LEAP},
 		{"jump", AugmentType::JUMP},
 		{"drop_box", AugmentType::DROP_BOX},
-		{"warp", AugmentType::WARP},
 		{"terminate", AugmentType::TERMINATE},
 		{"lightweight", AugmentType::LIGHTWEIGHT},
 		{"heavyweight", AugmentType::HEAVYWEIGHT},
@@ -83,10 +156,13 @@ AugmentType Augment::string_to_augment_type(std::string_view strView) {
 		{"fragile", AugmentType::FRAGILE},
 		{"self_destruct", AugmentType::SELF_DESTRUCT},
 		{"projectile", AugmentType::PROJECTILE},
-		{"deflect", AugmentType::DEFLECT},
 		{"rough", AugmentType::ROUGH},
 		{"link", AugmentType::LINK},
-		{"syphon", AugmentType::SYPHON}
+		{"syphon", AugmentType::SYPHON},
+		{"discharge", AugmentType::DISCHARGE},
+		{"detonate", AugmentType::DETONATE},
+		{"transform", AugmentType::TRANSFORM},
+		{"warp", AugmentType::WARP}
 	};
 
 	auto it = augmentMap.find((std::string)str);
@@ -94,7 +170,7 @@ AugmentType Augment::string_to_augment_type(std::string_view strView) {
 		std::cout << "Invalid Augment String: [" << str << "]" << std::endl;
 	return (it != augmentMap.end()) ? it->second : AugmentType::NONE;
 }
-int Augment::links_to_allies(AugmentType augType) {
+int Augment::get_link_target_team(AugmentType augType) {
 	static const std::unordered_set<AugmentType> linkToEnemies = {
 		AugmentType::SLOW, 
 		AugmentType::OVERLOAD,
@@ -117,4 +193,11 @@ int Augment::links_to_allies(AugmentType augType) {
 	if (linkToAllies.contains(augType)) return 1;
 	else if (linkToEnemies.contains(augType)) return -1;
 	else return 0;
+}
+
+bool Augment::try_activate(int hitIndex) const {
+	return can_hit(hitIndex) && Random::chance(activationChance);
+}
+bool Augment::try_activate() const {
+	return Random::chance(activationChance);
 }

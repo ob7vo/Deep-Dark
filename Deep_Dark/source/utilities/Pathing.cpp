@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Pathing.h"
+#include "Easing.hpp"
 
 const float HALF_CIRC = 180.f;
 const float THRESHOLD_SQ = 4.0f; // e.g. 2 units tolerance squared
@@ -17,7 +18,7 @@ PathingType Pathing::string_to_type(std::string& str) {
 	return PathingType::CIRCULAR;
 }
 sf::Vector2f CirclePathing::move(float deltaTime) {
-	float angleRad = angleDeg * (M_PI / 180.f);
+	float angleRad = angleDeg * (PI / 180.f);
 
 	pos.x = center.x + radius * cos(angleRad);
 	pos.y = center.y + radius * sin(angleRad);

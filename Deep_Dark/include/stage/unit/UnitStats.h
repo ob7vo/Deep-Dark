@@ -20,6 +20,8 @@ struct Hit {
 struct UnitStats {
 	// * = wont be change by core
 	int id = -1; // *
+	float magnification = 1.f;
+
 	float rechargeTime = 0.f;
 
 	/// <summary>

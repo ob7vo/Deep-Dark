@@ -2,12 +2,12 @@
 class Unit;
 struct Stage;
 
-
 enum class UnitMoveRequestType {
 	NOT_DONE = -2,
 	NONE = -1,
 	KNOCKBACK = 0,
 	FALL,
+	FAST_FALL,
 	SQUASH,
 	LAUNCH,
 	DROP_FROM_LAUNCH,
@@ -15,6 +15,7 @@ enum class UnitMoveRequestType {
 	LEAP,
 	PHASE,
 	TELEPORT,
+	WARP
 };
 
 struct Stage;
@@ -39,8 +40,10 @@ struct UnitMoveRequest {
 	void move_unit_by_request(Stage* stage, size_t unitIndex) const;
 
 	inline bool fall_request() const { return type == UnitMoveRequestType::FALL; }
+	inline bool fast_fall_request() const { return type == UnitMoveRequestType::FAST_FALL; }
 	inline bool teleport_request() const { return type == UnitMoveRequestType::TELEPORT; }
 	inline bool squash_request() const { return type == UnitMoveRequestType::SQUASH; }
 	inline bool jump_request() const { return type == UnitMoveRequestType::JUMP; }
 	inline bool	launch_request() const { return type == UnitMoveRequestType::LAUNCH; }
+	inline bool warp_request() const { return type == UnitMoveRequestType::WARP; }
 };

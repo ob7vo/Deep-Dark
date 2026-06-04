@@ -5,7 +5,7 @@
 
 StageEntity::StageEntity(sf::Vector2f _pos, int _lane) : 
 	sprite(defaultTexture),
-	laneInd(_lane),
+	laneIdx(_lane),
 	pos(_pos)
 {
 	sprite.setPosition(pos);

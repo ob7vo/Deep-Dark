@@ -29,7 +29,7 @@ void Unit::destroy_unit(DeathCause deathCauue) {
 	// THe base being destroyed means all units should die unconditionally 
 	// (no tranforming or reviving), and the death counter should not increment
 	if (deathCauue != DeathCause::BASE_WAS_DESTROYED) {
-		stage->recorder->add_death(stats->team, movement.laneInd, causeOfDeath);
+		stage->recorder->add_death(stats->team, movement.laneIdx, causeOfDeath);
 
 		if (spawnCategory == UnitSpawnType::SUMMON)
 			stage->lower_summons_count(stats->id);
@@ -58,9 +58,6 @@ void Unit::try_knockback(int oldHp, int enemyHitIndex, const UnitStats* enemySta
 
 	if (status.met_knockback_threshold(oldHp)) 
 	{
-		if (auto shield = stats->get_augment(AugmentType::SHIELD)) 
-			status.shieldHp = shield->intValue;
-
 		// If the Enemy both has the Bully Augment and targets this Unit's
 		// typings, increase the force to 1.5f
 		float kbForce = enemyStats->has_augment(AugmentType::BULLY) && is_targeted(enemyStats->targetTypes) 
@@ -85,7 +82,7 @@ void Unit::try_knockback(int oldHp, int enemyHitIndex, const UnitStats* enemySta
 	}
 	else if (enemyStats->try_proc_augment(AugmentType::WARP, enemyHitIndex)) 
 	{
-		movement.warp(enemyStats);
+		movement.push_warp_request(*enemyStats->get_augment(AugmentType::WARP));
 	}
 }
 
@@ -120,10 +117,10 @@ std::pair<float, float> Unit::get_attack_range() const {
 	return range;
 }
 const std::vector<size_t>& Unit::getLaneAllies() const {
-	return stage->lanes[movement.laneInd].getAllyUnits(stats->team);
+	return stage->lanes[movement.laneIdx].getAllyUnits(stats->team);
 }
 const std::vector<size_t>& Unit::getLaneEnemies() const {
-	return stage->lanes[movement.laneInd].getOpponentUnits(stats->team);
+	return stage->lanes[movement.laneIdx].getOpponentUnits(stats->team);
 }
 
 // Checks
@@ -159,11 +156,10 @@ bool Unit::found_valid_target(const Unit& enemy, float minRange, float maxRange)
 bool Unit::over_gap() const { 
 	// Check if the front of the hurtbox, as well as the back are BOTH off the lane
 	const auto& [left, right] = getHurtboxEdges();
-	return stage->lanes[movement.laneInd].within_gap(left, right);
+	return stage->lanes[movement.laneIdx].within_gap(left, right);
 }
 bool Unit::can_make_surge(const Augment& aug) const {
-	return aug.is_surge() && Random::chance(aug.percentage) &&
-		aug.can_hit(combat.hitIndex);
+	return aug.is_surge() && aug.try_activate(combat.hitIndex);
 }
 bool Unit::rust_type_and_near_gap() const {
 	if (!stats->rusted_tyoe()) return false;
@@ -321,8 +317,8 @@ void Unit::phase_windup_state(float deltaTime) {
 	if (anim.onFirstFrame()) remove(status.statusFlags, AugmentType::PHASE);
 	else if (any(events & AnimationEvent::TRIGGER)) {
 		if (auto phaseAugment = stats->get_augment(AugmentType::PHASE)) {
-			float newX = movement.pos.x + phaseAugment->value * static_cast<float>(stats->team);
-			newX = stage->lanes[movement.laneInd].get_stopping_point
+			float newX = movement.pos.x + phaseAugment->data.mobility.distance * static_cast<float>(stats->team);
+			newX = stage->lanes[movement.laneIdx].get_stopping_point
 			(newX, stats->sightRange, stats->team, getHurtboxEdges());
 			float dist = std::abs(movement.pos.y - newX);
 

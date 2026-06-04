@@ -60,28 +60,41 @@ void StageManager::create_challenges(const json& stageJson) {
 }
 
 #pragma region Creating Entities
-bool StageManager::try_spawn_death_surge(const Unit& unit) {
+bool StageManager::activate_units_self_destruct(const Unit& unit) {
 	// Will proc if it has the augment and rolls the chance
-	if (!unit.stats->try_proc_augment(AugmentType::DEATH_SURGE)) return false;
+	if (!unit.stats->has_augment(AugmentType::SELF_DESTRUCT)) return false;
 
-	const Augment& augment = *unit.stats->get_augment(AugmentType::DEATH_SURGE);
-	float distance = augment.value;
+	const Augment& aug = *unit.stats->get_augment(AugmentType::SELF_DESTRUCT);
+	float range = aug.data.selfDestruct.explosionRange;
+	int dmg = static_cast<int>(unit.stats->maxHp * aug.data.selfDestruct.hpPercentage);
+	int maxLane = std::min(stage->laneCount - 1, unit.get_lane() + aug.data.selfDestruct.hitsAdjacentLanes);
+	int minLane = std::max(0, unit.get_lane() - aug.data.selfDestruct.hitsAdjacentLanes);
 
-	Augment newSurge = Augment::surge(AugmentType::FIRE_WALL, distance, augment.surgeLevel, 0, unit.combat.hitIndex);
-	stage->create_surge(unit, newSurge);
+	for (int i = minLane; i <= maxLane; i++) {
+		const auto& enemyIndexes = stage->lanes[i].getOpponentUnits(unit.stats->team);
 
+		for (const auto& index : enemyIndexes) {
+			auto& enemyUnit = stage->getUnit(index);
+
+			if (unit.found_valid_target(enemyUnit, -range, range)) {
+				enemyUnit.status.apply_on_hit_status_effects(
+					unit.stats->augments, ALL_HITS);
+				enemyUnit.status.take_damage(dmg);
+			}
+		}
+	}
 	return true;
 }
-bool StageManager::try_create_drop_box(int laneInd, const UnitStats* stats, UnitAniMap* aniMap) {
+bool StageManager::try_create_drop_box(int laneIdx, const UnitStats* stats, UnitAniMap* aniMap) {
 	if (!stats->has_augment(AugmentType::DROP_BOX)) return false;
 
-	const Lane& lane = stage->lanes[laneInd];
+	const Lane& lane = stage->lanes[laneIdx];
 
-	float percentage = stats->get_augment(AugmentType::DROP_BOX)->value;
+	float percentage = stats->get_augment(AugmentType::DROP_BOX)->data.general.magnitude;
 	float spawnPoint = lane.playerSpawnPoint + (lane.enemySpawnPoint - lane.playerSpawnPoint) * percentage;
 
 	sf::Vector2f spawnPos = { spawnPoint, lane.yPos };
-	stage->entities.emplace_back(std::make_unique<UnitSpawner>(stats, aniMap, spawnPos, laneInd));
+	stage->entities.emplace_back(std::make_unique<UnitSpawner>(stats, aniMap, spawnPos, laneIdx));
 
 	return true;
 }
@@ -173,7 +186,7 @@ void StageManager::handle_death_augment(const Unit& unit) {
 		has(unit.causeOfDeath, DeathCause::BASE_WAS_DESTROYED))
 		return;
 
-	try_spawn_death_surge(unit);
+	activate_units_self_destruct(unit);
 	try_create_cloner(unit);
 }
 void StageManager::handle_unit_death(const Unit& unit, size_t poolIndex) {

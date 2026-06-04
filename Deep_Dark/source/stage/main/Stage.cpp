@@ -59,8 +59,8 @@ Stage::Stage(const json& stagePhaseJson, StageRecord* rec) : unitPool(this), uni
 		enemySpawners[i].create_unit_data(stagePhaseJson["enemy_spawns"][i]);
 
 		for (const auto& aug : enemySpawners[i].enemyStats.augments)
-			if (has(aug.augType & AugmentType::PROJECTILE))
-				projDataMap[aug.intValue] = ProjectileData(aug.intValue, enemySpawners[i].unitMagnification);
+			if (has(aug.augType & AugmentType::PROJECTILE) && !projDataMap.contains(aug.data.projectile.ID))
+				projDataMap[aug.data.projectile.ID] = ProjectileData(aug.data.projectile.ID, enemySpawners[i].unitMagnification);
 	}
 	
 	break_spawner_thresholds();
@@ -194,10 +194,11 @@ Unit* Stage::create_unit(int laneIndex, const UnitStats* unitStats, UnitAniMap* 
 }
 void Stage::try_revive_unit(UnitSpawner* spawner) {
 	// if they don't have the clone ability, or have be inflicted with code breaker, return
-	Unit* newUnit = create_unit(spawner->laneInd, spawner->stats, spawner->aniMap);
+	Unit* newUnit = create_unit(spawner->laneIdx, spawner->stats, spawner->aniMap);
 
 	if (newUnit) {
-		auto newHp = (int)((float)spawner->stats->maxHp * spawner->stats->get_augment(AugmentType::CLONE)->value);
+		int newHp = static_cast<int>(spawner->stats->maxHp * 
+			spawner->stats->get_augment(AugmentType::CLONE)->data.clone.hpPercentage);
 
 		newUnit->status.hp = newHp;
 		// Doing this will update the Units knockback index
@@ -208,10 +209,13 @@ void Stage::try_revive_unit(UnitSpawner* spawner) {
 		newUnit->anim.start(UnitAnimationState::MOVE);
 	}
 }
-void Stage::transform_unit(const Unit& unit) {
-	float magnification = unit.stats->get_augment(AugmentType::TRANSFORM)->value;
-	
-	if (auto transformation = get_unit_config(unit.stats->id, magnification, UnitSpawnType::TRANSFORMATION)) {
+
+void Stage::transform_unit(const Unit& unit) {	
+	// I guess I made a temp config to transform the unit to this units next gear
+	// Gears dont exist anymore though. make this its own union data in Augment
+	const Augment& aug = *unit.stats->get_augment(AugmentType::TRANSFORM);
+
+	if (auto transformation = get_unit_config(aug.data.transform.ID, unit.stats->magnification)) {
 		Unit* transformedUnit = create_unit(unit.get_lane(), unit.stats, unit.anim.get_ani_map());
 
 		if (transformedUnit) {
@@ -221,11 +225,11 @@ void Stage::transform_unit(const Unit& unit) {
 	}
 }
 void Stage::create_summon(const Unit& unit) {
-	const Augment& salvage = *unit.stats->get_augment(AugmentType::SALVAGE);
+	const Augment& aug = *unit.stats->get_augment(AugmentType::SALVAGE);
 
 	// value2 is the summon's magnification
-	if (auto summonData = get_unit_config(unit.stats->id, salvage.value2, UnitSpawnType::SUMMON)) {
-		float spawnRange = salvage.value;
+	if (auto summonData = get_unit_config(aug.data.killStreak.salvageID, unit.stats->magnification)) {
+		float spawnRange = aug.data.killStreak.effectMagnitude;
 		float xPos = unit.movement.pos.x;
 		float newX = Random::r_float(xPos - spawnRange, xPos + spawnRange);
 
@@ -238,13 +242,12 @@ void Stage::create_summon(const Unit& unit) {
 		}
 	}
 }
-UnitData* Stage::get_unit_config(int id, float magnification, UnitSpawnType spawnType) {
+UnitData* Stage::get_unit_config(int id, float magnification) {
+	// The count check doesn't matter for TRANSFORM, but its fine.
 	if (unitDataMap.contains(id))
 		return unitDataMap[id]->count < MAX_SUMMONS ? unitDataMap[id].get() : nullptr;
 
-	nlohmann::json unitJson = spawnType == UnitSpawnType::SUMMON ? UnitConfig::createSummonJson(id) 
-		 : UnitConfig::createUnitJson(id);
-	unitDataMap[id] = std::make_unique<UnitData>(unitJson, magnification);
+	unitDataMap[id] = std::make_unique<UnitData>(UnitConfig::createUnitJson(id), magnification);
 
 	return unitDataMap[id] ? unitDataMap[id].get() : nullptr;
 }
@@ -254,39 +257,36 @@ void Stage::try_create_ability_observer(size_t poolIndex, int spawnIndex) {
 	if (const auto* discharge = stats->get_augment(AugmentType::DISCHARGE)) 
 	{
 		unitAbilityObserver.registerUnit(AugmentType::DISCHARGE, spawnIndex, poolIndex,
-			discharge->value, stats->maxHp);
+			discharge->data.onTimer.interval, stats->maxHp);
 	}
 	if (const auto* overclock = stats->get_augment(AugmentType::OVERCLOCK))
 	{
 		unitAbilityObserver.registerUnit(AugmentType::OVERCLOCK, spawnIndex, poolIndex,
-			overclock->value);
+			overclock->data.onTimer.interval);
 	}
 }
 
 Surge* Stage::create_surge(const Unit& unit, const Augment& surge) {
 	int lane = unit.get_lane();
-	int level = surge.surgeLevel;
+	int level = surge.data.surge.level;
 	sf::Vector2f pos = unit.movement.pos;
 
-	if (surge.augType != AugmentType::SHOCK_WAVE) {
-		float min = surge.value;
-		float max = std::max(min, surge.value2);
-		pos.x += Random::r_float(min, max) * static_cast<float>(unit.stats->team);
-	}
+	if (surge.augType != AugmentType::SHOCK_WAVE)
+		pos.x += surge.data.surge.spawnDistance;
 
 	Surge* pSurge = create_surge(unit.stats, lane, level, pos, surge.augType);
 	pSurge->hitIndex = unit.combat.hitIndex;
 	return surges.back().get();
 }
 void Stage::create_surge(const BaseCannon* cannon, const Augment& surge) {
-	Surge* pSurge = create_surge(&cannon->cannonStats, *selectedLane, surge.surgeLevel, cannon->pos, surge.augType);
+	Surge* pSurge = create_surge(&cannon->cannonStats, *selectedLane, surge.data.surge.level, cannon->pos, surge.augType);
 	if (pSurge) pSurge->set_as_cannon_creation();
 }
 void Stage::create_surge(const BaseCannon* cannon, const Augment& surge, int lane, float distance) {
 	sf::Vector2f pos = cannon->pos;
 	pos.x -= distance;
 
-	Surge* pSurge = create_surge(&cannon->cannonStats, lane, surge.surgeLevel, pos, surge.augType);
+	Surge* pSurge = create_surge(&cannon->cannonStats, lane, surge.data.surge.level, pos, surge.augType);
 	if (pSurge) pSurge->set_as_cannon_creation();
 }
 Surge* Stage::create_surge(const UnitStats* stats, int lane, int level, sf::Vector2f pos, AugmentType aug) {
@@ -310,7 +310,7 @@ void Stage::create_projectile(const Unit& unit, const Augment& aug) {
 		return;
 	}
 
-	int id = aug.intValue;
+	int id = aug.data.projectile.ID;
 	if (!projDataMap.contains(id)) projDataMap[id] = ProjectileData(id);
 
 	const nlohmann::json projJson = ProjData::get_proj_json(id);
@@ -319,9 +319,10 @@ void Stage::create_projectile(const Unit& unit, const Augment& aug) {
 	// The first character of pathing_type (string in json) decides the Projectile's PathingType
 	switch (projJson["pathing"]["type"].get<std::string>()[0]) {
 	case 'c': {
-		sf::Vector2f center = { unit.movement.pos.x + (aug.value * (float)unit.stats->team), unit.movement.pos.y};
-		float speed = projJson["pathing"]["speed"];
-		float radius = projJson["pathing"]["radius"];
+		sf::Vector2f center = { unit.movement.pos.x + (projJson["pathing"]["spawn_displacement"].get<float>() * (float)unit.stats->team),
+			unit.movement.pos.y};
+		float speed = projJson["pathing"]["speed"].get<float>();
+		float radius = projJson["pathing"]["radius"].get<float>();
 		float startingAngle = projJson["pathing"].value("angle", 0.f);
 
 		proj.pathing = std::make_unique<CirclePathing>(center, speed, radius, startingAngle);
@@ -366,12 +367,12 @@ void Stage::create_hitbox_visualizers(sf::Vector2f pos, std::pair<float, float> 
 	hitboxes.emplace_back(shape, HITBOX_TIMER );
 }
 
-std::pair<float, int> Stage::find_lane_to_fall_on(const Unit& unit) const {
+std::pair<float, int> Stage::find_lane_to_fall_on(const Unit& unit, int startLane) const {
 	float newY = FLOOR;
 
 	const auto& [leftHurtboxEdge, rightHurtboxEdge] = unit.getHurtboxEdges();
 
-	for (int i = unit.get_lane() - 1; i >= 0; i--) {
+	for (int i = startLane; i >= 0; i--) {
 		if (!lanes[i].within_gap(leftHurtboxEdge, rightHurtboxEdge)) {
 			newY = lanes[i].yPos;
 			return { newY, i };
@@ -399,7 +400,7 @@ bool Stage::can_push_move_request(int id) {
 	return it == moveRequests.end();
 }
 void Stage::push_move_request(Unit& unit, int newLane, float fallTo, UnitMoveRequestType type) {
-	if (unit.movement.laneInd == newLane) {
+	if (unit.movement.laneIdx == newLane) {
 		std::cout << "MoveRequest moves Unit to the same lane." << std::endl;
 		return;
 	}

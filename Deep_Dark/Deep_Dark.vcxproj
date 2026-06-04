@@ -77,7 +77,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)\include\game_states\;$(ProjectDir)\include\visuals\;$(ProjectDir)\include\systems\;$(ProjectDir)\include\enums\;$(ProjectDir)\include\stage\;$(ProjectDir)include\menus\;$(ProjectDir)\include\utilities\;$(ProjectDir)\game_saves\;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include\game_states\;$(ProjectDir)\include\visuals\;$(ProjectDir)\include\systems\;$(ProjectDir)\include\enums\;$(ProjectDir)\include\stage\;$(ProjectDir)\include\menus\;$(ProjectDir)\include\utilities\;$(ProjectDir)\game_saves\;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -93,7 +93,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\include\game_states\;$(ProjectDir)\include\visuals\;$(ProjectDir)\include\systems\;$(ProjectDir)\include\enums\;$(ProjectDir)\include\stage\;$(ProjectDir)include\menus\;$(ProjectDir)\include\utilities\;$(ProjectDir)\game_saves\;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include\game_states\;$(ProjectDir)\include\visuals\;$(ProjectDir)\include\systems\;$(ProjectDir)\include\enums\;$(ProjectDir)\include\stage\;$(ProjectDir)\include\menus\;$(ProjectDir)\include\utilities\;$(ProjectDir)\game_saves\;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -109,7 +109,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)\include\visuals\camera\;$(ProjectDir)\include\visuals\ui\;$(ProjectDir)\include\game_states\;$(ProjectDir)\include\visuals\;$(ProjectDir)\include\visuals\textures\;$(ProjectDir)\include\systems\managers\;$(ProjectDir)\include\systems\observers\;$(ProjectDir)\include\systems\;$(ProjectDir)\include\configs\;$(ProjectDir)\include\enums\;$(ProjectDir)\include\stage\entities\;$(ProjectDir)\include\stage\main\;$(ProjectDir)\include\stage\;$(ProjectDir)include\menus\;$(ProjectDir)\include\utilities\main\;$(ProjectDir)\include\utilities\;$(ProjectDir)\include\stage\mechanics\;$(ProjectDir)\include\stage\unit\;$(ProjectDir)\include\debug\;$(ProjectDir)\include\saves\;C:\Users\amaec\source\SFML-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include\visuals\camera\;$(ProjectDir)\include\visuals\ui\;$(ProjectDir)\include\game_states\;$(ProjectDir)\include\visuals\;$(ProjectDir)\include\visuals\textures\;$(ProjectDir)\include\systems\managers\;$(ProjectDir)\include\systems\observers\;$(ProjectDir)\include\systems\;$(ProjectDir)\include\configs\;$(ProjectDir)\include\enums\;$(ProjectDir)\include\stage\entities\;$(ProjectDir)\include\stage\main\;$(ProjectDir)\include\stage\;$(ProjectDir)\include\menus\;$(ProjectDir)\include\utilities\main\;$(ProjectDir)\include\utilities\;$(ProjectDir)\include\stage\mechanics\;$(ProjectDir)\include\stage\unit\;$(ProjectDir)\include\saves\;C:\Users\amaec\source\SFML-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -131,7 +131,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)\include\game_states\;$(ProjectDir)\include\visuals\;$(ProjectDir)\include\systems\;$(ProjectDir)\include\enums\;$(ProjectDir)\include\stage\;$(ProjectDir)include\menus\;$(ProjectDir)\include\utilities\;$(ProjectDir)\game_saves\;C:\Users\amaec\source\SFML-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include\game_states\;$(ProjectDir)\include\visuals\;$(ProjectDir)\include\systems\;$(ProjectDir)\include\enums\;$(ProjectDir)\include\stage\;$(ProjectDir)\include\menus\;$(ProjectDir)\include\utilities\;$(ProjectDir)\game_saves\;C:\Users\amaec\source\SFML-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -142,15 +142,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="source\configs\StageConfig.cpp" />
-    <ClCompile Include="source\debug\DebugGameState.cpp" />
-    <ClCompile Include="source\debug\StageCreatorMenu.cpp" />
-    <ClCompile Include="source\debug\UnitCreatorMenu.cpp" />
     <ClCompile Include="source\menus\StageNodeMenu.cpp" />
     <ClCompile Include="source\menus\StageResultsScreen.cpp" />
     <ClCompile Include="source\menus\Window.cpp" />
     <ClCompile Include="source\saves\PlayerSaveData.cpp" />
     <ClCompile Include="source\saves\SaveSystem.cpp" />
-    <ClCompile Include="Deep Dark.cpp" />
+    <ClCompile Include="Deep_Dark.cpp" />
     <ClCompile Include="source\saves\StageSaveData.cpp" />
     <ClCompile Include="source\configs\UnitConfig.cpp" />
     <ClCompile Include="source\saves\UnitSaveData.cpp" />

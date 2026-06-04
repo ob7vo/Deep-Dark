@@ -20,8 +20,8 @@ bool UnitCombat::process_attack_on_lanes() {
 	auto [minLane, maxLane] = attacker.get_lane_reach();
 	bool hitEnemy = false;
 
-	for (int laneInd = minLane; laneInd <= maxLane; laneInd++) 
-		hitEnemy |= attack_lane(laneInd);
+	for (int laneIdx = minLane; laneIdx <= maxLane; laneIdx++) 
+		hitEnemy |= attack_lane(laneIdx);
 
 	return hitEnemy;
 }
@@ -98,8 +98,8 @@ void UnitCombat::try_create_surge(bool hitEnemy) const{
 			if (!surgeExist || augment.augType != AugmentType::ORBITAL_STRIKE) continue;
 
 			// Create additional orbital strikes with spacing
-			int additionalStrikes = augment.surgeLevel - 1;
-			float strikeSpacing = augment.value2;
+			int additionalStrikes = augment.data.surge.level - 1;
+			float strikeSpacing = augment.data.surge.spawnDistance;
 			float currentOffset = strikeSpacing;
 
 			for (int i = 0; i < additionalStrikes; i++) {
@@ -138,7 +138,7 @@ void UnitCombat::try_create_projectile() const {
 bool UnitCombat::try_terminate_unit(const Unit& hitUnit, int dmg) const{
 	if (!attacker.stats->has_augment(AugmentType::TERMINATE)) return false;
 
-	float threshold = attacker.stats->get_augment(AugmentType::TERMINATE)->value;
+	float threshold = attacker.stats->get_augment(AugmentType::TERMINATE)->data.onHPThreshold.hpPercentage;
 	float curHpPercent = (float)(hitUnit.status.hp - dmg) / (float)hitUnit.stats->maxHp;
 
 	return curHpPercent <= threshold;
@@ -146,8 +146,12 @@ bool UnitCombat::try_terminate_unit(const Unit& hitUnit, int dmg) const{
 #pragma endregion
 
 void UnitCombat::self_destruct(const Augment& selfDestruct) {
-	int minLane = std::max(0, attacker.movement.laneInd - selfDestruct.intValue);
-	int maxLane = std::min(stage->laneCount - 1, attacker.movement.laneInd + selfDestruct.intValue);
+	int extraLane = selfDestruct.data.selfDestruct.hitsAdjacentLanes ? 1 : 0;
+	int minLane = std::max(0, attacker.movement.laneIdx - extraLane);
+	int maxLane = std::min(stage->laneCount - 1, attacker.movement.laneIdx + extraLane);
+
+	float explosionRange = selfDestruct.data.selfDestruct.explosionRange;
+	int explosionDamage = static_cast<int>(attacker.stats->maxHp * selfDestruct.data.selfDestruct.hpPercentage);
 
 	for (int i = minLane; i <= maxLane; i++) {
 		auto& lane = stage->lanes[i];
@@ -156,8 +160,8 @@ void UnitCombat::self_destruct(const Augment& selfDestruct) {
 		for (const auto& index : enemyIndexes) {
 			auto& enemyUnit = stage->getUnit(index);
 
-			if (attacker.found_valid_target(enemyUnit, selfDestruct.value2, selfDestruct.value2)
-				&& enemyUnit.status.take_damage((int)selfDestruct.value))
+			if (attacker.found_valid_target(enemyUnit, explosionRange, explosionRange)
+				&& enemyUnit.status.take_damage(explosionDamage))
 			{
 				on_kill(enemyUnit);
 			}
@@ -192,7 +196,7 @@ void UnitCombat::on_kill(Unit& enemyUnit) {
 		attacker.stage->create_summon(attacker);
 
 	if (const auto syphon = attacker.stats->get_augment(AugmentType::SYPHON)) {
-		if (kills % syphon->intValue == 0)
+		if (kills % syphon->data.killStreak.requiredKills == 0)
 			attacker.status.syphon(syphon);
 	}
 

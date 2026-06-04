@@ -12,7 +12,7 @@ struct StageChallenge {
 	bool cleared = false;
 	int value = 0;
 	// A value other than 0 (and within the laneCount) means the challenge only apples to a specific lane
-	int laneInd = 0; 
+	int laneIdx = 0; 
 	const int* pTarget = nullptr;
 
 	ChallengeType challengeType = ChallengeType::UNIT_DEATHS;

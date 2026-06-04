@@ -5,6 +5,7 @@ struct Stage;
 struct UnitStats;
 class Unit;
 struct Teleporter;
+struct Augment;
 
 struct UnitMovement {
 private:
@@ -12,7 +13,7 @@ private:
 	Unit& owner;
 public:
 	Stage* stage = nullptr;;
-	int laneInd = 0;
+	int laneIdx = 0;
 	sf::Vector2f pos;
 
 	explicit UnitMovement(Unit& ownerUnit) : owner(ownerUnit) {}
@@ -23,17 +24,18 @@ public:
 	void knockback(float force = 1.f);
 	void squash(float newY);
 	void launch(float newY);
-	void fall(float newY);
+	void fall(float newY, UnitMoveRequestType fallType = UnitMoveRequestType::FALL);
 	void move(float deltaTime);
 	void jump(float newX);
 	bool try_leap();
-	void warp(const UnitStats* enemyStats);
+	void warp(float newY);
 
 	// creating tweens
 	void push_fall_request();
 	void push_teleport_request(const Teleporter& tp);
 	void push_squash_request();
 	void push_launch_request();
+	void push_warp_request(const Augment& warpAug);
 	bool try_push_jump_request()const;
 
 	void finish_launch_tween();

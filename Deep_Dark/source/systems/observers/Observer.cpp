@@ -32,7 +32,7 @@ bool UnitAbilityObserver::triggerAbility(Unit& unit, UnitAugmentTimer& timer) co
     if (const auto* discharge = unit.stats->get_augment(AugmentType::DISCHARGE)){
         unit.combat.discharge(timer.hpAtStart);
 
-        timer.cooldown = discharge->value;
+        timer.cooldown = discharge->data.onTimer.interval;
         timer.hpAtStart = unit.status.hp;
 
         return false;

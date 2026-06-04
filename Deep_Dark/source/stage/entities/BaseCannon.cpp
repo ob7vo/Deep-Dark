@@ -15,13 +15,13 @@ BaseCannon::BaseCannon(const json& baseJson, float magnification) :
 	cannonStats(UnitStats::create_cannon(baseJson, magnification)), team(baseJson["team"]) {}
 
 WaveCannon::WaveCannon(const json& baseJson, float magnification) :BaseCannon(baseJson, magnification), 
-shockWave(Augment::cannon(AugmentType::SHOCK_WAVE, baseJson["surge_level"])) {}
+shockWave(Augment::create_cannon(AugmentType::SHOCK_WAVE, baseJson["surge_level"].get<int>())) {}
 
 FireWallCannon::FireWallCannon(const json& baseJson, float magnification) :BaseCannon(baseJson, magnification), 
-fireWall(Augment::cannon(AugmentType::FIRE_WALL, baseJson["surge_level"])) {}
+fireWall(Augment::create_cannon(AugmentType::FIRE_WALL, baseJson["surge_level"].get<int>())) {}
 
 OrbitalCannon::OrbitalCannon(const json& baseJson, float magnification) :BaseCannon(baseJson, magnification),
-orbitalStrike(Augment::cannon(AugmentType::ORBITAL_STRIKE,1)) {}
+orbitalStrike(Augment::create_cannon(AugmentType::ORBITAL_STRIKE,1)) {}
 
 AreaCannon::AreaCannon(const json& baseJson, float magnification) : BaseCannon(baseJson, magnification),
 areaRange(baseJson["area_range"]) {}
@@ -62,7 +62,7 @@ void AreaCannon::fire(Stage& stage) {
 			auto& enemyUnit = stage.getUnit(index);
 
 			if (is_valid_target(enemyUnit))
-				enemyUnit.status.apply_on_hit_effects(cannonStats.augments, 0);
+				enemyUnit.status.apply_on_hit_status_effects(cannonStats.augments, 0);
 		}
 	}
 }

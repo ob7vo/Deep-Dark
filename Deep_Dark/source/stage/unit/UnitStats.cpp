@@ -105,7 +105,7 @@ void UnitStats::setup(const nlohmann::json& file) {
             if (has(augType, AugmentType::NONE)) continue;
 
             augmentsMask |= augType;
-            augments.emplace_back(Augment::from_json(augType, augJson));
+            augments.emplace_back(Augment::create_from_json(augType, augJson));
         }
     }
 
@@ -138,6 +138,7 @@ UnitStats UnitStats::create_enemy(const nlohmann::json& file, float magnificatio
     UnitStats stats; 
 
     stats.setup(file);
+    stats.magnification = magnification;
     stats.maxHp = static_cast<int>(magnification * (float)stats.maxHp);
     for (int i = 0; i < stats.totalHits; i++)
         stats.hits[i].dmg = static_cast<int>(magnification * (float)stats.hits[i].dmg);
@@ -165,7 +166,7 @@ UnitStats UnitStats::create_cannon(const nlohmann::json& baseFile, float magnifi
     if (baseFile.contains("augment")) {
         AugmentType aug = Augment::string_to_augment_type(baseFile["augment"]["augment_type"].get<std::string>());
         float procTime = baseFile["augment"].value("status_time", 1.f);
-        stats.augments.emplace_back(Augment::status(aug, procTime));
+        stats.augments.emplace_back(Augment::create_status(aug, procTime));
     }
 
     return stats;
@@ -261,7 +262,7 @@ void UnitStats::addCoreAugment(const nlohmann::json& file, const std::string& au
         if (augType == AugmentType::NONE || augType != coreAugType) continue;    
 
         augmentsMask |= augType;
-        augments.emplace_back(Augment::from_json(augType, coreAug));
+        augments.emplace_back(Augment::create_from_json(augType, coreAug));
     }
 }
 void UnitStats::modifyDmg(int hitIndex, char op, float value) {
@@ -295,7 +296,7 @@ int UnitStats::get_parts_value(const nlohmann::json& json) const {
 bool UnitStats::try_proc_augment(AugmentType targetAugment, int hit) const {
     for (auto& augment : augments) {
         if (augment.augType != targetAugment) continue;
-        return augment.can_hit(hit) && Random::chance(augment.percentage);
+        return augment.can_hit(hit) && Random::chance(augment.activationChance);
     }
 
     return false;

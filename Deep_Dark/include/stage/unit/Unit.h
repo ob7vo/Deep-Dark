@@ -84,7 +84,7 @@ public:
 	{ return stats->is_targeted(attacker.stats->targetTypes) && !attacker.status.is_short_circuited(); }
 
 	inline int get_dmg() const { return stats->get_hit_stats(combat.hitIndex).dmg; }
-	inline int get_lane() const { return movement.laneInd; }
+	inline int get_lane() const { return movement.laneIdx; }
 
 	// Will check for scope status effect
 	std::pair<float, float> get_attack_range() const;

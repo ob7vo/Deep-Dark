@@ -31,7 +31,7 @@ UnitSpawner::UnitSpawner(const UnitStats* stats, UnitAniMap* aniMap, sf::Vector2
 	create_animation();
 }
 SurgeSpawner::SurgeSpawner(const UnitStats* stats, const Augment& surge, sf::Vector2f pos, int lane) :
-	StageEntity(pos, lane), stats(stats), surge(surge) {
+	StageEntity(pos, lane), stats(stats), surgeAugment(surge) {
 	create_animation();
 }
 #pragma endregion
@@ -62,17 +62,17 @@ void EnemySpawner::unleash_boss_shockwave(Stage& stage) const {
 void UnitSpawner::action(Stage& stage) {
 	if (stats->has_augment(AugmentType::CLONE)) stage.try_revive_unit(this);
 	else {
-		Unit* unit = stage.create_unit(laneInd, stats, aniMap);
+		Unit* unit = stage.create_unit(laneIdx, stats, aniMap);
 		unit->movement.pos.x = sprite.getPosition().x;
 	}
 }
 void SurgeSpawner::action(Stage& stage) {
 	sf::Vector2f surgePos = sprite.getPosition();
 
-	if (surge.augType != AugmentType::SHOCK_WAVE)
-		surgePos.x += surge.value * static_cast<float>(stats->team);
+	if (surgeAugment.augType != AugmentType::SHOCK_WAVE)
+		surgePos.x += surgeAugment.data.surge.spawnDistance * static_cast<float>(stats->team);
 
-	stage.create_surge(stats, laneInd, surge.surgeLevel, surgePos, surge.augType);
+	stage.create_surge(stats, laneIdx, surgeAugment.data.surge.level, surgePos, surgeAugment.augType);
 }
 
 void UnitSpawner::create_animation() {

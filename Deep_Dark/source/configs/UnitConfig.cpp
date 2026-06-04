@@ -18,19 +18,6 @@ namespace UnitConfig {
             return nlohmann::json();
         }
     }
-    // make summon folder 
-    nlohmann::json createSummonJson(int id) {
-        const std::string path = getUnitFolderPath(id) + "summon/unit_data.json";
-        std::ifstream file(path);
-
-        try {
-            return nlohmann::json::parse(file);
-        }
-        catch (const nlohmann::json::parse_error& e) {
-            std::cerr << "JSON parse error in " << path << ": " << e.what() << std::endl;
-            return nlohmann::json();
-        }
-    }
     sf::Texture createSlotTexture(int id) {
         const std::string path = id >= 0 ? getUnitFolderPath(id) + "slot.png" :
             "sprites/defaults/empty_slot.png";

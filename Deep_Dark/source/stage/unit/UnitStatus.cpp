@@ -14,10 +14,6 @@ void UnitStatus::setup(const UnitStats* stats) {
 	hp = stats->maxHp;
 	kbIndex = 1;
 
-	if (auto shield = stats->get_augment(AugmentType::SHIELD))
-		shieldHp = static_cast<int>(shield->value);
-	else shieldHp = 0;
-
 	//tries to get augment to flip status mask. If it doesnt have the Augment,
 	// it will give an empty Augment with NONE, or 0
 	statusFlags = AugmentType::NONE;
@@ -28,35 +24,20 @@ void UnitStatus::setup(const UnitStats* stats) {
 }
 
 #pragma region Calculations
-float UnitStatus::calculate_damage_reduction(const std::vector<Augment>& augments) const {
-	// called from attacked Unit, parameters are from the attackING unit.
-	float boost = 1;
-
-	for (const Augment& augment : augments) {
-		if (!augment.is_damage_modifier()) continue;
-
-		if (has(augment.augType & AugmentType::RESIST))
-			boost *= augment.percentage;
-		else if (has(augment.augType & AugmentType::SUPERIOR))
-			boost /= augment.percentage;
-	}
-
-	return boost;
-}
 float UnitStatus::calculate_damage_boost(const std::vector<Augment>& augments) const {
 	float boost = 1;
 
 	for (const Augment& augment : augments) {
 		if (augment.is_damage_modifier())
-			boost *= augment.percentage;
+			boost *= augment.data.damage.dmgMultiplier;
 		else if (has(augment.augType & AugmentType::CRITICAL)
-			&& Random::chance(augment.percentage))
+			&& Random::chance(augment.activationChance))
 			boost *= 2;
 	}
 	
 	return boost;
 }
-int UnitStatus::calculate_damage_and_effects(const Unit& attacker) {
+int UnitStatus::calculate_damage_taken_and_apply_augments(const Unit& attacker) {
 	// called from attacked Unit, parameters are from the attackING unit.
 	// Run calculations from ABILITIES and DEBUFFS
 	float dmg = attacker.get_dmg();
@@ -66,26 +47,23 @@ int UnitStatus::calculate_damage_and_effects(const Unit& attacker) {
 	dmg *= get_reinforcement_multiplier();
 	dmg *= attacker.status.get_weaken_multiplier();
 
-	// If the ATTACKING Unit targets this unit's trait, run its damage-augments
-	if (owner.targeted_by_unit(attacker)) {
-		apply_on_hit_effects(attacker.stats->augments, attacker.combat.hitIndex);
-		dmg *= calculate_damage_boost(attacker.stats->augments);
-	}
-
-	// If thi Unit targets the ATTACKING Unit's trait, run this unit's damage-augments
+	// If thi Unit targets the ATTACKING Unit's trait, try to apply RESIST fi it has it
 	if (attacker.targeted_by_unit(owner))
-		dmg *= calculate_damage_reduction(owner.stats->augments);
+		for (const Augment& augment : owner.stats->augments) {
+			if (has(augment.augType & AugmentType::RESIST))
+				dmg *= augment.data.damage.dmgMultiplier;
+		}
 
-	// return if the unit has a shield and it is not broken vis "PIRECE" augment
-	// Try break the Shield BEFORE void and Terminate, as they do NOT go through shields
-	if (has_shield_up() && !damage_shield((int)dmg, attacker.stats)) return 0;
-
-	// These effects are based around the Unit's current HP, 
-	// so they are run after all calculations
 	if (owner.targeted_by_unit(attacker)) {
+		apply_on_hit_status_effects(attacker.stats->augments, attacker.combat.hitIndex);
+		dmg *= calculate_damage_boost(attacker.stats->augments);
+
+		// These effects are based around the Unit's current HP, 
+		// so they are run after all calculations
+
 		// Run VOID check
 		if (attacker.stats->try_proc_augment(AugmentType::VOID, attacker.combat.hitIndex))
-			dmg += (float)owner.stats->maxHp * attacker.stats->get_augment(AugmentType::VOID)->value;
+			dmg += (float)owner.stats->maxHp * attacker.stats->get_augment(AugmentType::VOID)->data.general.magnitude;
 		// Run TERMINATE check
 		if (attacker.combat.try_terminate_unit(owner, dmg))
 			dmg += (float)owner.stats->maxHp;
@@ -93,6 +71,7 @@ int UnitStatus::calculate_damage_and_effects(const Unit& attacker) {
 
 	return static_cast<int>(dmg);
 }
+void apply_on_hit_augments(const std::vector<Augment>& augments, int hitIndex = ALL_HITS);
 #pragma endregion
 
 #pragma region Status Effects
@@ -111,8 +90,10 @@ void UnitStatus::process_new_status_effect(const Augment& aug, bool fromLink) {
 		std::cout << "Augment type was not a status. Cannot add effect" << std::endl;
 		return;
 	}
-
-	StatusEffect newEffect(aug.augType, aug.value2, aug.value);
+	
+	float duration = aug.is_negative_status() ? aug.data.status.duration : 9999.f;
+	StatusEffect newEffect(aug.augType, aug.get_magnitude(), duration);
+	
 	add_status_effect(newEffect);
 
 	if (!fromLink && has(owner.stats->augmentsMask, AugmentType::LINK))
@@ -146,8 +127,7 @@ void UnitStatus::trigger_health_threshold_augments() {
 	float hpPercentage = static_cast<float>(hp) / static_cast<float>(owner.stats->maxHp);
 
 	for (const auto& augment : owner.stats->augments) {
-		if ((has(augment.augType, AugmentType::SCOPE), has(augment.augType, AugmentType::REINFORCE))
-			&& hpPercentage <= augment.value) {
+		if (augment.activates_via_health_threshold() && hpPercentage <= augment.data.onHPThreshold.hpPercentage) {
 			process_new_status_effect(augment);
 		}
 	}
@@ -157,24 +137,34 @@ void UnitStatus::link_augment(const Augment& augment) {
 
 	// Already checked for LINK to get here.
 	const Augment& link = *owner.stats->get_augment(AugmentType::LINK);
+	float linkRange = link.data.link.range;
+	int maxLane = std::min(stage->laneCount - 1, owner.get_lane() + link.data.link.reachesAdjacentLanes);
+	int minLane = std::max(0, owner.get_lane() - link.data.link.reachesAdjacentLanes);
 
 	// Get link Target Team returns 1 if it targets allies, adn -1 for enemies. I wanna rename this too
-	bool targetTeam = owner.stats->team * Augment::links_to_allies(augment.augType);
-	const auto& unitIndexes = stage->lanes[owner.get_lane()].getAllyUnits(targetTeam);
+	bool targetTeam = owner.stats->team * Augment::get_link_target_team(augment.augType);
 
 	bool isStatusEffect = augment.is_status_effect();
 	bool isSyphon = has(augment.augType, AugmentType::SYPHON);
 	bool isShove = has(augment.augType, AugmentType::SHOVE);
 
-	for (const auto& index : unitIndexes) {
-		Unit& unit = stage->getUnit(index);
+	for (int i = minLane; i <= maxLane; i++) {
+		const auto& unitIndexes = stage->lanes[i].getAllyUnits(targetTeam);
 
-		if (isStatusEffect)
-			unit.status.process_new_status_effect(augment, true);
-		if (isSyphon)
-			unit.status.syphon(owner.stats->get_augment(AugmentType::SYPHON));
-		else if (isShove)
-			unit.movement.knockback(UnitConfig::SHOVE_KB_FORCE);
+		for (const auto& index : unitIndexes) {
+			Unit& unit = stage->getUnit(index);
+
+			if (unit.spawnID == owner.spawnID ||
+				owner.enemy_in_range(unit.movement.pos.x, -linkRange, linkRange))
+				continue; // Don't link to self or units out of range
+
+			if (isStatusEffect)
+				unit.status.process_new_status_effect(augment, true);
+			if (isSyphon)
+				unit.status.syphon(owner.stats->get_augment(AugmentType::SYPHON));
+			else if (isShove)
+				unit.movement.knockback(UnitConfig::SHOVE_KB_FORCE);
+		}
 	}
 }
 void UnitStatus::update_status_effects(float deltaTime) {
@@ -198,34 +188,24 @@ void UnitStatus::update_status_effects(float deltaTime) {
 		}
 	}
 }
-void UnitStatus::apply_on_hit_effects(const std::vector<Augment>& augments,int attackersHitIndex) {
+void UnitStatus::apply_on_hit_status_effects(const std::vector<Augment>& augments,int attackersHitIndex) {
 	// called from attacked Unit, parameters are from the attackING unit.
 	for (const Augment& augment : augments) {
-		if (can_proc_status(augment, attackersHitIndex) && Random::chance(augment.percentage)) {
+		if (can_proc_status(augment, attackersHitIndex) && Random::chance(augment.activationChance)) {
 			process_new_status_effect(augment);
 		}
 	}
 }
 bool UnitStatus::can_proc_status(const Augment& augment, int hitIndex) const {
 	return augment.is_negative_status() && !owner.immune(augment.augType) &&
-		!has_shield_up() && augment.can_hit(hitIndex);
+		augment.can_hit(hitIndex);
 }
 #pragma endregion
 
 
 #pragma region Taking Damage
-bool UnitStatus::damage_shield(int dmg, const UnitStats* _stats) {
-	// shield pierce can instantly break shields
-	if (_stats && _stats->try_proc_augment(AugmentType::SHIELD_PIERCE)) {
-		shieldHp = 0;
-		return true;
-	}
-
-	shieldHp -= dmg;
-	return false;
-}
 bool UnitStatus::take_damage(const Unit& attackerUnit) {
-	int dmg = calculate_damage_and_effects(attackerUnit);
+	int dmg = calculate_damage_taken_and_apply_augments(attackerUnit);
 
 	int oldHp = hp;
 	hp -= dmg;
@@ -236,7 +216,7 @@ bool UnitStatus::take_damage(const Unit& attackerUnit) {
 	return hp <= 0 && !try_proc_survive();
 }
 bool UnitStatus::take_damage(const Surge& surge) {
-	int dmg = surge.calculate_damage_and_effects(owner);
+	int dmg = surge.calculate_damage_taken_and_apply_augments(owner);
 
 	int oldHp = hp;
 	hp -= dmg;
@@ -250,17 +230,13 @@ bool UnitStatus::take_damage(int dmg, bool shove) {
 	dmg *= get_corrosion_multiplier();
 	dmg *= get_reinforcement_multiplier();
 
-	if (has_shield_up() && !damage_shield(dmg)) return false; // return if shield did not break
-
 	int oldHp = hp;
 	hp -= dmg;
 
 	trigger_health_threshold_augments();
 
-	if (!owner.anim.in_knockback() && met_knockback_threshold(oldHp)) {
-		shieldHp = (int)owner.stats->get_augment(AugmentType::SHIELD)->value;
+	if (!owner.anim.in_knockback() && met_knockback_threshold(oldHp)) 
 		owner.movement.knockback();
-	}
 	else if (shove) owner.movement.knockback(0.5f);
 
 	return hp <= 0 && !try_proc_survive();
@@ -298,7 +274,7 @@ bool UnitStatus::try_proc_survive() {
 	return false;
 }
 void UnitStatus::syphon(const Augment* syphon) {
-	int prevKbIndex = std::max(kbIndex - (int)syphon->value, 1);
+	int prevKbIndex = std::max(kbIndex - (int)syphon->data.killStreak.effectMagnitude, 1);
 	int prevThroshold = owner.stats->maxHp - (owner.stats->maxHp * prevKbIndex / owner.stats->knockbacks);
 	
 	hp = prevThroshold + 1;

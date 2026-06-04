@@ -3,19 +3,24 @@
 #include <stdint.h>
 
 enum class UnitAnimationState {
-	WAITING_TO_DELETE = -4, // If the Unit is in this state, its about to get deleted (more specifically its spot in pool is freed up)
+	// If the Unit is in this state, its about to get deleted (more specifically its spot in pool is freed up)
+	WAITING_TO_DELETE = -4, 
 	PHASE_WINDDOWN = -3,
 	PHASE_WINDUP = -2,
 	SUMMON = -1,
 	MOVE = 0,
 	ATTACK = 1,
-	IDLE = 2, // Any AnimationState below this make the Unit INVINCIBLE (title card)
+	IDLE = 2, 
+	// Any AnimationState value below this make the Unit INVINCIBLE (title card)
 	KNOCKBACK = 3,
 	FALLING = 4,
 	DEATH = 5,
 	JUMPING = 6,
 	TRANSFORM = 7,
 	PHASE_ACTIVE = 8,
+	// Unit is waiting fro something to happen and is not being drawn or interacting with the game
+	// RIght now, its only use is for when a Unit is warped out and waiting to be warped back in.
+	WAITING = 9, 
 };
 enum class DeathCause {
 	NONE = 0,

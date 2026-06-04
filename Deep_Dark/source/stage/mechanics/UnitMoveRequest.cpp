@@ -32,11 +32,12 @@ void UnitMoveRequest::move_unit_by_request(Stage* stage, size_t unitIndex) const
 
 	// Cencel any ongoing tweens as a safety-net. Set new Lane
 	unit.movement.cancel_tween();
-	unit.movement.laneInd = newLane;
+	unit.movement.laneIdx = newLane;
 
 	switch (type) {
 	case UnitMoveRequestType::FALL:
-		unit.movement.fall(axisPos);
+	case UnitMoveRequestType::FAST_FALL:
+		unit.movement.fall(axisPos, type);
 		break;
 	case UnitMoveRequestType::SQUASH:
 		unit.movement.squash(axisPos);
@@ -46,6 +47,9 @@ void UnitMoveRequest::move_unit_by_request(Stage* stage, size_t unitIndex) const
 		break;
 	case UnitMoveRequestType::TELEPORT:
 		unit.movement.pos = { axisPos, stage->lanes[newLane].yPos };
+		break;
+	case UnitMoveRequestType::WARP:
+		unit.movement.warp(axisPos);
 		break;
 	default:
 		unit.movement.launch(axisPos);

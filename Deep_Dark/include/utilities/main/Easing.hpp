@@ -1,6 +1,10 @@
 #pragma once
 #include <cmath>
 #include <array>
+#include <unordered_map>
+#include "UnitMoveRequest.h"
+
+constexpr double PI = 3.14159265358979323846;
 
 namespace Easing {
     // Linear (no easing)
@@ -40,13 +44,13 @@ namespace Easing {
     }
     // ========== SINE ==========
     inline float easeInSine(float t) {
-        return 1.0f - std::cos((t * M_PI) / 2.0f);
+        return 1.0f - std::cos((t * PI) / 2.0f);
     }
     inline float easeOutSine(float t) {
-        return std::sin((t * M_PI) / 2.0f);
+        return std::sin((t * PI) / 2.0f);
     }
     inline float easeInOutSine(float t) {
-        return -(std::cos(M_PI * t) - 1.0f) / 2.0f;
+        return -(std::cos(PI * t) - 1.0f) / 2.0f;
     }
     // ========== EXPONENTIAL ==========
     inline float easeInExpo(float t) {
@@ -95,17 +99,17 @@ namespace Easing {
 
     // ========== ELASTIC (bouncy) ==========
     inline float easeInElastic(float t) {
-        const float c4 = (2.0f * M_PI) / 3.0f;
+        const float c4 = (2.0f * PI) / 3.0f;
         return t == 0.0f ? 0.0f : t == 1.0f ? 1.0f
             : -std::pow(2.0f, 10.0f * t - 10.0f) * std::sin((t * 10.0f - 10.75f) * c4);
     }
     inline float easeOutElastic(float t) {
-        const float c4 = (2.0f * M_PI) / 3.0f;
+        const float c4 = (2.0f * PI) / 3.0f;
         return t == 0.0f ? 0.0f : t == 1.0f ? 1.0f
             : std::pow(2.0f, -10.0f * t) * std::sin((t * 10.0f - 0.75f) * c4) + 1.0f;
     }
     inline float easeInOutElastic(float t) {
-        const float c5 = (2.0f * M_PI) / 4.5f;
+        const float c5 = (2.0f * PI) / 4.5f;
         return t == 0.0f ? 0.0f : t == 1.0f ? 1.0f : t < 0.5f
             ? -(std::pow(2.0f, 20.0f * t - 10.0f) * std::sin((20.0f * t - 11.125f) * c5)) / 2.0f
             : (std::pow(2.0f, -20.0f * t + 10.0f) * std::sin((20.0f * t - 11.125f) * c5)) / 2.0f + 1.0f;
@@ -141,6 +145,7 @@ namespace Easing {
 enum class EasingType {
     LINEAR,
     OUT_BOUNCE,
+	IN_CUBIC,
     OUT_CUBIC,
     IN_OUT_SINE,
     OUT_QUART,
@@ -148,9 +153,10 @@ enum class EasingType {
     COUNT
 };
 using EasingFunc = float(*)(float);
-static const auto easeFuncArr = std::array<EasingFunc, 7>{
+static const auto easeFuncArr = std::array<EasingFunc, 8>{
     Easing::linear,
     Easing::easeOutBounce,
+    Easing::easeInCubic,
     Easing::easeOutCubic,
     Easing::easeInOutSine,
     Easing::easeOutQuart,
@@ -159,13 +165,15 @@ static const auto easeFuncArr = std::array<EasingFunc, 7>{
 };
 
 const EasingType noEase = EasingType::COUNT;
-const std::array<std::pair<EasingType, EasingType>, 8> unitTweenEasings = { {
-    {EasingType::OUT_CUBIC, EasingType::COUNT}, // KNOCKBACK
-    {EasingType::COUNT, EasingType::IN_OUT_SINE}, // FALL
-    {EasingType::COUNT, EasingType::OUT_BOUNCE}, // SQUASH
-    {EasingType::COUNT, EasingType::OUT_QUART}, // LAUNCH
-    {EasingType::COUNT, EasingType::OUT_BOUNCE}, // DROP_FROM_LAUNCH
-    {EasingType::LINEAR, EasingType::OUT_BACK}, // JUMP
-    {EasingType::LINEAR, EasingType::COUNT}, // LEAP
-    {EasingType::LINEAR, EasingType::COUNT}
+// First and Second easings represent x and y coordinates. COUNT means no easing for that coordinate
+const std::unordered_map<UnitMoveRequestType, std::pair<EasingType, EasingType>> unitTweenEasings = { {
+    {UnitMoveRequestType::KNOCKBACK, {EasingType::OUT_CUBIC, EasingType::COUNT}},
+    {UnitMoveRequestType::FALL, {EasingType::COUNT, EasingType::IN_OUT_SINE}},
+	{UnitMoveRequestType::FAST_FALL, {EasingType::COUNT, EasingType::IN_CUBIC}},
+    {UnitMoveRequestType::SQUASH, {EasingType::COUNT, EasingType::OUT_BOUNCE}}, // SQUASH
+    {UnitMoveRequestType::LAUNCH, {EasingType::COUNT, EasingType::OUT_QUART}}, // LAUNCH
+    {UnitMoveRequestType::DROP_FROM_LAUNCH, {EasingType::COUNT, EasingType::OUT_BOUNCE}}, // DROP_FROM_LAUNCH
+    {UnitMoveRequestType::JUMP, {EasingType::LINEAR, EasingType::OUT_BACK}}, // JUMP
+    {UnitMoveRequestType::LEAP, {EasingType::LINEAR, EasingType::COUNT}}, // LEAP
+    {UnitMoveRequestType::WARP, {EasingType::LINEAR, EasingType::COUNT}}
 } };

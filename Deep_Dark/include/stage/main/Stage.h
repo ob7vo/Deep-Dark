@@ -64,6 +64,9 @@ struct Stage
 
 	// Configs
 	std::unordered_map<int, ProjectileData> projDataMap = {};
+	// Stored Unit Data (stats and animations)
+	// Used for cases where there are extra units that are not stored in an EnemySpawner or the Loadout class
+	// Those cases right now are for units that are summoned, and units that transform.
 	std::unordered_map<int, std::unique_ptr<UnitData>> unitDataMap;
 
 	Base enemyBase = {};
@@ -88,7 +91,8 @@ struct Stage
 	/// <summary> Reserved for Bosses. They die and tehn transform, like a Phase-Transition </summary>
 	void transform_unit(const Unit& unit);
 	void create_summon(const Unit& unit);
-	UnitData* get_unit_config(int id, float magnification, UnitSpawnType spawnType);
+
+	UnitData* get_unit_config(int id, float magnification);
 
 	void try_create_ability_observer(size_t poolIndex, int spawnIndex);
 
@@ -101,7 +105,7 @@ struct Stage
 	void create_projectile(const Unit& unit, const Augment& proj);
 	void create_hitbox_visualizers(sf::Vector2f pos, std::pair<float, float> range, int team);
 
-	std::pair<float, int> find_lane_to_fall_on(const Unit& unit) const;
+	std::pair<float, int> find_lane_to_fall_on(const Unit& unit, int startLane) const;
 	int find_lane_to_knock_to(const Unit& unit, int incrementer) const;
 
 	inline Base& get_enemy_base(int team) { return team == p_team ? enemyBase : playerBase; }
@@ -112,8 +116,8 @@ struct Stage
 	bool reached_unit_capacity(int team);
 	void lower_summons_count(int id);
 
-	inline float clamp_within_lane(float newX, int laneInd) const {
-		auto [minBound, maxBound] = lanes[laneInd].get_lane_boundaries();
+	inline float clamp_within_lane(float newX, int laneIdx) const {
+		auto [minBound, maxBound] = lanes[laneIdx].get_lane_boundaries();
 		return std::clamp(newX, minBound, maxBound);
 	}
 

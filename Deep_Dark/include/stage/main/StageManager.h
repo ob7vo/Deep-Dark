@@ -53,7 +53,7 @@ struct StageManager
 	bool read_spawn_inputs(Key key);
 	void read_misc_button_inputs(Key key);
 
-	bool try_spawn_death_surge(const Unit& unit);
+	bool activate_units_self_destruct(const Unit & unit);
 	bool try_create_drop_box(int lane, const UnitStats* stats, UnitAniMap* aniMap);
 	bool try_create_cloner(const Unit& unit);
 
