@@ -1,8 +1,8 @@
 #include "pch.h"
-#include "UnitMoveRequest.h"
+#include "UnitLaneTransferRequest.h"
 #include "Stage.h"
 
-std::optional<size_t> UnitMoveRequest::find_unit_to_move(const Stage& stage) const {
+std::optional<size_t> UnitLaneTransferRequest::find_unit_to_move(const Stage& stage) const {
 	const auto& from = stage.lanes[unitsCurrentLane].getAllyUnits(team);
 
 	for (size_t i = 0; i < from.size(); i++) {
@@ -13,7 +13,7 @@ std::optional<size_t> UnitMoveRequest::find_unit_to_move(const Stage& stage) con
 
 	return std::nullopt;
 }
-void UnitMoveRequest::process(Stage* stage, size_t fromIndex) const {
+void UnitLaneTransferRequest::process(Stage* stage, size_t fromIndex) const {
 	auto& from = stage->lanes[unitsCurrentLane].getAllyUnits(team);
 	auto& to = stage->lanes[newLane].getAllyUnits(team);
 
@@ -27,7 +27,7 @@ void UnitMoveRequest::process(Stage* stage, size_t fromIndex) const {
 
 	move_unit_by_request(stage, actualUnitIndex);
 };
-void UnitMoveRequest::move_unit_by_request(Stage* stage, size_t unitIndex) const {
+void UnitLaneTransferRequest::move_unit_by_request(Stage* stage, size_t unitIndex) const {
 	auto& unit = stage->getUnit(unitIndex);
 
 	// Cencel any ongoing tweens as a safety-net. Set new Lane
@@ -35,20 +35,20 @@ void UnitMoveRequest::move_unit_by_request(Stage* stage, size_t unitIndex) const
 	unit.movement.laneIdx = newLane;
 
 	switch (type) {
-	case UnitMoveRequestType::FALL:
-	case UnitMoveRequestType::FAST_FALL:
+	case UnitLaneTransferRequestType::FALL:
+	case UnitLaneTransferRequestType::FAST_FALL:
 		unit.movement.fall(axisPos, type);
 		break;
-	case UnitMoveRequestType::SQUASH:
+	case UnitLaneTransferRequestType::SQUASH:
 		unit.movement.squash(axisPos);
 		break;
-	case UnitMoveRequestType::JUMP:
+	case UnitLaneTransferRequestType::JUMP:
 		unit.movement.jump(axisPos);
 		break;
-	case UnitMoveRequestType::TELEPORT:
+	case UnitLaneTransferRequestType::TELEPORT:
 		unit.movement.pos = { axisPos, stage->lanes[newLane].yPos };
 		break;
-	case UnitMoveRequestType::WARP:
+	case UnitLaneTransferRequestType::WARP:
 		unit.movement.warp(axisPos);
 		break;
 	default:

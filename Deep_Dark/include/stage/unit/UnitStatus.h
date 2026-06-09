@@ -44,7 +44,7 @@ struct UnitStatus {
 
     bool met_knockback_threshold(int oldHp);
     bool try_proc_survive();
-    void syphon(const Augment* syphon);
+    void syphon(const Augment* syphon, bool fromLinking = false);
 
     inline bool can_phase() const { return has(statusFlags & AugmentType::PHASE); }
     inline bool can_transform() const { return has(statusFlags & AugmentType::TRANSFORM); }

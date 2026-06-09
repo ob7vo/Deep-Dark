@@ -96,12 +96,12 @@ void Trap::trigger_launch_pad(Stage& stage) const {
 	for (const auto& index : lane.enemyUnitIndexes) {
 		auto& unit = stage.getUnit(index);
 		if (valid_attack_target(unit))
-			unit.movement.push_launch_request();
+			unit.movement.queue_launch_request();
 	}
 	for (const auto& index : lane.playerUnitIndexes) {
 		auto& unit = stage.getUnit(index);
 		if (valid_attack_target(unit))
-			unit.movement.push_launch_request();
+			unit.movement.queue_launch_request();
 	}
 }
 void Trap::trigger_trap_door(Stage& stage) {

@@ -2,7 +2,7 @@
 #include "Easing.hpp"
 #include "UnitTween.h"
 
-void UnitTween::start(sf::Vector2f start, const sf::Vector2f& end, float dur, UnitMoveRequestType type) {
+void UnitTween::start(sf::Vector2f start, const sf::Vector2f& end, float dur, UnitLaneTransferRequestType type) {
 	startPos = start;
 	endPos = end;
 	duration = dur;

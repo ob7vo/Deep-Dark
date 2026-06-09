@@ -51,4 +51,7 @@ public:
 	inline UnitAnimationState get_state() const { return state; }
 
 	static std::string stateToString(UnitAnimationState state);
+
+	inline void enter_lane_transfer_state() { state = UnitAnimationState::WAITING_FOR_LANE_TRANSFER; }
+	inline bool waiting_for_lane_transfer() const { return state == UnitAnimationState::WAITING_FOR_LANE_TRANSFER; }
 };

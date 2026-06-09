@@ -172,7 +172,7 @@
     <ClCompile Include="source\stage\mechanics\Lane.cpp" />
     <ClCompile Include="source\stage\mechanics\StageRestrictions.cpp" />
     <ClCompile Include="source\stage\mechanics\StageWallet.cpp" />
-    <ClCompile Include="source\stage\mechanics\UnitMoveRequest.cpp" />
+    <ClCompile Include="source\stage\mechanics\UnitLaneTransferRequest.cpp" />
     <ClCompile Include="source\stage\main\Stage.cpp" />
     <ClCompile Include="source\stage\entities\Surge.cpp" />
     <ClCompile Include="source\stage\entities\Trap.cpp" />
@@ -242,7 +242,7 @@
     <ClInclude Include="include\stage\main\UnitPool.h" />
     <ClInclude Include="include\stage\mechanics\StageChallenge.h" />
     <ClInclude Include="include\stage\mechanics\StageRestrictions.h" />
-    <ClInclude Include="include\stage\mechanics\UnitMoveRequest.h" />
+    <ClInclude Include="include\stage\mechanics\UnitLaneTransferRequest.h" />
     <ClInclude Include="include\configs\UnitConfigConstants.h" />
     <ClInclude Include="include\systems\managers\TextboxManager.h" />
     <ClInclude Include="include\systems\observers\Scheduler.h" />

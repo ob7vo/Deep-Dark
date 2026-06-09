@@ -1,6 +1,6 @@
 #pragma once
 #include "Animation.h"
-#include "UnitMoveRequest.h"
+#include "UnitLaneTransferRequest.h"
 #include "Lane.h"
 #include "Base.h"
 #include "Spawners.h"
@@ -49,7 +49,7 @@ struct Stage
 	int* selectedLane = 0;
 
 	std::vector<EnemySpawner> enemySpawners = {};
-	std::vector<UnitMoveRequest> moveRequests = {};
+	std::vector<UnitLaneTransferRequest> laneTransferRequests = {};
 
 	// Effects
 	std::vector<std::pair<AugmentType, sf::Vector2f>> effectSpritePositions;
@@ -110,8 +110,8 @@ struct Stage
 
 	inline Base& get_enemy_base(int team) { return team == p_team ? enemyBase : playerBase; }
 
-	bool can_push_move_request(int id);
-	void push_move_request(Unit& unit, int newLane, float fallTo, UnitMoveRequestType type);
+	bool can_queue_lane_transfer_request(int id);
+	void queue_lane_transfer_request(Unit& unit, int newLane, float fallTo, UnitLaneTransferRequestType type);
 
 	bool reached_unit_capacity(int team);
 	void lower_summons_count(int id);

@@ -14,13 +14,13 @@ bool over_this_gap(std::pair<float, float> gap, float xPos) {
 	return xPos > gap.first && xPos < gap.second;
 }
 
-UnitMoveRequestType UnitMovement::update_tween(float deltaTime) {
+UnitLaneTransferRequestType UnitMovement::update_tween(float deltaTime) {
 	tween.update(pos, deltaTime);	
 
-	return tweening() ? UnitMoveRequestType::NOT_DONE : tween.tweenType;
+	return tweening() ? UnitLaneTransferRequestType::NOT_DONE : tween.tweenType;
 }
 void UnitMovement::create_tween(sf::Vector2f endPos, float time,
-	UnitMoveRequestType tweenType, bool overwrite) 
+	UnitLaneTransferRequestType tweenType, bool overwrite) 
 {
 	if (tweening()) {
 		if (overwrite) cancel_tween();
@@ -48,8 +48,13 @@ void UnitMovement::knockback(float force) {
 	// The timer of knockback should change proportionally with the KB force
 	float timerMultiplier = std::clamp(force, MIN_KB_TIMER_MULTIPLIER, MAX_KB_TIMER_MULTIPLIER);
 
-	create_tween(newPos, KNOCKBACK_DURATION * timerMultiplier, UnitMoveRequestType::KNOCKBACK);
+	create_tween(newPos, KNOCKBACK_DURATION * timerMultiplier, UnitLaneTransferRequestType::KNOCKBACK);
 	owner.anim.start(UnitAnimationState::KNOCKBACK);
+}
+void UnitMovement::shove(bool fromLinking) {
+	knockback(UnitConfig::SHOVE_KB_FORCE);
+	if (!fromLinking && has(owner.stats->augmentsMask, AugmentType::LINK))
+		owner.status.link_augment(SHOVE_AUGMENT);
 }
 bool UnitMovement::try_leap() {
 	float leapRange = owner.stats->get_augment(AugmentType::LEAP)->data.mobility.distance;
@@ -64,7 +69,7 @@ bool UnitMovement::try_leap() {
 		float landingSpot = edge + LEDGE_SNAP * static_cast<float>(owner.stats->team);
 		sf::Vector2f newPos({ landingSpot, pos.y });
 
-		create_tween(newPos, LEAP_TWEEN_DURATION, UnitMoveRequestType::LEAP);
+		create_tween(newPos, LEAP_TWEEN_DURATION, UnitLaneTransferRequestType::LEAP);
 
 		owner.anim.start(UnitAnimationState::JUMPING);
 		return true;
@@ -74,7 +79,7 @@ bool UnitMovement::try_leap() {
 }
 
 // VERTICAL
-void UnitMovement::fall(float newY, UnitMoveRequestType fallType) {
+void UnitMovement::fall(float newY, UnitLaneTransferRequestType fallType) {
 	sf::Vector2f newPos({ pos.x, newY });
 
 	create_tween(newPos, FALL_DURATION, fallType);
@@ -84,13 +89,13 @@ void UnitMovement::fall(float newY, UnitMoveRequestType fallType) {
 void UnitMovement::squash(float newY) {
 	sf::Vector2f newPos({ pos.x, newY });
 
-	create_tween(newPos, SQUASH_DURATION, UnitMoveRequestType::SQUASH);
+	create_tween(newPos, SQUASH_DURATION, UnitLaneTransferRequestType::SQUASH);
 	owner.anim.start(UnitAnimationState::KNOCKBACK);
 }
 void UnitMovement::launch(float newY) {
 	sf::Vector2f newPos({ pos.x, newY - LAUNCH_DISTANCE });
 
-	create_tween(newPos, LAUNCH_TWEEN_DURATION, UnitMoveRequestType::LAUNCH);
+	create_tween(newPos, LAUNCH_TWEEN_DURATION, UnitLaneTransferRequestType::LAUNCH);
 
 	owner.anim.start(UnitAnimationState::KNOCKBACK);
 }
@@ -99,13 +104,15 @@ void UnitMovement::launch(float newY) {
 void UnitMovement::jump(float newX) {
 	sf::Vector2f newPos({ newX, owner.stage->lanes[laneIdx].yPos });
 
-	create_tween(newPos, JUMP_TWEEN_DURATION, UnitMoveRequestType::JUMP);
+	create_tween(newPos, JUMP_TWEEN_DURATION, UnitLaneTransferRequestType::JUMP);
 
 	owner.anim.start(UnitAnimationState::JUMPING);
 }
 void UnitMovement::warp(float newY) {
-	// Set the position
+	// Being set to MOVING is the default from being warped. If they actually need to fall
+	// It should be immediately correct be the fall() and move request functions.
 	pos.y = newY;
+	owner.anim.start(UnitAnimationState::MOVE);
 
 	// Get LaneYPos to check for falling
 	float laneYpos = owner.stage->lanes[laneIdx].yPos;
@@ -121,12 +128,13 @@ void UnitMovement::warp(float newY) {
 
 		float fallDmgPercent = WARP_BASE_FALL_DAMAGE_PERCENTAGE + (WARP_FALL_DAMAGE_PER_LANE * ((stage->laneCount-1) - laneIdx));
 		owner.status.hp -= static_cast<int>(owner.stats->maxHp * fallDmgPercent);
-		owner.status.hp = std::max(0, owner.status.hp);
+		owner.status.hp = std::max(1, owner.status.hp);
 
-		// If they land on a new lane, but not out of bounds
+		// If they land on a lane that ISN'T the top lane, their lane index must be moved
 		if (newLaneIdx >= 0 && newLaneIdx < laneIdx) {
-			stage->push_move_request(owner, newLaneIdx, yPos, UnitMoveRequestType::FALL);
+			stage->queue_lane_transfer_request(owner, newLaneIdx, yPos, UnitLaneTransferRequestType::FALL);
 		}
+		// If they land on the top lane, which they are all ready on, or out of bounds, no move request/lane switching is needed.
 		else {
 			if (newLaneIdx <= -1) owner.status.hp = 0;
 			fall(yPos);
@@ -141,23 +149,23 @@ void UnitMovement::warp(float newY) {
 	// It is at it's lane height, but may still fall through any gaps
 	// No flal damage occurs in this case, but the Unit can still fall out and die
 	else if (owner.over_gap()) {
-		push_fall_request();
+		queue_fall_request();
 	}
 }
 #pragma endregion
 
 #pragma region Pushing Move Requests
-void UnitMovement::push_teleport_request(const Teleporter& tp) {
-	if (!stage->can_push_move_request(owner.spawnID)) return;
+void UnitMovement::queue_teleport_request(const Teleporter& tp) {
+	if (!stage->can_queue_lane_transfer_request(owner.spawnID)) return;
 
 	owner.anim.start(UnitAnimationState::MOVE);
 
 	// If the telportor leads to the same Lane, theen theres no need for a Move Request
 	if (tp.connectedLane != laneIdx)
-		stage->push_move_request(owner, tp.connectedLane, tp.xDestination, UnitMoveRequestType::TELEPORT);
+		stage->queue_lane_transfer_request(owner, tp.connectedLane, tp.xDestination, UnitLaneTransferRequestType::TELEPORT);
 	else pos = { tp.xDestination, stage->lanes[tp.connectedLane].yPos };
 }
-void UnitMovement::push_fall_request() {
+void UnitMovement::queue_fall_request() {
 	const auto [yPos, newLaneIdx] = stage->find_lane_to_fall_on(owner, laneIdx - 1);
 
 	// Lane will be -1 if no lane to fall on is found 
@@ -165,12 +173,12 @@ void UnitMovement::push_fall_request() {
 
 	if (newLaneIdx <= -1) {
 		owner.status.hp = 0;
-		fall(yPos, UnitMoveRequestType::FAST_FALL);
+		fall(yPos, UnitLaneTransferRequestType::FAST_FALL);
 	}
 	else
-		stage->push_move_request(owner, newLaneIdx, yPos, UnitMoveRequestType::FALL);
+		stage->queue_lane_transfer_request(owner, newLaneIdx, yPos, UnitLaneTransferRequestType::FALL);
 }
-void UnitMovement::push_squash_request() {
+void UnitMovement::queue_squash_request() {
 	if (laneIdx == 0) {
 		knockback(false);
 		return;
@@ -182,9 +190,9 @@ void UnitMovement::push_squash_request() {
 	// If there is no lane below, then default to a basic knockback
 	if (newLane == laneIdx) knockback(false);
 	else
-		stage->push_move_request(owner, newLane, laneYPos, UnitMoveRequestType::SQUASH);
+		stage->queue_lane_transfer_request(owner, newLane, laneYPos, UnitLaneTransferRequestType::SQUASH);
 }
-void UnitMovement::push_launch_request() {
+void UnitMovement::queue_launch_request() {
 	if (laneIdx == owner.stage->laneCount - 1 ||
 		owner.stats->has_augment(AugmentType::HEAVYWEIGHT)) {
 		knockback(false);
@@ -197,11 +205,13 @@ void UnitMovement::push_launch_request() {
 	// If there is no lane above, then default to a basic knockback
 	if (newLane == laneIdx) knockback(false);
 	else
-		stage->push_move_request(owner, newLane, laneYPos, UnitMoveRequestType::LAUNCH);
+		stage->queue_lane_transfer_request(owner, newLane, laneYPos, UnitLaneTransferRequestType::LAUNCH);
 }
-void UnitMovement::push_warp_request(const Augment& warpAug) {
-	// Reset animation to avoid any potential complications
-	owner.anim.start(UnitAnimationState::WAITING);
+void UnitMovement::queue_warp_request(const Augment& warpAug, bool fromLinking) {
+	// Try use the LINK augment before moving the X position, so it
+	// activates where teh Unit was actually hit.
+	if (!fromLinking && has(owner.stats->augmentsMask, AugmentType::LINK))
+		owner.status.link_augment(warpAug);
 
 	// The Unit's New Lane and x position are set BEFORE being sent into the warp waiting room
 	// After it is done waiting, it will be sent to its newLane and decide its y position
@@ -214,12 +224,13 @@ void UnitMovement::push_warp_request(const Augment& warpAug) {
 	float newY = stage->lanes[clampedLane].yPos;
 	if (actualLane < -1)
 		newY += WARP_UNDER_LANES_DISTANCE;
-	else if (actualLane >= stage->laneCount)
+	// Fall damage cocurs wehn specifically above the max Lane ID, so no (-1)
+	else if (actualLane >= stage->laneCount) 
 		newY -= WARP_ABOVE_LANES_DISTANCE;
 
-	stage->push_move_request(owner, clampedLane, newY, UnitMoveRequestType::WARP);
+	stage->queue_lane_transfer_request(owner, clampedLane, newY, UnitLaneTransferRequestType::WARP);
 }
-bool UnitMovement::try_push_jump_request() const {
+bool UnitMovement::try_queue_jump_request() const {
 	int targetLane = laneIdx + 1;
 	const auto& [leftEdge, rightEdge] = owner.getHurtboxEdges();
 
@@ -238,7 +249,7 @@ bool UnitMovement::try_push_jump_request() const {
 			dist <= 0 || dist > jumpRange) return false;
 
 		float landingSpot = edge + LEDGE_SNAP * static_cast<float>(owner.stats->team);
-		stage->push_move_request(owner, targetLane, landingSpot, UnitMoveRequestType::JUMP);
+		stage->queue_lane_transfer_request(owner, targetLane, landingSpot, UnitLaneTransferRequestType::JUMP);
 
 		return true;
 	}
@@ -250,6 +261,6 @@ void UnitMovement::finish_launch_tween() {
 	float laneYPos = stage->lanes[laneIdx].yPos;
 	sf::Vector2f newPos = { pos.x, laneYPos };
 
-	create_tween(newPos, DROP_FROM_LAUNCH_TWEEN_DURATION, UnitMoveRequestType::DROP_FROM_LAUNCH);	
+	create_tween(newPos, DROP_FROM_LAUNCH_TWEEN_DURATION, UnitLaneTransferRequestType::DROP_FROM_LAUNCH);	
 }
 #pragma endregion

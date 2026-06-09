@@ -23,7 +23,7 @@ void Teleporter::check_units(Stage& stage, const std::vector<size_t>& unitIndexe
 		auto& unit = stage.getUnit(index);
 
 		if (found_valid_target(unit))
-			unit.movement.push_teleport_request(*this);
+			unit.movement.queue_teleport_request(*this);
 	}
 }
 void Teleporter::action(Stage& stage) {

@@ -2,7 +2,7 @@
 #include <cmath>
 #include <array>
 #include <unordered_map>
-#include "UnitMoveRequest.h"
+#include "UnitLaneTransferRequest.h"
 
 constexpr double PI = 3.14159265358979323846;
 
@@ -141,11 +141,33 @@ namespace Easing {
             ? (1.0f - easeOutBounce(1.0f - 2.0f * t)) / 2.0f
             : (1.0f + easeOutBounce(2.0f * t - 1.0f)) / 2.0f;
     }
+
+    // x(t) and y(t) for cubic bezier with P0=(0,0), P3=(1,1)
+    // P1=(x1,y1), P2=(x2,y2) are your control points
+    inline float bezierCoord(float t, float p1, float p2) {
+        return 3 * (1 - t) * (1 - t) * t * p1 + 3 * (1 - t) * t * t * p2 + t * t * t;
+    }
+
+    // Given a time ratio `progress` in [0,1], get eased value
+    // Uses Newton's method to solve for t given x, then returns y(t)
+    inline float cubicBezierEase(float progress, float x1, float y1, float x2, float y2) {
+        // Solve for t where bezierCoord(t, x1, x2) == progress
+        float t = progress;
+        for (int i = 0; i < 8; i++) {
+            float x = bezierCoord(t, x1, x2) - progress;
+            float dx = 3 * (1 - t) * (1 - t) * x1 + 6 * (1 - t) * t * (x2 - x1) + 3 * t * t * (1 - x2);
+            t -= x / dx;
+        }
+        return bezierCoord(t, y1, y2);
+    }
+
 }
 enum class EasingType {
     LINEAR,
     OUT_BOUNCE,
+	IN_QUAD,
 	IN_CUBIC,
+	IN_QUART,
     OUT_CUBIC,
     IN_OUT_SINE,
     OUT_QUART,
@@ -153,10 +175,12 @@ enum class EasingType {
     COUNT
 };
 using EasingFunc = float(*)(float);
-static const auto easeFuncArr = std::array<EasingFunc, 8>{
+static const auto easeFuncArr = std::array<EasingFunc, 10>{
     Easing::linear,
     Easing::easeOutBounce,
+    Easing::easeInQuad,
     Easing::easeInCubic,
+	Easing::easeInQuart,
     Easing::easeOutCubic,
     Easing::easeInOutSine,
     Easing::easeOutQuart,
@@ -164,16 +188,16 @@ static const auto easeFuncArr = std::array<EasingFunc, 8>{
     Easing::zero
 };
 
-const EasingType noEase = EasingType::COUNT;
+constexpr EasingType noEase = EasingType::COUNT;
 // First and Second easings represent x and y coordinates. COUNT means no easing for that coordinate
-const std::unordered_map<UnitMoveRequestType, std::pair<EasingType, EasingType>> unitTweenEasings = { {
-    {UnitMoveRequestType::KNOCKBACK, {EasingType::OUT_CUBIC, EasingType::COUNT}},
-    {UnitMoveRequestType::FALL, {EasingType::COUNT, EasingType::IN_OUT_SINE}},
-	{UnitMoveRequestType::FAST_FALL, {EasingType::COUNT, EasingType::IN_CUBIC}},
-    {UnitMoveRequestType::SQUASH, {EasingType::COUNT, EasingType::OUT_BOUNCE}}, // SQUASH
-    {UnitMoveRequestType::LAUNCH, {EasingType::COUNT, EasingType::OUT_QUART}}, // LAUNCH
-    {UnitMoveRequestType::DROP_FROM_LAUNCH, {EasingType::COUNT, EasingType::OUT_BOUNCE}}, // DROP_FROM_LAUNCH
-    {UnitMoveRequestType::JUMP, {EasingType::LINEAR, EasingType::OUT_BACK}}, // JUMP
-    {UnitMoveRequestType::LEAP, {EasingType::LINEAR, EasingType::COUNT}}, // LEAP
-    {UnitMoveRequestType::WARP, {EasingType::LINEAR, EasingType::COUNT}}
+const std::unordered_map<UnitLaneTransferRequestType, std::pair<EasingType, EasingType>> unitTweenEasings = { {
+    {UnitLaneTransferRequestType::KNOCKBACK, {EasingType::OUT_CUBIC, EasingType::COUNT}},
+    {UnitLaneTransferRequestType::FALL, {EasingType::COUNT, EasingType::IN_QUAD}},
+	{UnitLaneTransferRequestType::FAST_FALL, {EasingType::COUNT, EasingType::IN_CUBIC}},
+    {UnitLaneTransferRequestType::SQUASH, {EasingType::COUNT, EasingType::OUT_BOUNCE}}, // SQUASH
+    {UnitLaneTransferRequestType::LAUNCH, {EasingType::COUNT, EasingType::OUT_QUART}}, // LAUNCH
+    {UnitLaneTransferRequestType::DROP_FROM_LAUNCH, {EasingType::COUNT, EasingType::OUT_BOUNCE}}, // DROP_FROM_LAUNCH
+    {UnitLaneTransferRequestType::JUMP, {EasingType::LINEAR, EasingType::OUT_BACK}}, // JUMP
+    {UnitLaneTransferRequestType::LEAP, {EasingType::LINEAR, EasingType::COUNT}}, // LEAP
+    {UnitLaneTransferRequestType::WARP, {EasingType::LINEAR, EasingType::COUNT}}
 } };

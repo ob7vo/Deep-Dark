@@ -141,7 +141,9 @@ enum class AugmentType : std::size_t {
 	// Projectiles that hit the unit will take extra chip dmg (-)
 	ROUGH = 1ULL << 41,
 
-	// When hit with a status, negative statuses wil be applied to enemies and positive statuses will be applied to allies. (-)
+	// When hit with or using a suitable Augment, it will apply the augment effects to Units within x units, and can reach through adjacent lanes if specified.
+	// Harmful Augments wil be applied to enemies and Helpful Augments will be applied to allies.
+	// Check the get_link_target_team() static Augment function for the list of suitable Augments.
 	LINK = 1ULL << 42,
 
 	// Heals up x knockback threshold after killing y enemies

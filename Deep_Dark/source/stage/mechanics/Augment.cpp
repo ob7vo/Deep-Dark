@@ -179,6 +179,7 @@ int Augment::get_link_target_team(AugmentType augType) {
 		AugmentType::CORRODE,
 		AugmentType::SHORT_CIRCUIT,
 		AugmentType::VIRUS,
+		AugmentType::DETONATE,
 		AugmentType::BOLT,
 		AugmentType::SHOVE
 	};

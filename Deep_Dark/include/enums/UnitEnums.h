@@ -20,7 +20,7 @@ enum class UnitAnimationState {
 	PHASE_ACTIVE = 8,
 	// Unit is waiting fro something to happen and is not being drawn or interacting with the game
 	// RIght now, its only use is for when a Unit is warped out and waiting to be warped back in.
-	WAITING = 9, 
+	WAITING_FOR_LANE_TRANSFER = 9, 
 };
 enum class DeathCause {
 	NONE = 0,

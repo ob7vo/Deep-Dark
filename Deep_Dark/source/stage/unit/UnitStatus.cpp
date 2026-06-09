@@ -71,7 +71,6 @@ int UnitStatus::calculate_damage_taken_and_apply_augments(const Unit& attacker) 
 
 	return static_cast<int>(dmg);
 }
-void apply_on_hit_augments(const std::vector<Augment>& augments, int hitIndex = ALL_HITS);
 #pragma endregion
 
 #pragma region Status Effects
@@ -132,7 +131,7 @@ void UnitStatus::trigger_health_threshold_augments() {
 		}
 	}
 }
-void UnitStatus::link_augment(const Augment& augment) {
+void UnitStatus::link_augment(const Augment& augmentToLink) {
 	Stage* stage = owner.stage;
 
 	// Already checked for LINK to get here.
@@ -142,11 +141,12 @@ void UnitStatus::link_augment(const Augment& augment) {
 	int minLane = std::max(0, owner.get_lane() - link.data.link.reachesAdjacentLanes);
 
 	// Get link Target Team returns 1 if it targets allies, adn -1 for enemies. I wanna rename this too
-	bool targetTeam = owner.stats->team * Augment::get_link_target_team(augment.augType);
+	bool targetTeam = owner.stats->team * Augment::get_link_target_team(augmentToLink.augType);
 
-	bool isStatusEffect = augment.is_status_effect();
-	bool isSyphon = has(augment.augType, AugmentType::SYPHON);
-	bool isShove = has(augment.augType, AugmentType::SHOVE);
+	bool isStatusEffect = augmentToLink.is_status_effect();
+	bool isSyphon = has(augmentToLink.augType, AugmentType::SYPHON);
+	bool isShove = has(augmentToLink.augType, AugmentType::SHOVE);
+	bool isWarp = has(augmentToLink.augType, AugmentType::WARP);
 
 	for (int i = minLane; i <= maxLane; i++) {
 		const auto& unitIndexes = stage->lanes[i].getAllyUnits(targetTeam);
@@ -155,15 +155,21 @@ void UnitStatus::link_augment(const Augment& augment) {
 			Unit& unit = stage->getUnit(index);
 
 			if (unit.spawnID == owner.spawnID ||
-				owner.enemy_in_range(unit.movement.pos.x, -linkRange, linkRange))
+				!owner.enemy_in_range(unit.movement.pos.x, -linkRange, linkRange))
 				continue; // Don't link to self or units out of range
 
 			if (isStatusEffect)
-				unit.status.process_new_status_effect(augment, true);
-			if (isSyphon)
-				unit.status.syphon(owner.stats->get_augment(AugmentType::SYPHON));
-			else if (isShove)
-				unit.movement.knockback(UnitConfig::SHOVE_KB_FORCE);
+				unit.status.process_new_status_effect(augmentToLink, true);
+			else if (isSyphon)
+				unit.status.syphon(&augmentToLink, true);
+			// Invincibility check since these augments would interupt some animation states otherwise (Like FALLING, or KNOCKBACK)
+			// I could make sure they don't lead to buggy behavior, but this is easier
+			else if (!unit.anim.invincible()) {
+				if (isShove)
+					unit.movement.shove(true);
+				else if (isWarp)
+					unit.movement.queue_warp_request(augmentToLink, true);
+			}
 		}
 	}
 }
@@ -273,10 +279,14 @@ bool UnitStatus::try_proc_survive() {
 	}
 	return false;
 }
-void UnitStatus::syphon(const Augment* syphon) {
+void UnitStatus::syphon(const Augment* syphon, bool fromLinking) {
 	int prevKbIndex = std::max(kbIndex - (int)syphon->data.killStreak.effectMagnitude, 1);
 	int prevThroshold = owner.stats->maxHp - (owner.stats->maxHp * prevKbIndex / owner.stats->knockbacks);
 	
 	hp = prevThroshold + 1;
 	kbIndex = prevKbIndex;
+
+	// LINK the healing to ally units if this Unit have it 
+	if (!fromLinking && owner.stats->has_augment(AugmentType::LINK))
+		link_augment(*syphon);
 }

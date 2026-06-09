@@ -28,22 +28,23 @@ public:
 		// activates on timer
 		struct { float effectMagnitude; float interval; } onTimer; 
         struct { float effectValue; float duration; } status;
-        struct { float spawnDistance; int level; } surge;
+		struct { float spawnDistance; int level; } surge;
+		// Sort this out I didn't really use it
         struct { int level; float radius; } cannon;
 		// For auments that move the Unuit, like JUMP or PHASE
-		struct { float distance;} mobility;
+		struct { float distance ;} mobility;
         struct { int ID; } projectile;
 		// For the LINK Augment
-		struct { float range; bool reachesAdjacentLanes;} link;
+		struct { float range; bool reachesAdjacentLanes; } link;
 		// For the DETONATE Augment
-		struct { float hpPercentage; float duration; float explosionRange; } detonate; 
+		struct { float hpPercentage;  float duration; float explosionRange; } detonate;
 		// For Augments that require killing a certain number of enemies to proc, like Salvage
 		struct { int effectMagnitude; int requiredKills; int salvageID; } killStreak;
-		struct { int ID;} transform;
+		struct { int ID; } transform;
 		struct { float hpPercentage; float duration; float spawnDisplacement; } clone;
-		struct { float explosionRange; bool hitsAdjacentLanes; float hpPercentage;} selfDestruct;
+		struct { float explosionRange; bool hitsAdjacentLanes; float hpPercentage; } selfDestruct;
 		struct { float distance; int laneDisplacemnet; } warp;
-    } data;
+	} data = {};
 
 	Augment() = default;
 	Augment(AugmentType type) : augType(type) {}
@@ -114,3 +115,11 @@ public:
 		return std::countr_zero(static_cast<size_t>(type));
 	}
 };
+
+// Here just so I don't have to pass ne in for the link_augment() function. Im lazy and IDC.
+const Augment SHOVE_AUGMENT = []() {
+	Augment aug(AugmentType::SHOVE);
+	aug.activationChance = 50.f;
+	aug.data.mobility.distance = 1.f;
+	return aug;
+	}();

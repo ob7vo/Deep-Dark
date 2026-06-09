@@ -218,14 +218,14 @@ void StageManager::spawn_enemies() {
 }
 
 void StageManager::process_all_move_requests() {
-	while (!stage->moveRequests.empty()) {
-		const auto& moveRequest = stage->moveRequests.back();
+	while (!stage->laneTransferRequests.empty()) {
+		const auto& moveRequest = stage->laneTransferRequests.back();
 		
 		// Get the index of the Unit in it's lane
 		if (auto unitIndexInVector = moveRequest.find_unit_to_move(*stage))
 			moveRequest.process(stage.get(), *unitIndexInVector);
 
-		stage->moveRequests.pop_back();
+		stage->laneTransferRequests.pop_back();
 	}
 }
 

@@ -66,7 +66,7 @@ Stage::Stage(const json& stagePhaseJson, StageRecord* rec) : unitPool(this), uni
 	break_spawner_thresholds();
 	std::cout << "Finished Constructing Stage" << std::endl;
 }
-UnitMoveRequest::UnitMoveRequest(const Unit& unit, int newLane, float axisPos, UnitMoveRequestType type) :
+UnitLaneTransferRequest::UnitLaneTransferRequest(const Unit& unit, int newLane, float axisPos, UnitLaneTransferRequestType type) :
 	unitId(unit.spawnID),
 	unitsCurrentLane(unit.get_lane()),
 	newLane(newLane),
@@ -113,7 +113,7 @@ void Stage::destroy_base(int destroyedBaseTeam) {
 
 		return false;
 		});
-	std::erase_if(moveRequests, [destroyedBaseTeam](const auto& moveRequest) {
+	std::erase_if(laneTransferRequests, [destroyedBaseTeam](const auto& moveRequest) {
 		return moveRequest.team == destroyedBaseTeam;
 		});
 
@@ -147,6 +147,7 @@ void Stage::lower_summons_count(int id) {
 		unitDataMap[id]->count--;
 }
 
+// Random BS checks off what I need at the moment
 void checker(Stage& stage) {
 	for (int i = 0; i < stage.laneCount; i++) {
 		const auto& l = stage.lanes[i];
@@ -393,18 +394,19 @@ int Stage::find_lane_to_knock_to(const Unit& unit, int inc) const {
 	return unit.get_lane();
 }
 
-bool Stage::can_push_move_request(int id) {
-	auto it = std::find_if(moveRequests.begin(), moveRequests.end(),
-		[&](const UnitMoveRequest& req) { return req.unitId == id; });
+bool Stage::can_queue_lane_transfer_request(int id) {
+	auto it = std::find_if(laneTransferRequests.begin(), laneTransferRequests.end(),
+		[&](const UnitLaneTransferRequest& req) { return req.unitId == id; });
 
-	return it == moveRequests.end();
+	return it == laneTransferRequests.end();
 }
-void Stage::push_move_request(Unit& unit, int newLane, float fallTo, UnitMoveRequestType type) {
+void Stage::queue_lane_transfer_request(Unit& unit, int newLane, float fallTo, UnitLaneTransferRequestType type) {
 	if (unit.movement.laneIdx == newLane) {
 		std::cout << "MoveRequest moves Unit to the same lane." << std::endl;
 		return;
 	}
-	if (!can_push_move_request(unit.spawnID)) return;
+	if (!can_queue_lane_transfer_request(unit.spawnID)) return;
 
-	moveRequests.emplace_back(unit, newLane, fallTo, type);
+	unit.anim.enter_lane_transfer_state();
+	laneTransferRequests.emplace_back(unit, newLane, fallTo, type);
 }

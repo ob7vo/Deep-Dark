@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Deep Dark.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="source\game_states\MainMenusGameState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -165,7 +162,7 @@
     <ClCompile Include="source\stage\mechanics\StageWallet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\stage\mechanics\UnitMoveRequest.cpp">
+    <ClCompile Include="source\stage\mechanics\UnitLaneTransferRequest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\stage\main\UnitPool.cpp">
@@ -204,19 +201,13 @@
     <ClCompile Include="source\visuals\ModularAnimation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\debug\UnitCreatorMenu.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\debug\StageCreatorMenu.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\debug\DebugGameState.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="source\systems\managers\TextboxManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\menus\Window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Deep_Dark.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -395,7 +386,7 @@
     <ClInclude Include="include\stage\unit\UnitTween.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\stage\mechanics\UnitMoveRequest.h">
+    <ClInclude Include="include\stage\mechanics\UnitLaneTransferRequest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\enums\AugmentTypes.h">

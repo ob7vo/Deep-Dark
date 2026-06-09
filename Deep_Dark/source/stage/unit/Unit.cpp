@@ -47,7 +47,7 @@ void Unit::call_death_anim(DeathCause deathCause) {
 	causeOfDeath |= deathCause;
 	anim.start(UnitAnimationState::DEATH);
 }
-bool Unit::move_req_check() { return !stage->can_push_move_request(spawnID); }
+bool Unit::move_req_check() { return !stage->can_queue_lane_transfer_request(spawnID); }
 
 float calc_phase_timer(float distance, float speed) {
 	return (distance / speed);
@@ -65,24 +65,21 @@ void Unit::try_knockback(int oldHp, int enemyHitIndex, const UnitStats* enemySta
 
 		if (enemyStats->has_augment(AugmentType::SQUASH)) 
 		{
-			movement.push_squash_request();
+			movement.queue_squash_request();
 		}
 		else if (enemyStats->has_augment(AugmentType::LAUNCH)) 
 		{
-			movement.push_launch_request();
+			movement.queue_launch_request();
 		}
 		else movement.knockback(kbForce);
 	}
 	else if (enemyStats->try_proc_augment(AugmentType::SHOVE, enemyHitIndex)) 
 	{
-		movement.knockback(UnitConfig::SHOVE_KB_FORCE);
-		
-		if (has(stats->augmentsMask, AugmentType::LINK))
-			status.link_augment(*enemyStats->get_augment(AugmentType::SHOVE));
+		movement.shove();
 	}
 	else if (enemyStats->try_proc_augment(AugmentType::WARP, enemyHitIndex)) 
 	{
-		movement.push_warp_request(*enemyStats->get_augment(AugmentType::WARP));
+		movement.queue_warp_request(*enemyStats->get_augment(AugmentType::WARP));
 	}
 }
 
@@ -230,7 +227,7 @@ void Unit::moving_state(float deltaTime) {
 	anim.set_position(movement.pos);
 
 	if (can_fall())
-		movement.push_fall_request();
+		movement.queue_fall_request();
 	else if (enemy_is_in_sight_range()) {
 		if (status.can_phase()) anim.start(UnitAnimationState::PHASE_WINDUP);
 		else anim.start_idle_or_attack_animation(*this);
@@ -238,7 +235,7 @@ void Unit::moving_state(float deltaTime) {
 	else {
 		// in case Unit has both JUMP and LEAP, return if they succeed in jumping
 		if (stats->has_augment(AugmentType::JUMP) && get_lane() < stage->laneCount - 1 && 
-			movement.try_push_jump_request()) 
+			movement.try_queue_jump_request()) 
 			return; 
 		if (stats->has_augment(AugmentType::LEAP) && movement.try_leap()) return;
 		if (rust_type_and_near_gap())
@@ -283,15 +280,15 @@ void Unit::knockback_state(float deltaTime) {
 	anim.update(deltaTime);
 	anim.set_position(movement.pos);
 
-	if (can_fall()) movement.push_fall_request();
+	if (can_fall()) movement.queue_fall_request();
 	else if (!movement.tweening()) {
 		if (status.dead()) anim.start(UnitAnimationState::DEATH);
 		else anim.start_move_idle_or_attack(*this);
 	}
 	else {
 		// If the tween ends, and it was a LAUNCH tween, enter the drop portion of it.
-		UnitMoveRequestType finishedType = movement.update_tween(deltaTime);
-		if (finishedType == UnitMoveRequestType::LAUNCH) movement.finish_launch_tween();
+		UnitLaneTransferRequestType finishedType = movement.update_tween(deltaTime);
+		if (finishedType == UnitLaneTransferRequestType::LAUNCH) movement.finish_launch_tween();
 	}
 }
 void Unit::falling_state(float deltaTime) {
@@ -322,7 +319,7 @@ void Unit::phase_windup_state(float deltaTime) {
 			(newX, stats->sightRange, stats->team, getHurtboxEdges());
 			float dist = std::abs(movement.pos.y - newX);
 
-			movement.create_tween({ newX, movement.pos.y }, calc_phase_timer(dist, stats->speed), UnitMoveRequestType::PHASE);
+			movement.create_tween({ newX, movement.pos.y }, calc_phase_timer(dist, stats->speed), UnitLaneTransferRequestType::PHASE);
 			anim.enter_is_phasing_state();
 		}
 	}
