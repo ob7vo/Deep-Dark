@@ -99,62 +99,71 @@ enum class AugmentType : std::size_t {
 	// When it dies, it will spawn a clone of itself at x% health, y distance away, after z seconds
 	CLONE = 1ULL << 27,
 
+	// Unit can spend x kills to revive all Allies that died withn y range of it (enters Animation state)
+	// Their is no cap to the # of uses, only the kill cost.
+	// Interchangeable with NECROMANCE. The name NECROMANCE is clearer, but SALVAGE is more thematic and will be used in-game.
+	SALVAGE = 1ULL << 28,
+	// Unit can spend x kills to revive all Allies that died withn y range of it (enters Animation state)
+	// Their is no cap to the # of uses, only the kill cost.
+	// Interchangeable with SALVAGE. The name NECROMANCE is clearer, but SALVAGE is more thematic and will be used in-game.
+	NECROMANCE = SALVAGE,
+
+	// Kill x enemies to summon a new Unit
+	CONSTRUCT = 1ULL << 29,
+
 	// stops an enemy from cloning if dealt the finishing blow (-)
-	CODE_BREAKER = 1ULL << 28,
+	CODE_BREAKER = 1ULL << 30,
 
 	// leaps over a gap with a width that is <= x units, can do this y times
-	LEAP = 1ULL << 29, 
+	LEAP = 1ULL << 31, 
 
 	// jumps to a higher ledge at an open gap with a width that is <= x units, can do this y times
-	JUMP = 1ULL << 30,
+	JUMP = 1ULL << 32,
 
 	// When spawning, start at x% of the lanes distance
-	DROP_BOX = 1ULL << 31, 
+	DROP_BOX = 1ULL << 33, 
 
 	// Enemies that are hit with x% health remaining will instantly die 
-	TERMINATE = 1ULL << 32,
+	TERMINATE = 1ULL << 34,
 
 	// Received knockback force is 50% greater (-)
-	LIGHTWEIGHT = 1ULL << 33,
+	LIGHTWEIGHT = 1ULL << 35,
 
 	// Received knockback force is 30% less (-)
-	HEAVYWEIGHT = 1ULL << 34, 
+	HEAVYWEIGHT = 1ULL << 36, 
 
 	// Unit will Knockback enemies 50% father (*) (-)
-	BULLY = 1ULL << 35,
-
-	// Killing # of enemies will summon a Unit
-	SALVAGE = 1ULL << 36,
+	BULLY = 1ULL << 37,
 
 	// When an enemy(boss) dies, they transform into their next phase (-)
-	TRANSFORM = 1ULL << 37, 
+	TRANSFORM = 1ULL << 38, 
 
 	// Units releases a damaging explosion after death (-)
-	SELF_DESTRUCT = 1ULL << 38, 
+	SELF_DESTRUCT = 1ULL << 39, 
 
 	// Unit dies after attacking (-)
-	FRAGILE = 1ULL << 39, 
+	FRAGILE = 1ULL << 40, 
 
 	// Launches a projectile when attacking,
-	PROJECTILE = 1ULL << 40, 
+	PROJECTILE = 1ULL << 41, 
 
 	// Projectiles that hit the unit will take extra chip dmg (-)
-	ROUGH = 1ULL << 41,
+	ROUGH = 1ULL << 42,
 
 	// When hit with or using a suitable Augment, it will apply the augment effects to Units within x units, and can reach through adjacent lanes if specified.
 	// Harmful Augments wil be applied to enemies and Helpful Augments will be applied to allies.
 	// Check the get_link_target_team() static Augment function for the list of suitable Augments.
-	LINK = 1ULL << 42,
+	LINK = 1ULL << 43,
 
 	// Heals up x knockback threshold after killing y enemies
-	SYPHON = 1ULL << 43, 
+	SYPHON = 1ULL << 44, 
 
 	// Every x seconds, the damage taken over that time period is released as an explosion. (Exclusive to Capcitor types)
-	DISCHARGE = 1ULL << 44,
+	DISCHARGE = 1ULL << 45,
 
 	// Hit enemies ahev an x% chance to be warped back y units. Can be sent up or down lanes. 
 	// If sent below all lanes, they fall to their death, if sent above all lanes, they take fall damage of 33% max health + 15% for each lane.
-	WARP = 1ULL << 45
+	WARP = 1ULL << 46
 };
 
 constexpr AugmentType operator|(AugmentType a, AugmentType b) {
@@ -187,5 +196,5 @@ constexpr AugmentType POSITIVE_STATUS_TYPES = AugmentType::SCOPE | AugmentType::
 constexpr AugmentType STATUS_TYPES = AugmentType::SLOW | AugmentType::WEAKEN | AugmentType::OVERLOAD | AugmentType::BLIND | AugmentType::BOLT | AugmentType::SHORT_CIRCUIT | AugmentType::VIRUS | AugmentType::DETONATE | AugmentType::CORRODE | AugmentType::SCOPE | AugmentType::STRENGTHEN | AugmentType::OVERCLOCK | AugmentType::REINFORCE;
 constexpr AugmentType STAT_CHANGE_TYPES = AugmentType::STRENGTHEN | AugmentType::OVERCLOCK | AugmentType::REINFORCE | AugmentType::SCOPE;
 constexpr AugmentType DAMAGE_MODIFIER_TYPES = AugmentType::STRENGTHEN | AugmentType::REINFORCE | AugmentType::BREAKER | AugmentType::RESIST;
-constexpr AugmentType KILL_REQUIREMENT_TYPES = AugmentType::SALVAGE | AugmentType::SYPHON;
+constexpr AugmentType KILL_REQUIREMENT_TYPES = AugmentType::SALVAGE | AugmentType::SYPHON | AugmentType::CONSTRUCT;
 constexpr AugmentType TIMER_TYPES = AugmentType::DISCHARGE | AugmentType::OVERCLOCK;

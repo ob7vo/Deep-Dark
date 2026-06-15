@@ -10,7 +10,7 @@ const float PHASE_GAP_PADDING = 25; // Distance from gaps to assure Units dont i
 
 Unit::Unit() : combat(*this), movement(*this), status(*this) {}
 void Unit::setup(sf::Vector2f startPos, int startingLane, const UnitStats* unitStats,
-	UnitAniMap* aniMap, int newSpawnID) {
+	UnitAnimMap* aniMap, int newSpawnID) {
 	stats = unitStats;
 
 	status.setup(unitStats);
@@ -196,6 +196,10 @@ void Unit::tick(float deltaTime) {
 	case UnitAnimationState::JUMPING:
 		jumping_state(deltaTime);
 		break;
+	case UnitAnimationState::SUMMON:
+	case UnitAnimationState::NECROMANCING:
+		simple_animation_state(deltaTime);
+		break;
 	case UnitAnimationState::PHASE_WINDUP:
 		phase_windup_state(deltaTime);
 		break;
@@ -363,4 +367,12 @@ void Unit::transform_state(float deltaTime) {
 		else anim.start_move_idle_or_attack(*this);
 	}
 }
+void Unit::simple_animation_state(float deltaTime) {
+	auto events = anim.update(deltaTime);
+	
+	if (any(events & AnimationEvent::FINAL_FRAME)) {
+		anim.start_move_idle_or_attack(*this);
+	}
+}
+
 #pragma endregion

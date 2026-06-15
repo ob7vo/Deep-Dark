@@ -39,9 +39,11 @@ public:
 		// For the DETONATE Augment
 		struct { float hpPercentage;  float duration; float explosionRange; } detonate;
 		// For Augments that require killing a certain number of enemies to proc, like Salvage
-		struct { int effectMagnitude; int requiredKills; int salvageID; } killStreak;
+		struct { int summonID; int requiredKills; float spawnRadius; } construct;
+		struct { float hpPercentageAfterRevival; int requiredKills; float reviveRange; } salvage;
+		struct { int restoredKnockbacks; int requiredKills; } syphon;
 		struct { int ID; } transform;
-		struct { float hpPercentage; float duration; float spawnDisplacement; } clone;
+		struct { float hpPercentageAfterRevival; float duration; float spawnDisplacement; } clone;
 		struct { float explosionRange; bool hitsAdjacentLanes; float hpPercentage; } selfDestruct;
 		struct { float distance; int laneDisplacemnet; } warp;
 	} data = {};

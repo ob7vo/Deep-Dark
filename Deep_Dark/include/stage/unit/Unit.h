@@ -37,7 +37,7 @@ public:
 	Unit& operator=(const Unit&) = delete;
 	
 	void setup(sf::Vector2f startPos, int startingLane, const UnitStats* data,
-		UnitAniMap* p_aniMap, int spawnID = -1);
+		UnitAnimMap* p_aniMap, int spawnID = -1);
 
 	bool move_req_check();
 	void destroy_unit(DeathCause deathCause = DeathCause::NONE);
@@ -58,6 +58,8 @@ public:
 	void falling_state(float deltaTime);
 	void jumping_state(float deltaTime);
 	void transform_state(float deltaTime);
+	// For states that simply play an animation then resume to neutral combat
+	void simple_animation_state(float deltaTime);
 	void phase_windup_state(float dt);
 	void phase_active_state(float deltaTime);
 	void phase_winddown_state(float deltaTime);

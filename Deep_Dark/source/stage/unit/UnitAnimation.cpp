@@ -5,7 +5,7 @@
 
 constexpr sf::Color HURTBOX_COLOR = { 0, 255, 255, static_cast<uint8_t>(255 * 0.2f) };
 
-void UnitAnimation::setup(UnitAniMap* map, const UnitStats* stats) {
+void UnitAnimation::setup(UnitAnimMap* map, const UnitStats* stats) {
 	aniMap = map;
 
 	hurtbox.setSize(stats->hurtBox);

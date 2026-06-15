@@ -192,12 +192,17 @@ void UnitCombat::on_kill(Unit& enemyUnit) {
 	if (attacker.stats->has_augment(AugmentType::CODE_BREAKER))
 		enemyUnit.status.statusFlags |= AugmentType::CODE_BREAKER;
 
-	if (attacker.stats->has_augment(AugmentType::SALVAGE))
-		attacker.stage->create_summon(attacker);
-
 	if (const auto syphon = attacker.stats->get_augment(AugmentType::SYPHON)) {
-		if (kills % syphon->data.killStreak.requiredKills == 0)
+		if (kills % syphon->data.syphon.requiredKills == 0)
 			attacker.status.syphon(syphon);
+	} 
+	else if (const auto construct = attacker.stats->get_augment(AugmentType::CONSTRUCT)) {
+		if (kills >= construct->data.construct.requiredKills) {
+			// I guess theres a bug here were if the summon limit is hit, it'll reset without
+			// doing anythng. idgaf though.
+			attacker.stage->summon_construct(attacker);
+			kills = 0;
+		}
 	}
 
 	enemyUnit.causeOfDeath |= DeathCause::UNIT;

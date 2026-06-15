@@ -22,7 +22,7 @@ struct LoadoutSlot {
 	UnitStats unitStats = {};
 
 	std::deque<sf::Texture> unitAnimTextures = {};
-	UnitAniMap aniMap = {};
+	UnitAnimMap aniMap = {};
 	
 	LoadoutSlot() = default;
 	explicit LoadoutSlot(const sf::Texture& tex) : slotSprite(tex) { }

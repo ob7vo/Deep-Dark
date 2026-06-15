@@ -125,7 +125,7 @@ AnimationClip AnimationClip::from_json(const nlohmann::json& file, sf::Texture* 
     
     return AnimationClip(pTexture, frames, rate, cellSizes, origin, events, loops);
 }
-void AnimationClip::setup_unit_animation_map(const json& unitFile, UnitAniMap& aniMap,
+void AnimationClip::setup_unit_animation_map(const json& unitFile, UnitAnimMap& aniMap,
     std::deque<sf::Texture>& unitTextures) {
     size_t anims = unitFile["animations"].size();
 

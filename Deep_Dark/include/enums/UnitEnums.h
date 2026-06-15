@@ -4,10 +4,11 @@
 
 enum class UnitAnimationState {
 	// If the Unit is in this state, its about to get deleted (more specifically its spot in pool is freed up)
-	WAITING_TO_DELETE = -4, 
-	PHASE_WINDDOWN = -3,
-	PHASE_WINDUP = -2,
-	SUMMON = -1,
+	WAITING_TO_DELETE = -5, 
+	PHASE_WINDDOWN = -4,
+	PHASE_WINDUP = -3,
+	SUMMON = -2,
+	NECROMANCING = -1,
 	MOVE = 0,
 	ATTACK = 1,
 	IDLE = 2, 

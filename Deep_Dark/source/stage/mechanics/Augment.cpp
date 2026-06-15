@@ -50,7 +50,7 @@ Augment Augment::create_from_json(AugmentType augType, const nlohmann::json& aug
 	// Start with the specific Augment Unions
 	switch (aug.augType) {
 	case AugmentType::DETONATE:
-		aug.data.detonate.hpPercentage = augJson["hp_threshold_percentage"].get<float>();
+		aug.data.detonate.hpPercentage = augJson["hp_percentage"].get<float>();
 		aug.data.detonate.explosionRange = augJson["explosion_range"].get<float>();
 		aug.data.detonate.duration = augJson["duration"].get<float>();
 		return aug;
@@ -58,7 +58,7 @@ Augment Augment::create_from_json(AugmentType augType, const nlohmann::json& aug
 		aug.data.transform.ID = augJson["transform_id"].get<int>();
 		return aug;
 	case AugmentType::CLONE:
-		aug.data.clone.hpPercentage = augJson["hp_percentage"].get<float>();
+		aug.data.clone.hpPercentageAfterRevival = augJson["hp_percentage_after_revival"].get<float>();
 		aug.data.clone.spawnDisplacement = augJson["spawn_displacement"].get<float>();
 		aug.data.clone.duration = augJson["duration"].get<float>();
 		return aug;
@@ -77,6 +77,20 @@ Augment Augment::create_from_json(AugmentType augType, const nlohmann::json& aug
 	case AugmentType::WARP:
 		aug.data.warp.distance = augJson["distance"].get<float>();
 		aug.data.warp.laneDisplacemnet = augJson["lane_displacement"].get<int>();
+		return aug;
+	case AugmentType::CONSTRUCT:
+		aug.data.construct.summonID = augJson["summon_id"].get<int>();
+		aug.data.construct.requiredKills = augJson["required_kills"].get<int>();
+		aug.data.construct.spawnRadius = augJson["spawn_radius"].get<float>();
+		return aug;
+	case AugmentType::SALVAGE:
+		aug.data.salvage.hpPercentageAfterRevival = augJson["hp_percentage_after_revival"].get<float>();
+		aug.data.salvage.requiredKills = augJson["required_kills"].get<int>();
+		aug.data.salvage.reviveRange = augJson["revive_range"].get<float>();
+		return aug;
+	case AugmentType::SYPHON:
+		aug.data.syphon.restoredKnockbacks = augJson["restored_knockbacks"].get<int>();
+		aug.data.syphon.requiredKills = augJson["required_kills"].get<int>();
 		return aug;
 	}
 
@@ -102,10 +116,6 @@ Augment Augment::create_from_json(AugmentType augType, const nlohmann::json& aug
 	}
 	else if (aug.is_mobility()) {
 		aug.data.mobility.distance = augJson["distance"].get<float>();
-	}
-	else if (aug.needs_kills()) {
-		aug.data.killStreak.requiredKills = augJson["required_kills"].get<int>();
-		aug.data.killStreak.effectMagnitude = augJson["effect_magnitude"].get<int>();
 	}
 	else {
 		aug.data.general.magnitude = augJson["magnitude"].get<float>();
@@ -144,6 +154,8 @@ AugmentType Augment::string_to_augment_type(std::string_view strView) {
 		{"survivor", AugmentType::SURVIVOR},
 		{"phase", AugmentType::PHASE},
 		{"clone", AugmentType::CLONE},
+		{"salvage", AugmentType::SALVAGE},
+		{"construct", AugmentType::CONSTRUCT },
 		{"code_breaker", AugmentType::CODE_BREAKER},
 		{"leap", AugmentType::LEAP},
 		{"jump", AugmentType::JUMP},
@@ -152,7 +164,6 @@ AugmentType Augment::string_to_augment_type(std::string_view strView) {
 		{"lightweight", AugmentType::LIGHTWEIGHT},
 		{"heavyweight", AugmentType::HEAVYWEIGHT},
 		{"bully", AugmentType::BULLY},
-		{"salvage", AugmentType::SALVAGE},
 		{"fragile", AugmentType::FRAGILE},
 		{"self_destruct", AugmentType::SELF_DESTRUCT},
 		{"projectile", AugmentType::PROJECTILE},

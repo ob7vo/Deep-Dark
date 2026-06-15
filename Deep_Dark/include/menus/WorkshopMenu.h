@@ -26,7 +26,7 @@ struct WorkshopMenu : public Menu<UI::Workshop::BTN_COUNT> {
 
 	AnimationPlayer unitAnimPlayer;
 	std::deque<sf::Texture> unitAnimTextures;
-	UnitAniMap unitAnimMap; // unordered map of Animations for the Unit
+	UnitAnimMap unitAnimMap; // unordered map of Animations for the Unit
 	UnitAnimationState currentAnimState = UnitAnimationState::MOVE;
 	int unitAnimSpeedIndex = 2;
 

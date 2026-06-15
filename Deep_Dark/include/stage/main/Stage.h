@@ -11,6 +11,7 @@
 #include "UnitPool.h"
 #include "StageStatus.h"
 #include "observers/UnitAbilityObserver.h"
+#include "SharedUnitData.h"
 #include <iostream>
 #include <functional>
 
@@ -25,28 +26,17 @@ class Unit;
 struct Stage;
 struct StageRecord;
 
-struct UnitData {
-	/// <summary> How many Unit Instances are using this data </summary>
-	int count = 0;
-	const UnitStats stats;
-	UnitAniMap ani;
-
-	UnitData(const nlohmann::json& file, float mag) :
-		stats(UnitStats::create_enemy(file, mag)) {
-	}
-}; 
-
 struct Stage
 {
 	UnitPool unitPool;
-	UnitAbilityObserver unitAbilityObserver;
-
 	StageRecord* recorder = nullptr;
-	int laneCount = 0;
 	int nextUnitID = -1;
-	// Lane Management
+
 	std::vector<Lane> lanes = {};
+	int laneCount = 0;
 	int* selectedLane = 0;
+
+	UnitAbilityObserver unitAbilityObserver;
 
 	std::vector<EnemySpawner> enemySpawners = {};
 	std::vector<UnitLaneTransferRequest> laneTransferRequests = {};
@@ -67,7 +57,7 @@ struct Stage
 	// Stored Unit Data (stats and animations)
 	// Used for cases where there are extra units that are not stored in an EnemySpawner or the Loadout class
 	// Those cases right now are for units that are summoned, and units that transform.
-	std::unordered_map<int, std::unique_ptr<UnitData>> unitDataMap;
+	std::unordered_map<int, std::unique_ptr<SharedUnitData>> unitDataMap;
 
 	Base enemyBase = {};
 	Base playerBase = {};
@@ -86,13 +76,13 @@ struct Stage
 	void destroy_base(int baseTeam);
 
 	// Creating Units
-	Unit* create_unit(int laneIndex, const UnitStats* unitStats, UnitAniMap* aniMap);
+	Unit* create_unit(int laneIndex, const UnitStats* unitStats, UnitAnimMap* aniMap);
 	void try_revive_unit(UnitSpawner* spawner);
 	/// <summary> Reserved for Bosses. They die and tehn transform, like a Phase-Transition </summary>
 	void transform_unit(const Unit& unit);
-	void create_summon(const Unit& unit);
+	void summon_construct(const Unit& unit);
 
-	UnitData* get_unit_config(int id, float magnification);
+	SharedUnitData* get_unit_config(int id, float magnification);
 
 	void try_create_ability_observer(size_t poolIndex, int spawnIndex);
 

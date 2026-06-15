@@ -280,11 +280,11 @@ bool UnitStatus::try_proc_survive() {
 	return false;
 }
 void UnitStatus::syphon(const Augment* syphon, bool fromLinking) {
-	int prevKbIndex = std::max(kbIndex - (int)syphon->data.killStreak.effectMagnitude, 1);
-	int prevThroshold = owner.stats->maxHp - (owner.stats->maxHp * prevKbIndex / owner.stats->knockbacks);
-	
-	hp = prevThroshold + 1;
-	kbIndex = prevKbIndex;
+	int newKbIndex = std::max(kbIndex - (int)syphon->data.syphon.restoredKnockbacks, 1);
+	int oldHPThreshold = owner.stats->maxHp - (owner.stats->maxHp * newKbIndex / owner.stats->knockbacks);
+
+	hp = oldHPThreshold + 1;
+	kbIndex = newKbIndex;
 
 	// LINK the healing to ally units if this Unit have it 
 	if (!fromLinking && owner.stats->has_augment(AugmentType::LINK))

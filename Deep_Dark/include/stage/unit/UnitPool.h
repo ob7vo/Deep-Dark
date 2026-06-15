@@ -27,6 +27,10 @@ struct UnitPool {
 
 	inline Unit& getUnit(size_t i) { return pool[i]; }
 	inline const Unit& getUnit(size_t i) const { return pool[i]; }
+	/// <summary> 
+	/// Sets its slot as "available", allowing it to be overwritten. 
+	/// Does not actually reset/delete the data of the Unit
+	/// </summary>
 	inline void freeUnit(size_t i) { available[i] = true; }
 
 ///	static std::array<Unit, 100> create_unit_pool();

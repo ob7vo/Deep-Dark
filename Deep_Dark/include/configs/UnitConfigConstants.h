@@ -1,6 +1,7 @@
 #pragma once
 #include <cmath>
 #include <cstddef>
+#include "UnitEnums.h"
 
 constexpr size_t NULL_UNIT_INDEX = -1;
 
@@ -66,5 +67,10 @@ namespace UnitConfig {
 	inline bool isEnemy(int unitID) { return unitID >= 100; }
 	inline int GetUpgradeCost(int curLevel) { 
 		return static_cast<int>(std::round(BASE_UPGRADE_COST * std::pow(UPGRADE_COST_MULTIPLIER, (float)(curLevel - 1.f))));
+	}
+	inline bool anim_state_is_invincible(UnitAnimationState state) {
+		switch (state) {
+
+		}
 	}
 }

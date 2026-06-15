@@ -26,7 +26,7 @@ void EnemySpawner::create_unit_data(const nlohmann::json& spawnerData) {
 	enemyStats = UnitStats::create_enemy(unitJson, spawnerData["magnification"].get<float>());
 } 
 
-UnitSpawner::UnitSpawner(const UnitStats* stats, UnitAniMap* aniMap, sf::Vector2f pos, int lane) :
+UnitSpawner::UnitSpawner(const UnitStats* stats, UnitAnimMap* aniMap, sf::Vector2f pos, int lane) :
 	StageEntity(pos, lane), stats(stats), aniMap(aniMap) {
 	create_animation();
 }

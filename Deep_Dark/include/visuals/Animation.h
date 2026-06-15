@@ -8,7 +8,7 @@
 
 struct AnimationClip;
 
-using UnitAniMap = std::unordered_map<UnitAnimationState, AnimationClip>;
+using UnitAnimMap = std::unordered_map<UnitAnimationState, AnimationClip>;
 
 struct AnimationFrame {
 	sf::IntRect rect;
@@ -34,7 +34,7 @@ struct AnimationClip {
 	/// Takes passed in aniMap and unitTexture vector and sets them up.
 	/// This function EXPECTS the two variables to be EMPTY when called
 	/// </summary>
-	static void setup_unit_animation_map(const nlohmann::json& unitFile, UnitAniMap& aniMap, std::deque<sf::Texture>& unitTextures);
+	static void setup_unit_animation_map(const nlohmann::json& unitFile, UnitAnimMap& aniMap, std::deque<sf::Texture>& unitTextures);
 	static AnimationClip create_unit_animation(const nlohmann::json& file, sf::Texture* pTexture, 
 		UnitAnimationState ani, bool loops);
 	static AnimationClip from_json(const nlohmann::json& file, sf::Texture* pTexture, bool loops);

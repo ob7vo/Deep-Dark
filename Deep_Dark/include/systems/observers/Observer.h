@@ -5,6 +5,7 @@ struct Event {
 	EventType type = EventType::NONE;
 
 	Event() = default;
+	virtual ~Event() = default;
 };
 struct TimedEvent : Event {
 	float timePassed = 0.0f;
@@ -20,5 +21,5 @@ struct IObserver {
 public:
 	IObserver() = default;
 	virtual ~IObserver() = default;
-	virtual bool notify(const Event& event) = 0; 
+	virtual bool notify(const Event* event) = 0; 
 };

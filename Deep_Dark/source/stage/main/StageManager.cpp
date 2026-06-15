@@ -85,7 +85,7 @@ bool StageManager::activate_units_self_destruct(const Unit& unit) {
 	}
 	return true;
 }
-bool StageManager::try_create_drop_box(int laneIdx, const UnitStats* stats, UnitAniMap* aniMap) {
+bool StageManager::try_create_drop_box(int laneIdx, const UnitStats* stats, UnitAnimMap* aniMap) {
 	if (!stats->has_augment(AugmentType::DROP_BOX)) return false;
 
 	const Lane& lane = stage->lanes[laneIdx];
@@ -107,6 +107,9 @@ bool StageManager::try_create_cloner(const Unit& unit) {
 
 	return true;
 }
+bool try_revive_ally(const Unit& unit) {
+
+}
 #pragma endregion
 
 void StageManager::call_one_second_updates(float deltaTime) {
@@ -115,7 +118,7 @@ void StageManager::call_one_second_updates(float deltaTime) {
 	while (oneSecondTimer >= 1.0f) {
 		wallet.gain_parts(wallet.partsPerSecond, stageRecorder);
 		notify_challenges();
-		stage->unitAbilityObserver.notify(TimedEvent::oneSecond);
+		stage->unitAbilityObserver.notify(&TimedEvent::oneSecond);
 
 		oneSecondTimer -= 1.0f;
 	}
@@ -196,6 +199,9 @@ void StageManager::handle_unit_death(const Unit& unit, size_t poolIndex) {
 
 	if (unit.stats->team == UnitConfig::ENEMY_TEAM)
 		wallet.collect_parts_from_unit(unit, stageRecorder);
+
+	if (stage->unitAbilityObserver.has_salvage_unit())
+		stage->unitAbilityObserver.registerDeadUnit(unit);
 }
 
 void StageManager::spawn_enemies() {

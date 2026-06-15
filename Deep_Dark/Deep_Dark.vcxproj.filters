@@ -210,6 +210,9 @@
     <ClCompile Include="Deep_Dark.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="source\systems\observers\UnitAbilityObserver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\game_states\GameState.h">
@@ -422,7 +425,7 @@
     <ClInclude Include="include\configs\EntityConfigs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\stage\main\UnitPool.h">
+    <ClInclude Include="include\stage\unit\UnitPool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\configs\StageConfig.h">
@@ -483,6 +486,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\menus\Window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\stage\unit\UnitInstanceIDs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\stage\unit\SharedUnitData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

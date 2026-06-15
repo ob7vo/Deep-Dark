@@ -10,7 +10,7 @@ private:
 	UnitAnimationState state = UnitAnimationState::MOVE;
 
 	AnimationPlayer player = {};
-	UnitAniMap* aniMap; // Owned by Enemy Spawners and Loadout slots
+	UnitAnimMap* aniMap; // Owned by Enemy Spawners and Loadout slots
 
 	sf::Sprite sprite = sf::Sprite(defaultTexture);
 	sf::RectangleShape hurtbox;
@@ -19,7 +19,7 @@ public:
 	UnitAnimation() = default;
 	~UnitAnimation() = default;
 
-	void setup(UnitAniMap* map, const UnitStats* stats);
+	void setup(UnitAnimMap* map, const UnitStats* stats);
 
 	// Sets the new state and changes the AnimationClip
 	void start(UnitAnimationState newState);
@@ -42,11 +42,15 @@ public:
 	inline bool dead() const { return dying() && player.onFinalFrame(); }
 	inline bool in_knockback() const { return state == UnitAnimationState::KNOCKBACK; }
 	inline bool is_phasing() const { return state == UnitAnimationState::PHASE_ACTIVE; }
+	inline bool is_necromancing() const { return state == UnitAnimationState::NECROMANCING; }
 	inline bool invincible() const { return static_cast<int>(state) > 2; }
 	inline bool onFirstFrame() const { return player.currentFrame == 0; }
+	inline bool can_enter_necromance_state() const {
+		return state == UnitAnimationState::IDLE || state == UnitAnimationState::MOVE;
+	}
 
 	inline void die() { state = UnitAnimationState::DEATH; }
-	inline UnitAniMap* get_ani_map() const { return aniMap; }
+	inline UnitAnimMap* get_ani_map() const { return aniMap; }
 	inline const sf::Sprite& get_sprite() const { return sprite; }
 	inline UnitAnimationState get_state() const { return state; }
 

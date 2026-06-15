@@ -254,6 +254,13 @@ namespace Arrays {
         }(std::make_index_sequence<SIZE>{});
         */
     }
+    template<typename T>
+    inline void swap_n_pop(std::vector<T>& vec, size_t index) {
+        if (index >= vec.size()) return;
+
+        vec[index] = vec.back();
+        vec.pop_back();
+    }
 }
 namespace Vector2 {
 	template<typename T>

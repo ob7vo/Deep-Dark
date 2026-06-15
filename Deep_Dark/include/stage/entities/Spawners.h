@@ -8,13 +8,15 @@
 const int INACTIVE_SPAWN_INDEX = -1;
 const float INACTIVE_SPAWNER_TIMER = 10000.f;
 
+// Animated object that spawns in a Unit
+// Currently for CLONE, SALVAGE, and DROP_BOX
 struct UnitSpawner : public StageEntity {
 	const UnitStats* stats;
-	UnitAniMap* aniMap;
+	UnitAnimMap* aniMap;
 
 	AnimationClip animClip;
 
-	UnitSpawner(const UnitStats* stats, UnitAniMap* aniMap, sf::Vector2f pos, int lane);
+	UnitSpawner(const UnitStats* stats, UnitAnimMap* aniMap, sf::Vector2f pos, int lane);
 	~UnitSpawner() override = default;
 
 	void action(Stage& stage) override;
@@ -37,7 +39,7 @@ struct SurgeSpawner : public StageEntity {
 struct EnemySpawner {
 	UnitStats enemyStats;
 	std::deque<sf::Texture> unitTextures;
-	UnitAniMap aniMap;
+	UnitAnimMap aniMap;
 
 	float unitMagnification = 1.f;
 	bool spawnsABoss = false;

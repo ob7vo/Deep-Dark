@@ -180,6 +180,7 @@
     <ClCompile Include="source\stage\unit\Unit.cpp" />
     <ClCompile Include="source\stage\unit\UnitTween.cpp" />
     <ClCompile Include="source\systems\managers\TextboxManager.cpp" />
+    <ClCompile Include="source\systems\observers\UnitAbilityObserver.cpp" />
     <ClCompile Include="source\visuals\camera\Camera.cpp" />
     <ClCompile Include="source\systems\observers\Observer.cpp" />
     <ClCompile Include="source\stage\main\StageManager.cpp" />
@@ -239,11 +240,13 @@
     <ClInclude Include="include\enums\ChallengeTypes.h" />
     <ClInclude Include="include\configs\StageConfig.h" />
     <ClInclude Include="include\saves\UnitSaveData.h" />
-    <ClInclude Include="include\stage\main\UnitPool.h" />
+    <ClInclude Include="include\stage\unit\UnitPool.h" />
     <ClInclude Include="include\stage\mechanics\StageChallenge.h" />
     <ClInclude Include="include\stage\mechanics\StageRestrictions.h" />
     <ClInclude Include="include\stage\mechanics\UnitLaneTransferRequest.h" />
     <ClInclude Include="include\configs\UnitConfigConstants.h" />
+    <ClInclude Include="include\stage\unit\SharedUnitData.h" />
+    <ClInclude Include="include\stage\unit\UnitInstanceIDs.h" />
     <ClInclude Include="include\systems\managers\TextboxManager.h" />
     <ClInclude Include="include\systems\observers\Scheduler.h" />
     <ClInclude Include="include\systems\observers\UnitAbilityObserver.h" />

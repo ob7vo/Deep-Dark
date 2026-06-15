@@ -11,7 +11,7 @@ const int MAX_PROJECTILES = 10;
 
 using json = nlohmann::json;
 
-Stage::Stage(const json& stagePhaseJson, StageRecord* rec) : unitPool(this), unitAbilityObserver(&unitPool), recorder(rec),
+Stage::Stage(const json& stagePhaseJson, StageRecord* rec) : unitPool(this), unitAbilityObserver(&unitPool, &lanes), recorder(rec),
 	enemyBase(stagePhaseJson["enemy_base"], -1), playerBase(stagePhaseJson["player_base"], 1)
 {
 	laneCount = (int)stagePhaseJson["lanes"].size();
@@ -54,7 +54,7 @@ Stage::Stage(const json& stagePhaseJson, StageRecord* rec) : unitPool(this), uni
 		enemySpawners.emplace_back(spawnData);
 	}
 	// Creat Unit Data after full vector construction to avoid
-	// dangling pointers for the UnitAniMap
+	// dangling pointers for the UnitAnimMap
 	for (size_t i = 0; i < enemySpawners.size(); i++) {
 		enemySpawners[i].create_unit_data(stagePhaseJson["enemy_spawns"][i]);
 
@@ -166,7 +166,7 @@ void checker(Stage& stage) {
 	}
 }
 
-Unit* Stage::create_unit(int laneIndex, const UnitStats* unitStats, UnitAniMap* aniMap) {
+Unit* Stage::create_unit(int laneIndex, const UnitStats* unitStats, UnitAnimMap* aniMap) {
 	if (laneIndex < 0 || laneIndex >= lanes.size()) {
 		std::cout << "Lane Index " << laneIndex << " is out of range, cannot spawn Unit" << std::endl;
 		return nullptr;
@@ -199,7 +199,7 @@ void Stage::try_revive_unit(UnitSpawner* spawner) {
 
 	if (newUnit) {
 		int newHp = static_cast<int>(spawner->stats->maxHp * 
-			spawner->stats->get_augment(AugmentType::CLONE)->data.clone.hpPercentage);
+			spawner->stats->get_augment(AugmentType::CLONE)->data.clone.hpPercentageAfterRevival);
 
 		newUnit->status.hp = newHp;
 		// Doing this will update the Units knockback index
@@ -225,12 +225,12 @@ void Stage::transform_unit(const Unit& unit) {
 		}
 	}
 }
-void Stage::create_summon(const Unit& unit) {
-	const Augment& aug = *unit.stats->get_augment(AugmentType::SALVAGE);
+void Stage::summon_construct(const Unit& unit) {
+	const Augment& aug = *unit.stats->get_augment(AugmentType::CONSTRUCT);
 
 	// value2 is the summon's magnification
-	if (auto summonData = get_unit_config(aug.data.killStreak.salvageID, unit.stats->magnification)) {
-		float spawnRange = aug.data.killStreak.effectMagnitude;
+	if (auto summonData = get_unit_config(aug.data.construct.summonID, unit.stats->magnification)) {
+		float spawnRange = aug.data.construct.spawnRadius;
 		float xPos = unit.movement.pos.x;
 		float newX = Random::r_float(xPos - spawnRange, xPos + spawnRange);
 
@@ -243,12 +243,12 @@ void Stage::create_summon(const Unit& unit) {
 		}
 	}
 }
-UnitData* Stage::get_unit_config(int id, float magnification) {
+SharedUnitData* Stage::get_unit_config(int id, float magnification) {
 	// The count check doesn't matter for TRANSFORM, but its fine.
 	if (unitDataMap.contains(id))
 		return unitDataMap[id]->count < MAX_SUMMONS ? unitDataMap[id].get() : nullptr;
 
-	unitDataMap[id] = std::make_unique<UnitData>(UnitConfig::createUnitJson(id), magnification);
+	unitDataMap[id] = std::make_unique<SharedUnitData>(UnitConfig::createUnitJson(id), magnification);
 
 	return unitDataMap[id] ? unitDataMap[id].get() : nullptr;
 }
@@ -257,13 +257,16 @@ void Stage::try_create_ability_observer(size_t poolIndex, int spawnIndex) {
 
 	if (const auto* discharge = stats->get_augment(AugmentType::DISCHARGE)) 
 	{
-		unitAbilityObserver.registerUnit(AugmentType::DISCHARGE, spawnIndex, poolIndex,
+		unitAbilityObserver.registerTimer(AugmentType::DISCHARGE, spawnIndex, poolIndex,
 			discharge->data.onTimer.interval, stats->maxHp);
 	}
 	if (const auto* overclock = stats->get_augment(AugmentType::OVERCLOCK))
 	{
-		unitAbilityObserver.registerUnit(AugmentType::OVERCLOCK, spawnIndex, poolIndex,
+		unitAbilityObserver.registerTimer(AugmentType::OVERCLOCK, spawnIndex, poolIndex,
 			overclock->data.onTimer.interval);
+	}
+	if (const auto* salvage = stats->get_augment(AugmentType::SALVAGE)) {
+		unitAbilityObserver.registerSalvage(poolIndex, spawnIndex);
 	}
 }
 
