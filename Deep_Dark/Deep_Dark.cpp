@@ -1,100 +1,68 @@
 #include "pch.h"
-#include "SaveSystem.h"
-#include "StateManager.h"
-#include "PreparationState.h"
-#include "StageGameState.h"
+#include "Game.h"
 
 using json = nlohmann::json;
 
-const float MAX_DELTA_TIME = 0.033f;
-const unsigned int FRAMERATE_LIMIT = 60;
 const int ASPECT_WIDTH = 1000;
 const int ASPECT_HEIGHT = 850;
 const sf::Color WINDOW_COLOR(54, 2, 11);
 
-const float FPSTimer = 0.5f;
-
-void set_mouse_position(const sf::RenderWindow& window, Camera& cam) {
-    sf::Vector2i mouseScreenPos = sf::Mouse::getPosition(window);
-    sf::Vector2f MOUSE_POS = window.mapPixelToCoords(mouseScreenPos);
-    cam.update_mouse_pos(MOUSE_POS, mouseScreenPos);
-}
-void set_fps_text(float deltaTime, float& time, sf::Text& fpsText) {
-    time += deltaTime;
-    if (time < FPSTimer) return;
-
-    time = 0.0f;
-    float fps = 1 / deltaTime;
-
-    fpsText.setString(std::format("FPS: {}", fps));
-}
-
 int main()
 {
-    sf::Text fpsText(baseFont);
-    float timeSinceLastFPSUpdate = 0.0f;
-
     std::cout << "SFML Version: "
         << SFML_VERSION_MAJOR << "."
         << SFML_VERSION_MINOR << "."
         << SFML_VERSION_PATCH << std::endl;
 
-    sf::Clock clock;
-    sf::RenderWindow window(sf::VideoMode({ ASPECT_WIDTH, ASPECT_HEIGHT }), "SFML works!",
+    sf::RenderWindow renderWindow(sf::VideoMode({ ASPECT_WIDTH, ASPECT_HEIGHT }), "SFML works!",
         sf::Style::Titlebar | sf::Style::Close);
- 
-    bool overwritePlayerSave = false;
-    bool overwriteStageSave = true; 
-    bool overwriteUnitSave = false;
-    SaveSystem::Initialize(overwritePlayerSave, overwriteStageSave, overwriteUnitSave);
 
-    Textures::initializeAll();
-    Surge::init_animations();
-
-    fpsText.setCharacterSize(20);
-    fpsText.setFillColor(sf::Color::White);
-    fpsText.setPosition({ 600, 50 });
-
-    Camera cam(window);
-    StateManager stateManager(cam);
-
-    /**/
-    std::array<ArmorySlot, UnitConfig::MAX_EQUIP_SLOTS> slots = ArmorySlot::default_armory_loadout(cam);
-    StageEnterData stageEnterData(0, 0, slots, false);
-    //*/
-
-    PrepEnterData prepData(MenuType::STAGE_SELECT, MenuType::ARMORY_EQUIP);
-    OnStateEnterData enterData(GameState::Type::MAIN_MENU);
-    stateManager.switch_state(&prepData);
-
-    while (window.isOpen())
+    Game::Get().Initialize();
+    
+    /*
+    while (renderWindow.isOpen())
     {
-        set_mouse_position(window, cam);
-        float deltaTime = clock.restart().asSeconds();
-        deltaTime = std::min(deltaTime, MAX_DELTA_TIME);
 
-        while (const std::optional event = window.pollEvent()){
-            stateManager.handle_events(*event);
+    }
+    */
+    if (!ImGui::SFML::Init(renderWindow))
+        return -1;
+
+    sf::Clock deltaClock;
+
+    while (renderWindow.isOpen())
+    {
+        while (const std::optional event = renderWindow.pollEvent())        
+        {
+          //  const sf::Event& e = event;
+            ImGui::SFML::ProcessEvent(renderWindow, *event);
 
             if (event->is<sf::Event::Closed>()) {
-                SaveSystem::SaveAll();
-                window.close();
+                renderWindow.close();
             }
         }
 
-        set_fps_text(deltaTime, timeSinceLastFPSUpdate, fpsText);
+        ImGui::SFML::Update(renderWindow, deltaClock.restart());
 
-        window.clear(WINDOW_COLOR);
+        // ---- UI code ----
+        ImGui::Begin("My Window");
+        ImGui::Text("Hello, world!");
 
-        cam.renderer.queue_ui_draw(&fpsText);
-        stateManager.update(deltaTime);
-        stateManager.render();
+        static float value = 0.0f;
+        ImGui::SliderFloat("Slider", &value, 0.0f, 1.0f);
 
-        window.display();
+        if (ImGui::Button("Click me"))
+            printf("Button pressed\n");
 
-        if (auto newEnterData = stateManager.gameState->get_next_state()) 
-            stateManager.switch_state(newEnterData);
+        ImGui::End();
+        // -----------------
+
+        renderWindow.clear();
+        ImGui::SFML::Render(renderWindow);
+        renderWindow.display();
     }
+
+    ImGui::SFML::Shutdown();
 }
 
  // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

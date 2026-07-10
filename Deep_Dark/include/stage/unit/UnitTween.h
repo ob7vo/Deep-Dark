@@ -1,6 +1,7 @@
 #pragma once
 #include "UnitLaneTransferRequest.h"
 #include <SFML/System/Vector2.hpp>
+#include "Vector_Opps.h"
 
 struct UnitTween {
     float duration = 0.f;

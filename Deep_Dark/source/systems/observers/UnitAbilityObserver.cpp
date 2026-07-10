@@ -2,6 +2,7 @@
 #include "UnitPool.h"
 #include "Stage.h"
 #include "Unit.h"
+#include "Animation.h"
 #include "observers/Observer.h"
 #include "observers/UnitAbilityObserver.h"
 #include "Utils.h"

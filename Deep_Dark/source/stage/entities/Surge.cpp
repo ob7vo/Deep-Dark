@@ -113,6 +113,8 @@ void Surge::on_kill(Unit& unit) const {
 void Surge::attack_units(Stage& stage) {
 	// lane is froms tage (passed in)
 	const auto& enemyUnitIndexes = stage.lanes[laneIdx].getOpponentUnits(stats->team);
+
+	// Used to delay attacking enemies so if the surge is blocked, all enemies in range are saved.
 	std::vector<size_t> enemiesToAttack;
 
 	// Add in units to attack AFTER this loop to make Surge Blocking
@@ -223,8 +225,10 @@ void OrbitalStrike::tick(Stage& stage, float deltaTime){
 	auto events = update_animation(stage, deltaTime);
 
 	if (any(events & AnimationEvent::ATTACK))
-		for (int i = 0; i < stage.laneCount; i++)
+		for (int i = stage.laneCount - 1; i >= 0; i--){
 			attack_units(stage);
+			if (readyForRemoval) break; // Happens when this Orbital Strike is blocked
+		}
 	else if (any(events & AnimationEvent::FINAL_FRAME))
 		readyForRemoval = true;
 }

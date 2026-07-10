@@ -121,7 +121,9 @@ Augment Augment::create_from_json(AugmentType augType, const nlohmann::json& aug
 		aug.data.general.magnitude = augJson["magnitude"].get<float>();
     	aug.data.general.magnitude2 = augJson.value("magnitude2", 0.0f);
 	}
-}
+
+	return aug;
+};
 AugmentType Augment::string_to_augment_type(std::string_view strView) {
 	std::string str(strView);
 	std::transform(str.begin(), str.end(), str.begin(), ::tolower);

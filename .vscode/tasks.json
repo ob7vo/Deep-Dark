@@ -27,10 +27,10 @@
                 "-I${workspaceFolder}/Deep_Dark/include/visuals/camera",
                 "-I${workspaceFolder}/Deep_Dark/include/visuals/textures",
                 "-I${workspaceFolder}/Deep_Dark/include/visuals/ui",
-                "-I/home/deck/Desktop/vs-code-projects/SFML-3.1.0/include",
+                "-I/home/deck/Libraries/SFML-3.1.0/include",
                 "${workspaceFolder}/Deep_Dark/src/**/*.cpp",
                 "-o", "${workspaceFolder}/MySFMLApp",
-                "-L/home/deck/Desktop/vs-code-projects/SFML-3.1.0/lib",
+                "-L/home/deck/Libraries/SFML-3.1.0/lib",
                 "-lsfml-graphics", "-lsfml-window", "-lsfml-system"
             ], 
             "options": {

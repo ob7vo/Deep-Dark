@@ -23,7 +23,7 @@ private:
         int hpAtStart;
     };
 	struct RecentlyDeceasedUnit {
-        UnitStats* stats;
+        const UnitStats* stats;
         UnitAnimMap* anims;
         int laneID;
 		sf::Vector2f deathPosition;
@@ -63,9 +63,11 @@ public:
             timers.end()
         );
         unitsWithSalvage.erase(
-            std::remove(unitsWithSalvage.begin(), unitsWithSalvage.end(), unitPoolIndex),
-            unitsWithSalvage.end()
-        );          
+    std::remove_if(unitsWithSalvage.begin(), unitsWithSalvage.end(),
+        [unitPoolIndex](const UnitInstanceIDs& id)
+        { return id.poolIndex == unitPoolIndex; }), // adjust member name below
+    unitsWithSalvage.end()
+)       ; 
     }
 
     bool notify(const Event* event) override;

@@ -3,6 +3,47 @@ project(DeepDark)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+include(FetchContent)
+
+# ---------------------------------------------------------------------------
+# SFML 3.1.0
+# ---------------------------------------------------------------------------
+set(SFML_BUILD_NETWORK OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    SFML
+    GIT_REPOSITORY https://github.com/SFML/SFML.git
+    GIT_TAG 3.1.0
+    GIT_SHALLOW ON
+)
+FetchContent_MakeAvailable(SFML)
+
+# ---------------------------------------------------------------------------
+# Dear ImGui — pin to a tag known compatible with imgui-sfml below
+# ---------------------------------------------------------------------------
+FetchContent_Declare(
+    imgui
+    GIT_REPOSITORY https://github.com/ocornut/imgui.git
+    GIT_TAG v1.91.1
+    GIT_SHALLOW ON
+)
+FetchContent_MakeAvailable(imgui)
+
+# ---------------------------------------------------------------------------
+# ImGui-SFML — 3.0 targets SFML 3.0.0 + ImGui 1.91.1
+# ---------------------------------------------------------------------------
+set(IMGUI_DIR ${imgui_SOURCE_DIR})
+set(IMGUI_SFML_FIND_SFML OFF)   # SFML already provided above via FetchContent
+
+FetchContent_Declare(
+    imgui-sfml
+    GIT_REPOSITORY https://github.com/SFML/imgui-sfml.git
+    GIT_TAG v3.0
+    GIT_SHALLOW ON
+)
+FetchContent_MakeAvailable(imgui-sfml)
 
 # Collect all source files recursively
 file(GLOB_RECURSE SOURCES 
@@ -10,28 +51,15 @@ file(GLOB_RECURSE SOURCES
     "${CMAKE_SOURCE_DIR}/Deep_Dark/Deep_Dark.cpp"
 )
 
-set(SFML_DIR "/home/deck/Desktop/vs-code-projects/SFML-3.1.0/lib/cmake/SFML")
-
-find_package(SFML 3 REQUIRED COMPONENTS Graphics Window System)
+#*
+#set(IMGUI_DIR "/home/deck/Libraries/imgui")          # <-- adjust to your actual path
+#set(IMGUI_SFML_DIR "/home/deck/Libraries/imgui-sfml")
+#set(SFML_DIR "/home/deck/Libraries/SFML-3.1.0/lib/cmake/SFML")
+#
 
 add_executable(DeepDark ${SOURCES})
 
-add_custom_command(TARGET DeepDark POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/Deep_Dark/fonts
-    $<TARGET_FILE_DIR:DeepDark>/fonts
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/Deep_Dark/sprites
-    $<TARGET_FILE_DIR:DeepDark>/sprites
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/Deep_Dark/game_saves
-    $<TARGET_FILE_DIR:DeepDark>/game_saves
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/Deep_Dark/configs
-    $<TARGET_FILE_DIR:DeepDark>/configs
-)
-
-target_precompile_headers(DeepDark PRIVATE /home/deck/Desktop/vs-code-projects/Deep-Dark/Deep_Dark/include/utilities/pch.h)
+target_precompile_headers(DeepDark PRIVATE ${CMAKE_SOURCE_DIR}/Deep_Dark/include/utilities/pch.h)
 
 target_include_directories(DeepDark PRIVATE
     ${CMAKE_SOURCE_DIR}/Deep_Dark/include
@@ -53,11 +81,32 @@ target_include_directories(DeepDark PRIVATE
     ${CMAKE_SOURCE_DIR}/Deep_Dark/include/visuals/camera
     ${CMAKE_SOURCE_DIR}/Deep_Dark/include/visuals/textures
     ${CMAKE_SOURCE_DIR}/Deep_Dark/include/visuals/ui
-    # add subdirs here or just the root if headers include each other relatively
+    ${IMGUI_DIR}
+    ${IMGUI_SFML_DIR}
 )
 
 target_link_libraries(DeepDark PRIVATE
     SFML::Graphics
     SFML::Window
     SFML::System
-)  
+    ImGui-SFML::ImGui-SFML
+)
+
+target_compile_definitions(DeepDark PRIVATE
+    IMGUI_USER_CONFIG="${IMGUI_SFML_DIR}/imconfig-SFML.h"
+)
+
+add_custom_command(TARGET DeepDark POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/Deep_Dark/fonts
+    $<TARGET_FILE_DIR:DeepDark>/fonts
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/Deep_Dark/sprites
+    $<TARGET_FILE_DIR:DeepDark>/sprites
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/Deep_Dark/game_saves
+    $<TARGET_FILE_DIR:DeepDark>/game_saves
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/Deep_Dark/configs
+    $<TARGET_FILE_DIR:DeepDark>/configs
+)

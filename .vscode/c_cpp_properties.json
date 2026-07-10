@@ -22,7 +22,9 @@
                 "${workspaceFolder}/Deep_Dark/include/visuals/camera",
                 "${workspaceFolder}/Deep_Dark/include/visuals/textures",
                 "${workspaceFolder}/Deep_Dark/include/visuals/ui",
-                "/home/deck/Desktop/vs-code-projects/SFML-3.1.0/include"
+                "${workspaceFolder}/build/_deps/sfml-src/include",
+                "${workspaceFolder}/build/_deps/imgui-src",
+                "${workspaceFolder}/build/_deps/imgui-sfml-src"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/g++",

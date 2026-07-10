@@ -3,6 +3,8 @@
 // SFML
 #include <SFML/System.hpp>
 #include <SFML/Graphics.hpp>
+#include <imgui-SFML.h>
+#include <imgui.h>
 
 // Functions and Namespaces
 #include <algorithm>
@@ -15,6 +17,7 @@
 #include <format>
 #include <ranges>
 #include <CustomErrors.hpp>
+#include <Vector_Opps.h>
 
 // Data Types
 #include <json.hpp>

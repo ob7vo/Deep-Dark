@@ -107,9 +107,6 @@ bool StageManager::try_create_cloner(const Unit& unit) {
 
 	return true;
 }
-bool try_revive_ally(const Unit& unit) {
-
-}
 #pragma endregion
 
 void StageManager::call_one_second_updates(float deltaTime) {
