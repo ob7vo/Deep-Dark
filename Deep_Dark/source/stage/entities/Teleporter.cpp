@@ -60,6 +60,6 @@ bool Teleporter::found_valid_target(const Unit& unit) const{
 	auto animState = static_cast<int>(unit.anim.get_state());
 	bool validAnimation = animState >= 0 && animState <= 5;
 	
-	return collides(bounds, unit) && !unit.stats->ancient_type() &&
+	return collides(bounds, unit) && !unit.stats->NaN_type() &&
 		validAnimation;
 }

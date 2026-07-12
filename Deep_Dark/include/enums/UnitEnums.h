@@ -39,11 +39,9 @@ enum class UnitType : std::uint32_t { // comments depict the Types common builds
 	NANO = 1 << 2, // Fast, high dps, high knockback count. Don't TRIGGER traps (can still be hurt by them)
 	RUSTED = 1 << 3, // Very Slow and VERY bulky, will idle on gaps
 	FLOATING = 1 << 4, // Agile, generally mid-ranged, ignores gaps 
-	REANIMEN = 1 << 5, // Fast, low range, high dps, low health, can revive and syphon.
-	ANCIENT = 1 << 6, // Ignore teleporters, usaully apply short-circuit, good bulk and damage.
+	SWEEPER = 1 << 5, // Fast, low range, high dps, low health, can revive and syphon.
+	NaN = 1 << 6, // Ignore teleporters, usaully apply short-circuit, good bulk and damage.
 	HOLOGRAM = 1 << 7, // Can phase through units, good at applying statuses
-	CAPACITOR = 1 << 8, // Tankers, low-mid kbs, all units have the unique "Charge" augment
-	VOIDED = 1 << 9, // Aku-sheilds and have unique voided ability.
 	ALL = 1 << 10 // Every Unit has type ALL, easy way to give target to all types
 };
 enum class UnitSpawnType {

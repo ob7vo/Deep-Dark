@@ -159,7 +159,7 @@ bool Unit::can_make_surge(const Augment& aug) const {
 	return aug.is_surge() && aug.try_activate(combat.hitIndex);
 }
 bool Unit::rust_type_and_near_gap() const {
-	if (!stats->rusted_tyoe()) return false;
+	if (!stats->rusted_type()) return false;
 
 	return std::ranges::any_of(stage->lanes[get_lane()].gaps, [&](const auto& gap) {
 		float gapEdge = player_team() ? gap.first : gap.second; // choose between left and right edge

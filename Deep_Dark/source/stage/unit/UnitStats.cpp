@@ -8,16 +8,16 @@ UnitType UnitStats::convert_string_to_type(std::string_view strView) {
     std::string str(strView);
     std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 
+    // PLEASE don't make a type with "NANO" and "NAN"
     static const std::unordered_map<std::string, UnitType> typeMap = {
         {"typeless", UnitType::TYPELESS},
         {"steel", UnitType::STEEL},
         {"nano", UnitType::NANO},
         {"rusted", UnitType::RUSTED},
         {"floating", UnitType::FLOATING},
-        {"reanimen", UnitType::REANIMEN},
-        {"ancient", UnitType::ANCIENT},
+        {"sweeper", UnitType::SWEEPER},
+        {"nan", UnitType::NaN},
         {"hologram", UnitType::HOLOGRAM},
-        {"voided", UnitType::VOIDED},
         {"all", UnitType::ALL}
     };
 

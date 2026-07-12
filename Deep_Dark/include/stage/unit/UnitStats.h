@@ -69,8 +69,8 @@ struct UnitStats {
 	static UnitStats create_cannon(const nlohmann::json& baseFile, float magnification);
 
 	inline const Hit& get_hit_stats(int hitIndex) const { return hits[hitIndex]; }
-	inline bool rusted_tyoe() const { return has(unitTypes, UnitType::RUSTED); }
-	inline bool ancient_type() const { return has(unitTypes, UnitType::ANCIENT); }
+	inline bool rusted_type() const { return has(unitTypes, UnitType::RUSTED); }
+	inline bool NaN_type() const { return has(unitTypes, UnitType::NaN); }
 	inline bool floating_type() const { return has(unitTypes, UnitType::FLOATING); }
 	inline bool has_surge() const {
 		return has(augmentsMask, AugmentType::ORBITAL_STRIKE) ||
