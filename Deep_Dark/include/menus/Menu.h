@@ -28,6 +28,7 @@ struct MenuBase
 	virtual void draw() = 0;
 	/// <summary>Return value prevents camera drag when buttons are clicked</summary>
 	virtual bool on_mouse_press(bool isM1) = 0; 
+	virtual void on_mouse_hold(bool isM1) = 0;
 	virtual bool on_mouse_release(bool isM1) { return true; }
 	virtual void check_mouse_hover() = 0;
 
@@ -53,6 +54,7 @@ struct ButtonMenu : public MenuBase
 
 	// Virtual with default — subclasses can extend
 	bool on_mouse_press(bool isM1) override;
+	void on_mouse_hold(bool isM1) override;
 	bool on_mouse_release(bool isM1) override { return true; }
 	void check_mouse_hover() override;
 };
