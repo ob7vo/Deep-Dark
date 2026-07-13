@@ -14,27 +14,34 @@ int main()
         << SFML_VERSION_MINOR << "."
         << SFML_VERSION_PATCH << std::endl;
 
-    sf::RenderWindow renderWindow(sf::VideoMode({ ASPECT_WIDTH, ASPECT_HEIGHT }), "SFML works!",
-        sf::Style::Titlebar | sf::Style::Close);
+    sf::ContextSettings settings;
+    settings.antiAliasingLevel = 0;
+    settings.majorVersion = 3;
+    settings.minorVersion = 0;
+    settings.attributeFlags = sf::ContextSettings::Default;
 
-    Game::Get().Initialize();
+    sf::RenderWindow renderWindow(
+        sf::VideoMode({ ASPECT_WIDTH, ASPECT_HEIGHT }), 
+        "work nowww!",
+        sf::Style::Titlebar | sf::Style::Close, 
+        sf::State::Windowed,
+        settings
+    );
+    renderWindow.setFramerateLimit(60);
+
+   // Game::Get().Initialize();
     
-    /*
-    while (renderWindow.isOpen())
-    {
-
-    }
-    */
     if (!ImGui::SFML::Init(renderWindow))
-        return -1;
+       return -1;
 
+    sf::CircleShape shape(50.f);
+    shape.setFillColor(sf::Color::Green);
     sf::Clock deltaClock;
-
+    
     while (renderWindow.isOpen())
     {
         while (const std::optional event = renderWindow.pollEvent())        
         {
-          //  const sf::Event& e = event;
             ImGui::SFML::ProcessEvent(renderWindow, *event);
 
             if (event->is<sf::Event::Closed>()) {
@@ -42,6 +49,7 @@ int main()
             }
         }
 
+        
         ImGui::SFML::Update(renderWindow, deltaClock.restart());
 
         // ---- UI code ----
@@ -56,13 +64,18 @@ int main()
 
         ImGui::End();
         // -----------------
+        
+        renderWindow.clear(sf::Color::Blue);
 
-        renderWindow.clear();
         ImGui::SFML::Render(renderWindow);
+        renderWindow.draw(shape);
+        
         renderWindow.display();
     }
-
+    
     ImGui::SFML::Shutdown();
+
+    return 0;
 }
 
  // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
