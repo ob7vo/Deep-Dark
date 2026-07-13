@@ -29,6 +29,7 @@ public:
 
 	inline sf::Vector2f get_pos() const { return pos; }
 	void set_pos(sf::Vector2f newPos);
+	inline void translate(sf::Vector2f delta) { set_pos(pos + delta); }
 	void set_norm_pos(sf::Vector2f norm);
 	void set_texture(const sf::Texture& texture, sf::IntRect rect = {});
 };
