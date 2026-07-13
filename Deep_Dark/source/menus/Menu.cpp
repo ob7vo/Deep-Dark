@@ -25,6 +25,8 @@ bool ButtonMenu<BUTTONS>::on_mouse_press(bool isM1) {
 	return this->buttonManager.on_mouse_press(this->cam.getMouseScreenPos(), isM1);
 }
 template<int BUTTONS>
+void ButtonMenu<BUTTONS>::on_mouse_hold(bool isM1) { return; }
+template<int BUTTONS>
 void ButtonMenu<BUTTONS>::check_mouse_hover()  {
 	this->buttonManager.check_mouse_hover(this->cam.getMouseScreenPos());
 }
@@ -50,7 +52,11 @@ bool ButtonManager<BUTTONS>::on_mouse_press(sf::Vector2i mPos, bool m1, int star
 
 	return false;
 }
-
+template<int BUTTONS>
+void ButtonManager<BUTTONS>::translate(sf::Vector2f delta, int start, int end) {
+	for (int i = start; i < end; i++)
+		buttons[i].translate(delta);
+}
 
 template struct ButtonManager<UI::ArmoryMenu::BTN_COUNT>; // 9
 template struct ButtonManager<UI::StageSelect::BTN_COUNT>; // 4
