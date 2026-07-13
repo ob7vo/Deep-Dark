@@ -14,5 +14,7 @@ struct ButtonManager
 	void draw(Camera& cam, int start = 0, int end = BUTTONS);
 	void check_mouse_hover(sf::Vector2i mPos, int start = 0, int end = BUTTONS);
 	bool on_mouse_press(sf::Vector2i mPos, bool m1, int start = 0, int end = BUTTONS);
+
+	void translate(sf::Vector2f delta, int start = 0, int end = BUTTONS);
 };
 
